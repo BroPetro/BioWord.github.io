@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Уроки біології</title>
+    <style>
+        /* Загальні стилі */
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: url('https://source.unsplash.com/1600x900/?nature,biology') no-repeat center center/cover;
+            background-size: cover;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            width: 80%;
+            max-width: 700px;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .container:hover {
+            transform: scale(1.05);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+
+        /* Кнопки */
+        .button {
+            display: inline-block;
+            background: linear-gradient(45deg, #28a745, #218838);
+            color: white;
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 1.3em;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .button:hover {
+            background: linear-gradient(45deg, #218838, #28a745);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .button:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+        /* Адаптивність */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+            .container {
+                padding: 20px;
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>📚 Уроки з біології</h1>
+        <p>Досліджуй світ природи разом із нами!</p>
+        <a href="Lesson/LessIndex.html" class="button">📖 Перейти до уроків</a>
+        <a href="Quz.html" class="button">🧪 Пройти тест</a>
+    </div>
+
+    <script src="https://cdn.pulse.is/livechat/loader.js" data-live-chat-id="67c429452cc14b14c1029fac" async></script>
+
+</body>
+</html>

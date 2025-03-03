@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📖 Квізи</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .lesson-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            margin: 20px auto;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+        .lesson-card:hover {
+            transform: scale(1.05);
+        }
+        .lesson-img {
+            width: 120px;
+            height: auto;
+            border-radius: 10px;
+            margin-right: 20px;
+        }
+        .lesson-link {
+            text-decoration: none;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .button:hover {
+            background: linear-gradient(45deg, #218838, #28a745);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .button:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(45deg, #28a745, #218838);
+            color: white;
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 1.3em;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>📖 Уроки з біології</h1>
+    <div class="lesson-card">
+        <img src="Assets/PlosCherv.jpg" class="lesson-img" alt="Плоскі черви">
+        <a href="Quz/QPlosCherv.html" class="lesson-link">Плоскі черви </a>
+    </div>
+    <div class="lesson-card">
+        <img src="Assets/Pets.jpg" class="lesson-img" alt="Плоскі черви">
+        <a href="Quz/QPetInst.html" class="lesson-link">Розвиток і поведінка тварин</a>
+    </div>
+    <div class="lesson-card">
+        <img src="Assets/Pet2.png" class="lesson-img" alt="Плоскі черви">
+        <a href="Quz/QPetOrg.html" class="lesson-link">Органи та система органів тварин</a>
+    </div>
+    <a href="Index.html" class="button">🏠На головне меню</a>
+        <script src="https://cdn.pulse.is/livechat/loader.js" data-live-chat-id="67c429452cc14b14c1029fac" async></script>
+</body>
+</html>

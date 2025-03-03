@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Квест: Органи та система органів тварин</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background: white;
+            color: black;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+        button {
+            margin: 10px;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            background: #ff5722;
+            color: white;
+        }
+        button:hover {
+            background-color: #e64a19;
+        }
+        #answers button {
+            display: block;
+            width: 100%;
+            background: #607d8b;
+            color: white;
+        }
+        #answers button:hover {
+            background: #455a64;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 id="question">Питання 1</h2>
+        <div id="answers"></div>
+        <p id="score">Очки: 0</p>
+        <p id="progress">Питання: 1 / 10</p>
+        <button onclick="restartQuiz()">Перезапустити</button>
+    </div>
+    <script>
+        const quiz = [
+            {question: "Який орган відповідає за фільтрацію крові та утворення сечі у тварин?", answers: ["Легені", "Печінка", "Нирки"], correct: 2},
+            {question: "Яка система органів забезпечує транспорт поживних речовин і кисню?", answers: ["Нервова система", "Кровоносна система", "Травна система"], correct: 1},
+            {question: "Який основний орган дихальної системи у ссавців?", answers: ["Легені", "Зябра", "Серце"], correct: 0},
+            {question: "Який орган відіграє головну роль у травленні та виділенні жовчі?", answers: ["Печінка", "Серце", "Легені"], correct: 0},
+            {question: "Яка система органів відповідає за рух тварин?", answers: ["Опорно-рухова система", "Травна система", "Видільна система"], correct: 0},
+            {question: "Що є основним компонентом центральної нервової системи у хребетних?", answers: ["Головний і спинний мозок", "Серце", "Печінка"], correct: 0},
+            {question: "Який організм має замкнену кровоносну систему?", answers: ["Комаха", "Риба", "Губка"], correct: 1},
+            {question: "Який орган відповідає за координацію рухів і обробку інформації?", answers: ["Мозок", "Шлунок", "Легені"], correct: 0},
+            {question: "У якої тварини відсутнє серце?", answers: ["Гідра", "Риба", "Черепаха"], correct: 0},
+            {question: "Який орган травної системи у птахів допомагає перетирати їжу?", answers: ["М'язовий шлунок (жорновий)", "Печінка", "Серце"], correct: 0},
+        ];
+        let currentQuestion = 0;
+        let score = 0;
+
+        function loadQuestion() {
+            document.getElementById("question").innerText = quiz[currentQuestion].question;
+            let answersDiv = document.getElementById("answers");
+            answersDiv.innerHTML = "";
+            quiz[currentQuestion].answers.forEach((answer, index) => {
+                let btn = document.createElement("button");
+                btn.innerText = answer;
+                btn.onclick = function() { checkAnswer(index); };
+                answersDiv.appendChild(btn);
+            });
+            document.getElementById("progress").innerText = `Питання: ${currentQuestion + 1} / 10`;
+        }
+
+        function checkAnswer(index) {
+            if (index === quiz[currentQuestion].correct) {
+                score++;
+            }
+            document.getElementById("score").innerText = "Очки: " + score;
+            setTimeout(nextQuestion, 500);
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < quiz.length) {
+                loadQuestion();
+            } else {
+                document.querySelector(".container").innerHTML = `<h2>Кінець квесту!</h2><p>Ваш рахунок: ${score} з 10</p><button onclick='restartQuiz()'>Перезапустити</button>`;
+            }
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            document.querySelector(".container").innerHTML = `
+                <h2 id="question"></h2>
+                <div id="answers"></div>
+                <p id="score">Очки: 0</p>
+                <p id="progress">Питання: 1 / 10</p>
+                <button onclick="restartQuiz()">Перезапустити</button>
+            `;
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>

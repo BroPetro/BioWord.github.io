@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Персоналізація Аватара та Нікнейму</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        label {
+            padding: 10px;
+            background-color: #2980b9;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .avatar-container {
+            margin-bottom: 20px;
+        }
+        .avatar-display {
+            margin-top: 10px;
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            margin-bottom: 20px;
+        }
+        .nickname-container {
+            margin-bottom: 20px;
+        }
+        .nickname-input {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #34495e;
+            border-radius: 5px;
+            width: 80%;
+            margin-top: 10px;
+            background: #ecf0f1;
+        }
+        .save-container {
+            margin-top: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .info-text {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        .button:hover {
+            background: linear-gradient(45deg, #218838, #28a745);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .button:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(45deg, #28a745, #218838);
+            color: white;
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 1.3em;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Персоналізація Аватара та Нікнейму</h1>
+
+    <!-- Нікнейм -->
+    <div class="nickname-container">
+        <h2>Ваш Нікнейм</h2>
+        <input type="text" id="nicknameInput" class="nickname-input" placeholder="Введіть свій нікнейм" />
+    </div>
+
+    <!-- Завантаження аватара -->
+    <div class="avatar-container">
+        <label for="avatarUpload">Завантажити аватар</label>
+        <input type="file" id="avatarUpload" accept="image/*" onchange="previewAvatar(event)" />
+        <div id="avatarPreview">
+            <img src="https://via.placeholder.com/150" class="avatar-display" id="avatarDisplay" alt="Аватар" />
+        </div>
+    </div>
+
+    <!-- Кнопка для збереження -->
+    <div class="save-container">
+        <button onclick="saveData()">Зберегти</button>
+    </div>
+
+    <!-- Завантаження збережених даних -->
+    <div class="info-text">
+        <button onclick="loadData()">Завантажити збережені дані</button>
+    </div>
+    <a href="Index.html" class="button">🏠На головне меню</a>
+</div>
+
+<script>
+    // Функція для перегляду аватара
+    function previewAvatar(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('avatarDisplay').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Функція для збереження даних в LocalStorage
+    function saveData() {
+        const nickname = document.getElementById('nicknameInput').value;
+        const avatarSrc = document.getElementById('avatarDisplay').src;
+
+        if (nickname && avatarSrc) {
+            localStorage.setItem('nickname', nickname);
+            localStorage.setItem('avatar', avatarSrc);
+            alert('Дані збережено!');
+        } else {
+            alert('Будь ласка, введіть нікнейм і виберіть аватар.');
+        }
+    }
+
+    // Функція для завантаження збережених даних
+    function loadData() {
+        const savedNickname = localStorage.getItem('nickname');
+        const savedAvatar = localStorage.getItem('avatar');
+
+        if (savedNickname) {
+            document.getElementById('nicknameInput').value = savedNickname;
+        } else {
+            alert('Немає збережених даних.');
+        }
+
+        if (savedAvatar) {
+            document.getElementById('avatarDisplay').src = savedAvatar;
+        } else {
+            document.getElementById('avatarDisplay').src = 'https://via.placeholder.com/150';
+        }
+    }
+</script>
+
+</body>
+</html>

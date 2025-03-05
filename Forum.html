@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ідеї та Лайки (P2P)</title>
+    <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2c2f33;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #36393f;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px 0;
+            width: calc(100% - 20px);
+            border-radius: 5px;
+            border: none;
+        }
+        .post {
+            background: #7289da;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            word-break: break-word;
+        }
+        .like-btn {
+            cursor: pointer;
+            color: red;
+            font-size: 20px;
+        }
+        .chat-box {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            max-width: 70%;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 10px;
+            word-wrap: break-word;
+        }
+        .my-message {
+            background: #5865f2;
+            align-self: flex-end;
+        }
+        .other-message {
+            background: #4f545c;
+            align-self: flex-start;
+        }
+        .image-preview {
+            max-width: 100px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .image-preview:hover {
+            transform: scale(1.2);
+        }
+        .image-preview:active {
+            width: 100%;
+            height: auto;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(45deg, #28a745, #218838);
+            color: white;
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 1.3em;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .button:hover {
+            background: linear-gradient(45deg, #218838, #28a745);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .button:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Чат</h1>
+        <p>Твій ID: <span id="myId">...</span></p>
+        <input type="text" id="peerId" placeholder="ID друга...">
+        <button onclick="connectToPeer()">Підключитись</button>
+        <input type="text" id="messageInput" placeholder="Введи повідомлення...">
+        <input type="file" id="imageInput" accept="image/*">
+        <button onclick="sendMessage()">Надіслати</button>
+        <div class="chat-box" id="chatBox"></div>
+        <audio id="notificationSound" src="Assets/SMS.mp3"></audio>
+        <a href="index.html" class="button">🏠На головне меню</a>
+    </div>
+    <script src="https://cdn.pulse.is/livechat/loader.js" data-live-chat-id="67c429452cc14b14c1029fac" async></script>
+    <script>
+        let peer = new Peer();
+        let conn;
+
+        peer.on('open', id => {
+            document.getElementById("myId").innerText = id;
+        });
+
+        peer.on('connection', connection => {
+            conn = connection;
+            conn.on('data', data => {
+                displayMessage(data.text, false, data.image);
+                document.getElementById("notificationSound").play();
+            });
+        });
+
+        function connectToPeer() {
+            const peerId = document.getElementById("peerId").value;
+            conn = peer.connect(peerId);
+            conn.on('open', () => console.log("Connected to: " + peerId));
+            conn.on('data', data => {
+                displayMessage(data.text, false, data.image);
+                document.getElementById("notificationSound").play();
+            });
+        }
+
+        function sendMessage() {
+            const input = document.getElementById("messageInput");
+            const imageInput = document.getElementById("imageInput");
+            let imageData = null;
+
+            if (imageInput.files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    imageData = event.target.result;
+                    sendData(input.value, imageData);
+                };
+                reader.readAsDataURL(imageInput.files[0]);
+            } else {
+                sendData(input.value, null);
+            }
+        }
+
+        function sendData(text, image) {
+            if (!conn || text.trim() === "") return;
+            const message = { text: text, image: image };
+            conn.send(message);
+            displayMessage(text, true, image);
+            document.getElementById("messageInput").value = "";
+            document.getElementById("imageInput").value = "";
+        }
+
+        function displayMessage(text, isMine, image) {
+            const chatBox = document.getElementById("chatBox");
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("message", isMine ? "my-message" : "other-message");
+            
+            if (text) {
+                if (text.includes("https://www.youtube.com/watch?v=dQw4w9WgXcQ")) {
+                    text = "Це рікрол! 🎵";
+                }
+                text = text.replace(/(https?:\/\/\S+)/g, '<a href="$1" target="_blank">$1</a>');
+                messageDiv.innerHTML = text;
+            }
+            
+            if (image) {
+                const img = document.createElement("img");
+                img.src = image;
+                img.classList.add("image-preview");
+                messageDiv.appendChild(img);
+            }
+            
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+       
+    </script>
+</body>
+</html>

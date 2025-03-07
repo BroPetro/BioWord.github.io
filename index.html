@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Уроки біології</title>
     <style>
-        /* Загальні стилі */
         body {
             font-family: 'Roboto', sans-serif;
             margin: 0;
@@ -17,7 +16,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            overflow: hidden;
+            flex-direction: column;
         }
 
         .container {
@@ -28,27 +27,31 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
             width: 80%;
             max-width: 700px;
-            transition: transform 0.3s ease-in-out;
         }
 
-        .container:hover {
-            transform: scale(1.05);
+        .xp-wrapper {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
         }
 
-        h1 {
-            font-size: 2.5em;
-            margin-bottom: 20px;
-            font-weight: 700;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+        .xp-container {
+            background:rgba(0, 0, 0, 0.7) ;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: rgb(255, 255, 255);
+            transition: transform 0.3s ease;
+            flex: 1;
+            text-align: center;
         }
 
-        p {
-            font-size: 1.2em;
-            margin-bottom: 30px;
-            font-weight: 300;
+        .xp-container:hover {
+            transform: scale(1.1);
         }
 
-        /* Кнопки */
         .button {
             display: inline-block;
             background: linear-gradient(45deg, #28a745, #218838);
@@ -66,22 +69,6 @@
             transform: translateY(-5px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
-
-        .button:active {
-            transform: translateY(2px);
-            box-shadow: none;
-        }
-
-        /* Адаптивність */
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 2em;
-            }
-            .container {
-                padding: 20px;
-                width: 90%;
-            }
-        }
     </style>
 </head>
 <body>
@@ -89,13 +76,55 @@
     <div class="container">
         <h1>📚 Уроки з біології</h1>
         <p>Досліджуй світ природи разом із нами!</p>
+
         <a href="Lesson/LessIndex.html" class="button">📖 Перейти до уроків</a>
         <a href="QUZ.html" class="button">🧪 Пройти тест</a><br>
-        <a href="Forum.html" class="button">💬Forum (Beta)</a><br>
+        <a href="Forum.html" class="button">💬 Forum </a><br>
         <a href="InfoUpdate.html" class="button">Оновлення</a>
     </div>
 
-    <script src="https://cdn.pulse.is/livechat/loader.js" data-live-chat-id="67c429452cc14b14c1029fac" async></script>
+    <div class="xp-wrapper">
+        <div class="xp-container" onclick="location.href='prizes.html'">
+            Ваш XP: <span id="xp-points">0</span>
+        </div>
+        <div class="xp-container" onclick="redirectToRandomTest()"> 
+            🎲 Випробуй себе!  
+        </div>
+        <div class="xp-container" onclick="location.href='Test.html'">
+            🌿Розпізнавач Рослин 
+        </div>
+    </div>
+
+    <script>
+        let xpPoints = localStorage.getItem('xpPoints') || 0;
+        let lastClaimDate = localStorage.getItem('lastClaimDate') || '';
+        const today = new Date().toISOString().split('T')[0];
+
+        if (lastClaimDate !== today) {
+            xpPoints = parseInt(xpPoints) + 50;
+            localStorage.setItem('xpPoints', xpPoints);
+            localStorage.setItem('lastClaimDate', today);
+        }
+
+        document.querySelectorAll('.xp-container span').forEach(span => {
+            span.textContent = xpPoints;
+        });
+        function redirectToRandomTest() {
+        // Масив з URL-адресами тестів
+        const tests = [
+            'Quz/QPetInst.html', // Посилання на тест 1
+            'Quz/QPetOrg.html',  // Посилання на тест 2
+            'Quz/QPlosCherv.html',
+            'Quz/QPetIn.html' // Посилання на тест 3
+        ];
+
+        // Вибір випадкового тесту з масиву
+        const randomTest = tests[Math.floor(Math.random() * tests.length)];
+
+        // Перекидання на випадковий тест
+        location.href = randomTest;
+    }
+    </script>
 
 </body>
 </html>

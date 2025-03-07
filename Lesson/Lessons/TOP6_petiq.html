@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Найрозумніші Тварини</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            color: #333;
+        }
+        h1 {
+            font-size: 3em;
+            color: #1abc9c;
+            margin-top: 30px;
+            text-transform: uppercase;
+        }
+        h2 {
+            font-size: 1.8em;
+            color: #34495e;
+            margin-bottom: 30px;
+        }
+        .animal-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 20px auto;
+            padding: 20px;
+            max-width: 1200px;
+        }
+        .animal-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .animal-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.2);
+        }
+        .animal-card img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-bottom: 5px solid #1abc9c;
+        }
+        .animal-card h3 {
+            margin: 20px 0;
+            font-size: 1.5em;
+            color: #2c3e50;
+        }
+        .animal-card p {
+            padding: 0 20px 20px;
+            font-size: 1.1em;
+            color: #7f8c8d;
+        }
+        .animal-card ul {
+            text-align: left;
+            padding-left: 30px;
+            color: #34495e;
+        }
+        .emoji {
+            font-size: 2em;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Найрозумніші Тварини</h1>
+
+    <div class="animal-container">
+        <!-- Дельфіни -->
+        <div class="animal-card">
+            <img src="Assets/Delfin.jpg" alt="Дельфіни">
+            <h3>Дельфіни 🐬</h3>
+            <p>Дельфіни — одні з найрозумніших морських тварин, здатні до соціальних взаємодій, навчання та саморозпізнавання.</p>
+            <p>IQ: <strong>30</strong></p>
+        </div>
+
+        <!-- Ворони -->
+        <div class="animal-card">
+            <img src="Assets/Bird_W.jpg" alt="Ворони">
+            <h3>Ворони 🦅</h3>
+            <p>Ворони можуть вирішувати складні задачі, використовувати інструменти та мають чудову пам'ять.</p>
+            <p>IQ: <strong>10</strong></p>
+        </div>
+
+        <!-- Шимпанзе -->
+        <div class="animal-card">
+            <img src="Assets/Mankey.jpg" alt="Шимпанзе">
+            <h3>Шимпанзе 🐒</h3>
+            <p>Шимпанзе — наші найближчі родичі, здатні до абстрактного мислення та використання інструментів.</p>
+            <p>IQ: <strong>+150</strong></p>
+        </div>
+
+        <!-- Слони -->
+        <div class="animal-card">
+            <img src="Assets/Elefant.jpg" alt="Слони">
+            <h3>Слони 🐘</h3>
+            <p>Слони мають чудову пам'ять та емоційне розуміння, здатні вирішувати складні задачі.</p>
+            <p>IQ: <strong>12.6</strong></p>
+        </div>
+
+        <!-- Собаки -->
+        <div class="animal-card">
+            <img src="Assets/Dog.jpg" alt="Собаки">
+            <h3>Собаки 🐕</h3>
+            <p>Собаки дуже розумні, можуть виконувати складні команди та мають здатність до емоційного зв'язку з людьми.</p>
+            <p>IQ: <strong>19</strong></p>
+        </div>
+
+        <!-- Кити -->
+        <div class="animal-card">
+            <img src="Assets/Kuts.jpg" alt="Кити">
+            <h3>Кити 🐋</h3>
+            <p>Кити демонструють складну соціальну поведінку, спілкуються за допомогою звуків і мають високий рівень інтелекту.</p>
+            <p>IQ: <strong>27</strong></p>
+        </div>
+    </div>
+
+</body>
+</html>

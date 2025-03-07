@@ -1,0 +1,134 @@
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎁 Призи</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: url('https://source.unsplash.com/1600x900/?galaxy,stars') no-repeat center center/cover;
+            background-size: cover;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            width: 80%;
+            max-width: 700px;
+        }
+
+        .button {
+            display: inline-block;
+            background: linear-gradient(45deg, #ff9800, #e65100);
+            color: white;
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 1.3em;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .button:hover {
+            background: linear-gradient(45deg, #e65100, #ff9800);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .prize-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .prize-info {
+            margin-top: 10px;
+            font-size: 1.1em;
+            color: #ffeb3b;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🎁 Обери приз!</h1>
+        <p>Ваш XP: <span id="xp-points">0</span></p>
+        
+        <div class="prize-container">
+            <h3>🥇 "Ти що, геній?"</h3>
+            <p>Ціна: 100 XP</p>
+            <button class="button" onclick="redeemPrize(100, 'Ти що, геній?')">Обміняти</button>
+            <p class="prize-info" id="genius-count">Придбано: 0</p>
+        </div>
+
+        <div class="prize-container">
+            <h3>🌟 "Майстер біології"</h3>
+            <p>Ціна: 200 XP</p>
+            <button class="button" onclick="redeemPrize(200, 'Майстер біології')">Обміняти</button>
+            <p class="prize-info" id="bio-master-count">Придбано: 0</p>
+        </div>
+
+        <div class="prize-container">
+            <h3>🚀 "Мега мозок!"</h3>
+            <p>Ціна: 300 XP</p>
+            <button class="button" onclick="redeemPrize(300, 'Мега мозок!')">Обміняти</button>
+            <p class="prize-info" id="mega-brain-count">Придбано: 0</p>
+        </div>
+
+        <a href="index.html" class="button">🏠 Назад</a>
+    </div>
+
+    <script>
+        let xpPoints = localStorage.getItem('xpPoints') || 0;
+        let geniusCount = localStorage.getItem('geniusCount') || 0;
+        let bioMasterCount = localStorage.getItem('bioMasterCount') || 0;
+        let megaBrainCount = localStorage.getItem('megaBrainCount') || 0;
+
+        document.getElementById('xp-points').textContent = xpPoints;
+        document.getElementById('genius-count').textContent = `Придбано: ${geniusCount}`;
+        document.getElementById('bio-master-count').textContent = `Придбано: ${bioMasterCount}`;
+        document.getElementById('mega-brain-count').textContent = `Придбано: ${megaBrainCount}`;
+
+        function redeemPrize(cost, prizeName) {
+            if (xpPoints >= cost) {
+                xpPoints -= cost;
+                localStorage.setItem('xpPoints', xpPoints);
+                document.getElementById('xp-points').textContent = xpPoints;
+
+                if (prizeName === 'Ти що, геній?') {
+                    geniusCount++;
+                    localStorage.setItem('geniusCount', geniusCount);
+                    document.getElementById('genius-count').textContent = `Придбано: ${geniusCount}`;
+                } else if (prizeName === 'Майстер біології') {
+                    bioMasterCount++;
+                    localStorage.setItem('bioMasterCount', bioMasterCount);
+                    document.getElementById('bio-master-count').textContent = `Придбано: ${bioMasterCount}`;
+                } else if (prizeName === 'Мега мозок!') {
+                    megaBrainCount++;
+                    localStorage.setItem('megaBrainCount', megaBrainCount);
+                    document.getElementById('mega-brain-count').textContent = `Придбано: ${megaBrainCount}`;
+                }
+
+                alert(`🎉 Ви отримали приз: '${prizeName}'`);
+            } else {
+                alert("❌ Недостатньо XP!");
+            }
+        }
+    </script>
+
+</body>
+</html>

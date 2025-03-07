@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Розпізнавання рослини</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            margin-top: 50px;
+            padding: 30px;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        h2 {
+            color: #4CAF50;
+        }
+        video {
+            width: 100%;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+        }
+        button {
+            margin-top: 20px;
+            padding: 12px 25px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #photo {
+            margin-top: 20px;
+            display: none;
+        }
+        #captured-image {
+            width: 100%;
+            max-width: 400px;
+            margin-top: 15px;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+        }
+        .result {
+            margin-top: 30px;
+            font-size: 18px;
+            color: #333;
+            background: #e0f7fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .result h3 {
+            color: #00838f;
+        }
+        .result p {
+            color: #00796b;
+        }
+        .error {
+            color: #d32f2f;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(45deg, #28a745, #218838);
+            color: white;
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 1.3em;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .button:hover {
+            background: linear-gradient(45deg, #218838, #28a745);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Фотографування та Розпізнавання Рослини</h2>
+        <video id="video" autoplay></video>
+        <button id="capture">Зробити фото</button>
+        <canvas id="canvas" style="display:none;"></canvas>
+        <div id="photo">
+            <h3>Фото рослини:</h3>
+            <img id="captured-image" alt="Captured image">
+        </div>
+        <div id="result" class="result" style="display:none;">
+            <h3>Розпізнана рослина:</h3>
+            <p id="plant-name"></p>
+            <p id="plant-description"></p>
+        </div>
+        <p id="error-message" class="error" style="display:none;"></p>
+        <a href="index.html" class="button">Додому</a>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const captureButton = document.getElementById('capture');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const capturedImage = document.getElementById('captured-image');
+        const plantName = document.getElementById('plant-name');
+        const plantDescription = document.getElementById('plant-description');
+        const resultDiv = document.getElementById('result');
+        const errorMessage = document.getElementById('error-message');
+        const apiKey = "Us3Vq7MsATS9kvSwN2f5B1SRDLegGQRqRxkSTQO6KMdQaRiGOD"; // Твій API-ключ
+
+        // Отримуємо доступ до камери
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+            })
+            .catch((err) => {
+                console.error("Помилка доступу до камери: ", err);
+            });
+
+        // Функція для захоплення фото
+        captureButton.addEventListener('click', () => {
+            // Встановлюємо розміри canvas відповідно до розміру відео
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/png');
+            capturedImage.src = imageData;
+            document.getElementById('photo').style.display = 'block';
+            resultDiv.style.display = 'none';
+            errorMessage.style.display = 'none';
+
+            // Відправка зображення на API для розпізнавання
+            recognizePlant(imageData);
+        });
+
+        // Функція для розпізнавання рослини
+        async function recognizePlant(imageData) {
+            const url = 'https://api.plant.id/v2/identify';
+            const formData = new FormData();
+            formData.append('images', imageData); // додавання зображення
+
+            const headers = {
+                'Api-Key': apiKey // використання твого API-ключа
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.suggestions && data.suggestions.length > 0) {
+                    const plant = data.suggestions[0];
+                    // Виведення результатів розпізнавання
+                    plantName.innerText = `Назва: ${plant.plant_name}`;
+                    plantDescription.innerText = plant.plant_details || 'Опис не доступний.';
+                    resultDiv.style.display = 'block';
+                } else {
+                    errorMessage.innerText = "Не вдалося розпізнати рослину.";
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Помилка API:', error);
+                errorMessage.innerText = "Сталася помилка при розпізнаванні.";
+                errorMessage.style.display = 'block';
+            }
+        }
+    </script>
+
+</body>
+</html>

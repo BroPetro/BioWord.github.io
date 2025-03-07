@@ -15,7 +15,7 @@
         .lesson-card {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             background: rgba(0, 0, 0, 0.8);
             color: white;
             padding: 20px;
@@ -40,27 +40,134 @@
             color: white;
             font-size: 20px;
             font-weight: bold;
+            flex-grow: 1;
+        }
+        .favorite-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: white;
+        }
+        .favorite-btn.active {
+            color: gold;
+        }
+        #searchBox {
+            width: 70%;
+            max-width: 400px;
+            padding: 10px;
+            font-size: 18px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        #showFavorites {
+            background: gold;
+            border: none;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
         }
     </style>
+    <script>
+        let favoriteLessons = new Set(JSON.parse(localStorage.getItem("favorites")) || []);
+
+        function toggleFavorite(button, lesson) {
+            if (favoriteLessons.has(lesson)) {
+                favoriteLessons.delete(lesson);
+                button.classList.remove("active");
+                button.textContent = "⭐";
+            } else {
+                favoriteLessons.add(lesson);
+                button.classList.add("active");
+                button.textContent = "❌";
+            }
+            localStorage.setItem("favorites", JSON.stringify(Array.from(favoriteLessons)));
+        }
+
+        function restoreFavorites() {
+            document.querySelectorAll(".lesson-card").forEach(card => {
+                let lesson = card.querySelector(".lesson-link").textContent;
+                let button = card.querySelector(".favorite-btn");
+                if (favoriteLessons.has(lesson)) {
+                    button.classList.add("active");
+                    button.textContent = "❌";
+                }
+            });
+        }
+
+        function searchLessons() {
+            let input = document.getElementById("searchBox").value.toLowerCase();
+            let cards = document.getElementsByClassName("lesson-card");
+            
+            for (let card of cards) {
+                let text = card.innerText.toLowerCase();
+                card.style.display = text.includes(input) ? "flex" : "none";
+            }
+        }
+
+        function showFavorites() {
+            let cards = document.getElementsByClassName("lesson-card");
+            
+            for (let card of cards) {
+                let link = card.querySelector(".lesson-link").textContent;
+                card.style.display = favoriteLessons.has(link) ? "flex" : "none";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", restoreFavorites);
+    </script>
 </head>
 <body>
     <h1>📖 Уроки з біології</h1>
+    <input type="text" id="searchBox" onkeyup="searchLessons()" placeholder="🔍 Введіть тему для пошуку...">
+    <button id="showFavorites" onclick="showFavorites()">⭐ Улюблені</button>
+    
     <div class="lesson-card">
         <img src="Assets/PlosCherv.jpg" class="lesson-img" alt="Плоскі черви">
-        <a href="Lessons/PlsCherv.html" class="lesson-link">Плоскі черви </a>
+        <a href="Lessons/PlsCherv.html" class="lesson-link">Плоскі черви #lesson</a>
+        <button class="favorite-btn" onclick="toggleFavorite(this, 'Плоскі черви #lesson')">⭐</button>
     </div>
     <div class="lesson-card">
-        <img src="Assets/Crab.jpg" class="lesson-img" alt="Плоскі черви">
-        <a href="Lessons/Clenuston.html" class="lesson-link">Загальна характеристика членистоногих </a>
+        <img src="Assets/Crab.jpg" class="lesson-img" alt="Членистоногі">
+        <a href="Lessons/Clenuston.html" class="lesson-link">Загальна характеристика членистоногих #lesson</a>
+        <button class="favorite-btn" onclick="toggleFavorite(this, 'Загальна характеристика членистоногих #lesson')">⭐</button>
     </div>
     <div class="lesson-card">
-        <img src="Assets/GummiPig.jpg" class="lesson-img" alt="Плоскі черви">
-        <a href="Project/Project1/Project.html" class="lesson-link">Морські свинки: поведінка , догляд та цікаві факти</a>
-        <script src="https://cdn.pulse.is/livechat/loader.js" data-live-chat-id="67c429452cc14b14c1029fac" async></script>
+        <img src="Assets/GummiPig.jpg" class="lesson-img" alt="Морські свинки">
+        <a href="Project/Project1/Project.html" class="lesson-link">Морські свинки: поведінка, догляд та цікаві факти #project</a>
+        <button class="favorite-btn" onclick="toggleFavorite(this, 'Морські свинки: поведінка, догляд та цікаві факти #project')">⭐</button>
     </div>
     <div class="lesson-card">
-        <img src="Assets/Molusk.jpg" class="lesson-img" alt="Плоскі черви">
-        <a href="Lessons/Molusk.html" class="lesson-link">Значення молюсків у природі та житті людини</a>
+        <img src="Assets/Molusk.jpg" class="lesson-img" alt="Молюски">
+        <a href="Lessons/Molusk.html" class="lesson-link">Значення молюсків у природі та житті людини #lesson</a>
+        <button class="favorite-btn" onclick="toggleFavorite(this, 'Значення молюсків у природі та житті людини #lesson')">⭐</button>
+    </div>
+    <div class="lesson-card">
+        <img src="Assets/OMG.jpg" class="lesson-img" alt="Top 6 незвичайних тварин">
+        <a href="Lessons/TOP6_Pet.html" class="lesson-link">Top 6 незвичайних тварин #pet</a>
+        <button class="favorite-btn" onclick="toggleFavorite(this, 'Top 6 незвичайних тварин #pet')">⭐</button>
+    </div>
+    <div class="lesson-card">
+        <img src="Assets/IQ.png" class="lesson-img" alt="Top 6 розумних тварин">
+        <a href="Lessons/TOP6_petiq.html" class="lesson-link">Top 6 розумних тварин #pet</a>
+        <button class="favorite-btn" onclick="toggleFavorite(this, 'Top 6 розумних тварин #pet')">⭐</button>
+    </div>
+    <div class="lesson-card">
+        <img src="Lessons/Assets/InsestSun.JPG" class="lesson-img" alt="Комахи різноманітність комах">
+        <a href="Lessons/Insects.html" class="lesson-link">Комахи різноманітність комах #lesson</a>
+        <button class="favorite-btn" onclick="toggleFavorite(this, 'Комахи різноманітність комах #lesson')">⭐</button>
+    </div>
+    <div class="lesson-card">
+        <img src="Assets/Rozvitok.png" class="lesson-img" alt="Розвиток і поведінка тварин">
+        <a href="Lessons/Animal_development.html" class="lesson-link">Розвиток і поведінка тварин #lesson</a>
+        <button class="favorite-btn" onclick="toggleFavorite(this, 'Розвиток і поведінка тварин #lesson')">⭐</button>
+    </div>
+    <div class="lesson-card">
+        <img src="Lessons/Assets/Organ.png" class="lesson-img" alt="Органи та система огранів тварин ">
+        <a href="Lessons/OrganAnimals.html" class="lesson-link">Органи та система огранів тварин #lesson</a>
+        <button class="favorite-btn" onclick="toggleFavorite(this, 'Органи та система огранів тварин #lesson')">⭐</button>
     </div>
 </body>
 </html>

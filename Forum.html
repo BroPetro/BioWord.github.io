@@ -83,29 +83,6 @@
             width: 100%;
             height: auto;
         }
-        .button {
-            display: inline-block;
-            background: linear-gradient(45deg, #28a745, #218838);
-            color: white;
-            padding: 15px 25px;
-            text-decoration: none;
-            font-size: 1.3em;
-            border-radius: 50px;
-            transition: all 0.3s ease;
-            margin: 10px;
-        }
-
-        .button:hover {
-            background: linear-gradient(45deg, #218838, #28a745);
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .button:active {
-            transform: translateY(2px);
-            box-shadow: none;
-        }
-
     </style>
 </head>
 <body>
@@ -118,10 +95,9 @@
         <input type="file" id="imageInput" accept="image/*">
         <button onclick="sendMessage()">Надіслати</button>
         <div class="chat-box" id="chatBox"></div>
-        <audio id="notificationSound" src="Assets/SMS.mp3"></audio>
-        <a href="index.html" class="button">🏠На головне меню</a>
+        <audio id="notificationSound" src="https://www.myinstants.com/media/sounds/sms-alert-1.mp3"></audio>
     </div>
-    <script src="https://cdn.pulse.is/livechat/loader.js" data-live-chat-id="67c429452cc14b14c1029fac" async></script>
+    
     <script>
         let peer = new Peer();
         let conn;
@@ -197,7 +173,6 @@
             chatBox.appendChild(messageDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
-       
     </script>
 </body>
 </html>

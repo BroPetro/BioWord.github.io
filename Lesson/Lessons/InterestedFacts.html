@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Біологічні Факти</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #2E7D32, #81C784);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+        }
+        .card {
+            width: 350px;
+            height: 450px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            padding: 30px;
+            transition: transform 0.5s, opacity 0.5s;
+        }
+        .hidden-card {
+            opacity: 0;
+            transform: rotateY(180deg);
+        }
+        .button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 30px;
+            background: #FFEB3B;
+            color: #2E7D32;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: 0.3s;
+        }
+        .button:hover {
+            background: #FBC02D;
+            transform: scale(1.1);
+        }
+        .fact-count {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="text-4xl font-bold mb-6 drop-shadow-lg">Цікаві факти з біології</h1>
+    <div id="fact-card" class="card hidden-card">Натисни кнопку, щоб отримати факт!</div>
+    <button onclick="showFact()" class="button">Отримати факт</button>
+    <div class="fact-count">Фактів переглянуто: <span id="factCounter">0</span></div>
+    
+    <script>
+        const facts = [
+            "Людське серце створює достатньо тиску, щоб підняти кров на 9 метрів у висоту!",
+            "У восьминога три серця та синя кров!",
+            "ДНК людини на 60% схожа на ДНК банана!",
+            "Корови мають найкращих друзів і можуть відчувати стрес при їх відсутності!",
+            "Мурахи не сплять – вони просто роблять короткі перерви протягом дня!",
+            "Метелики можуть відчувати смаки лапками!",
+            "Зірки морські можуть відростити втрачені частини тіла!",
+            "В організмі людини більше бактерій, ніж власних клітин!",
+            "Риби можуть спілкуватися між собою за допомогою звуків!"
+        ];
+        
+        let currentFactIndex = -1;
+        let factCount = 0;
+
+        function showFact() {
+            const card = document.getElementById("fact-card");
+            card.classList.add("hidden-card");
+            setTimeout(() => {
+                currentFactIndex = Math.floor(Math.random() * facts.length);
+                card.textContent = facts[currentFactIndex];
+                card.classList.remove("hidden-card");
+                factCount++;
+                document.getElementById("factCounter").textContent = factCount;
+            }, 500);
+        }
+    </script>
+</body>
+</html>

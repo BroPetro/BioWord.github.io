@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>3D Генератор ДНК</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0d1b2a, #1b263b, #415a77);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 320px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        h2 {
+            margin: 0 0 15px;
+            font-size: 22px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .input-group {
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        label {
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+        input[type="number"], select {
+            padding: 6px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            width: 50px;
+            text-align: center;
+            transition: background 0.3s;
+        }
+        input[type="number"]:hover, select:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+            width: 100%;
+            margin: 5px 0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+        #renderBtn { background: linear-gradient(45deg, #ff6b6b, #ff8e53); }
+        #randomBtn { background: linear-gradient(45deg, #4facfe, #00f2fe); }
+        #saveBtn { background: linear-gradient(45deg, #4facfe, #00f2fe); display: none; }
+        #settingsBtn { background: linear-gradient(45deg, #feca57, #ff9f43); }
+        #resetBtn { background: linear-gradient(45deg, #6d6875, #b5838d); }
+        #canvas {
+            width: 100%;
+            height: 260px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            margin-top: 10px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        #result {
+            font-size: 14px;
+            margin-top: 10px;
+            color: #d0e1f9;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        #settingsModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 15px;
+            width: 260px;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        input[type="range"] {
+            width: 80px;
+        }
+        .close-btn {
+            background: linear-gradient(45deg, #e63946, #d00000);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Генератор ДНК</h2>
+        <div class="input-group">
+            <label>Зелені:</label>
+            <input type="number" id="greenCores" min="0" max="10" value="0">
+        </div>
+        <div class="input-group">
+            <label>Червоні:</label>
+            <input type="number" id="redCores" min="0" max="10" value="0">
+        </div>
+        <div class="input-group">
+            <label>Сині:</label>
+            <input type="number" id="blueCores" min="0" max="10" value="0">
+        </div>
+        <div class="input-group">
+            <label>Форма:</label>
+            <select id="dnaShape">
+                <option value="spiral">Спіраль</option>
+                <option value="ring">Кільце</option>
+                <option value="wave">Хвиля</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>Розмір:</label>
+            <select id="dnaSize">
+                <option value="small">Малий</option>
+                <option value="medium">Середній</option>
+                <option value="large">Великий</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>Швидкість:</label>
+            <select id="rotationSpeed">
+                <option value="0.005">Повільно</option>
+                <option value="0.01">Нормально</option>
+                <option value="0.02">Швидко</option>
+            </select>
+        </div>
+        <button id="settingsBtn" onclick="openSettings()">Налаштування</button>
+        <button id="renderBtn" onclick="renderDNA()">Рендер</button>
+        <button id="randomBtn" onclick="randomDNA()">Випадково</button>
+        <button id="resetBtn" onclick="resetDNA()">Скинути</button>
+        <div id="canvas"></div>
+        <div id="result"></div>
+        <button id="saveBtn" onclick="saveImage()">Зберегти</button>
+    </div>
+
+    <div id="settingsModal">
+        <div class="modal-content">
+            <h3>Налаштування</h3>
+            <div class="input-group">
+                <label>Яскравість:</label>
+                <input type="range" id="lightIntensity" min="0.5" max="2" step="0.1" value="1">
+            </div>
+            <div class="input-group">
+                <label>Прозорість:</label>
+                <input type="range" id="transparency" min="0.1" max="1" step="0.1" value="1">
+            </div>
+            <div class="input-group">
+                <label>Масштаб:</label>
+                <input type="range" id="scale" min="0.5" max="2" step="0.1" value="1">
+            </div>
+            <div class="input-group">
+                <label>Текстура:</label>
+                <select id="texture">
+                    <option value="solid">Суцільна</option>
+                    <option value="wireframe">Каркас</option>
+                    <option value="shiny">Блискуча</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Фон:</label>
+                <select id="backgroundColor">
+                    <option value="0x000000">Чорний</option>
+                    <option value="0x87ceeb">Блакитний</option>
+                    <option value="0x228b22">Зелений</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Анімація:</label>
+                <select id="animationToggle">
+                    <option value="on">Увімкнена</option>
+                    <option value="off">Вимкнена</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Колір ліній:</label>
+                <select id="lineColor">
+                    <option value="0xffffff">Білий</option>
+                    <option value="0xffd700">Золотий</option>
+                    <option value="0xff00ff">Фіолетовий</option>
+                </select>
+            </div>
+            <button class="close-btn" onclick="closeSettings()">Закрити</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, 320 / 260, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(320, 260);
+        document.getElementById('canvas').appendChild(renderer.domElement);
+
+        const light = new THREE.PointLight(0xffffff, 1, 100);
+        light.position.set(10, 10, 10);
+        scene.add(light);
+
+        let dnaGroup, rotationSpeed = 0.01, animationOn = true;
+
+        function createDNA(green, red, blue, size, shape, texture, transparency, scale, lineColor) {
+            if (dnaGroup) scene.remove(dnaGroup);
+            dnaGroup = new THREE.Group();
+            const totalCores = green + red + blue;
+            if (totalCores === 0) return false;
+
+            const colors = [...Array(green).fill(0x00ff00), ...Array(red).fill(0xff0000), ...Array(blue).fill(0x0000ff)];
+            const sphereGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+            const radius = size === 'large' ? 3 : size === 'medium' ? 2 : 1;
+            const height = size === 'large' ? 20 : size === 'medium' ? 15 : 10;
+            const steps = totalCores * 2;
+
+            for (let i = 0; i < steps; i++) {
+                const t = i / (steps - 1);
+                let x1, z1, x2, z2, y;
+                if (shape === 'spiral') {
+                    const angle = t * 3 * 2 * Math.PI;
+                    y = t * height - height / 2;
+                    x1 = radius * Math.cos(angle);
+                    z1 = radius * Math.sin(angle);
+                    x2 = radius * Math.cos(angle + Math.PI);
+                    z2 = radius * Math.sin(angle + Math.PI);
+                } else if (shape === 'ring') {
+                    const angle = t * 2 * Math.PI;
+                    y = 0;
+                    x1 = radius * Math.cos(angle);
+                    z1 = radius * Math.sin(angle);
+                    x2 = -x1;
+                    z2 = -z1;
+                } else {
+                    const angle = t * 2 * Math.PI;
+                    y = Math.sin(angle * 5) * radius;
+                    x1 = radius * Math.cos(angle);
+                    z1 = radius * Math.sin(angle);
+                    x2 = -x1;
+                    z2 = -z1;
+                }
+
+                const material = texture === 'solid' ? new THREE.MeshPhongMaterial({ color: colors[i % colors.length], transparent: true, opacity: transparency }) :
+                                texture === 'wireframe' ? new THREE.MeshBasicMaterial({ color: colors[i % colors.length], wireframe: true }) :
+                                new THREE.MeshPhongMaterial({ color: colors[i % colors.length], shininess: 100, specular: 0xffffff });
+
+                const sphere1 = new THREE.Mesh(sphereGeometry, material);
+                sphere1.position.set(x1, y, z1);
+                sphere1.scale.set(scale, scale, scale);
+                dnaGroup.add(sphere1);
+
+                const sphere2 = new THREE.Mesh(sphereGeometry, material);
+                sphere2.position.set(x2, y, z2);
+                sphere2.scale.set(scale, scale, scale);
+                dnaGroup.add(sphere2);
+
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x1, y, z1), new THREE.Vector3(x2, y, z2)]);
+                dnaGroup.add(new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({ color: lineColor })));
+            }
+
+            scene.add(dnaGroup);
+            camera.position.z = size === 'large' ? 15 : size === 'medium' ? 12 : 8;
+            return true;
+        }
+
+        function getAnimalType(green, red, blue) {
+            if (green > red && green > blue) return "Зелена жаба";
+            if (red > green && red > blue) return "Червоний тигр";
+            if (blue > green && blue > red) return "Синій кит";
+            if (green === red && green > blue) return "Жовто-червоний удав";
+            if (green === blue && green > red) return "Бірюзовий крокодил";
+            if (red === blue && red > green) return "Фіолетовий скорпіон";
+            return "Райдужна химера";
+        }
+
+        function renderDNA() {
+            const green = parseInt(document.getElementById('greenCores').value);
+            const red = parseInt(document.getElementById('redCores').value);
+            const blue = parseInt(document.getElementById('blueCores').value);
+            const size = document.getElementById('dnaSize').value;
+            const shape = document.getElementById('dnaShape').value;
+            const texture = document.getElementById('texture').value;
+            const transparency = parseFloat(document.getElementById('transparency').value);
+            const scale = parseFloat(document.getElementById('scale').value);
+            rotationSpeed = parseFloat(document.getElementById('rotationSpeed').value);
+            light.intensity = parseFloat(document.getElementById('lightIntensity').value);
+            scene.background = new THREE.Color(parseInt(document.getElementById('backgroundColor').value));
+            animationOn = document.getElementById('animationToggle').value === 'on';
+            const lineColor = parseInt(document.getElementById('lineColor').value);
+
+            if (!createDNA(green, red, blue, size, shape, texture, transparency, scale, lineColor)) {
+                document.getElementById('result').innerText = "Додай ядра!";
+                document.getElementById('saveBtn').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('result').innerText = `${getAnimalType(green, red, blue)}\nЯдра: ${green}-${red}-${blue}`;
+            document.getElementById('saveBtn').style.display = 'block';
+            animate();
+        }
+
+        function randomDNA() {
+            document.getElementById('greenCores').value = Math.floor(Math.random() * 11);
+            document.getElementById('redCores').value = Math.floor(Math.random() * 11);
+            document.getElementById('blueCores').value = Math.floor(Math.random() * 11);
+            renderDNA();
+        }
+
+        function resetDNA() {
+            document.getElementById('greenCores').value = 0;
+            document.getElementById('redCores').value = 0;
+            document.getElementById('blueCores').value = 0;
+            document.getElementById('dnaShape').value = 'spiral';
+            document.getElementById('dnaSize').value = 'medium';
+            document.getElementById('rotationSpeed').value = '0.01';
+            document.getElementById('lightIntensity').value = 1;
+            document.getElementById('transparency').value = 1;
+            document.getElementById('scale').value = 1;
+            document.getElementById('texture').value = 'solid';
+            document.getElementById('backgroundColor').value = '0x000000';
+            document.getElementById('animationToggle').value = 'on';
+            document.getElementById('lineColor').value = '0xffffff';
+            if (dnaGroup) scene.remove(dnaGroup);
+            document.getElementById('result').innerText = '';
+            document.getElementById('saveBtn').style.display = 'none';
+            renderer.render(scene, camera);
+        }
+
+        function animate() {
+            if (animationOn) {
+                requestAnimationFrame(animate);
+                if (dnaGroup) dnaGroup.rotation.y += rotationSpeed;
+            }
+            renderer.render(scene, camera);
+        }
+
+        function saveImage() {
+            renderer.render(scene, camera);
+            const link = document.createElement('a');
+            link.download = 'dna.png';
+            link.href = renderer.domElement.toDataURL('image/png');
+            link.click();
+        }
+
+        function openSettings() {
+            document.getElementById('settingsModal').style.display = 'flex';
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

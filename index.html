@@ -69,6 +69,30 @@
             transform: translateY(-5px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
+                /* Налаштування */
+                .settings-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7) ;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .settings-popup input {
+            margin: 10px;
+        }
+
+        .close-btn {
+            background: red;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -79,14 +103,19 @@
 
         <a href="Lesson/LessIndex.html" class="button">📖 Перейти до уроків</a>
         <a href="QUZ.html" class="button">🧪 Пройти тест</a><br>
+        <a href="Nots.html" class="button">🗒️Нотатник </a>
         <a href="Forum.html" class="button">💬 Forum </a><br>
+        <a href="InfoCrator.html" class="button">🏠 Про нас</a>
         <a href="InfoUpdate.html" class="button">Оновлення</a>
+        <a href="#" class="button" onclick="openSettings()">⚙️ Налаштування</a>
     </div>
 
     <div class="xp-wrapper">
+
         <div class="xp-container" onclick="location.href='prizes.html'">
             Ваш XP: <span id="xp-points">0</span>
         </div>
+        
         <div class="xp-container" onclick="redirectToRandomTest()"> 
             🎲 Випробуй себе!  
         </div>
@@ -94,7 +123,26 @@
             🌿Розпізнавач Рослин 
         </div>
     </div>
-
+        <!-- Вікно налаштувань -->
+        <div class="settings-popup" id="settings">
+            <h2>⚙️ Налаштування</h2>
+            
+            <label>
+                <input type="checkbox" id="darkModeToggle"> 🌙 Темна тема
+            </label><br>
+    
+            <label>
+                <input type="checkbox" id="animationToggle" checked> ✨ Анімації
+            </label><br>
+    
+            <label>
+                🖼 Власний фон: 
+                <input type="text" id="bgInput" placeholder="Вставте URL">
+            </label><br>
+    
+            <button onclick="applySettings()">✅ Зберегти</button>
+            <div class="close-btn" onclick="closeSettings()">❌ Закрити</div>
+        </div>
     <script>
         let xpPoints = localStorage.getItem('xpPoints') || 0;
         let lastClaimDate = localStorage.getItem('lastClaimDate') || '';
@@ -124,7 +172,58 @@
         // Перекидання на випадковий тест
         location.href = randomTest;
     }
-    </script>
+    function openSettings() {
+            document.getElementById('settings').style.display = 'block';
+        }
 
+        function closeSettings() {
+            document.getElementById('settings').style.display = 'none';
+        }
+
+        function applySettings() {
+            // Темна тема
+            const darkMode = document.getElementById('darkModeToggle').checked;
+            if (darkMode) {
+                document.body.style.background = '#121212';
+            } else {
+                document.body.style.background = "url('https://source.unsplash.com/1600x900/?nature,biology') no-repeat center center/cover";
+            }
+            localStorage.setItem('darkMode', darkMode);
+
+            // Анімації
+            const animations = document.getElementById('animationToggle').checked;
+            document.body.style.transition = animations ? 'background 0.5s ease-in-out' : 'none';
+            localStorage.setItem('animations', animations);
+
+            // Власний фон
+            const customBg = document.getElementById('bgInput').value;
+            if (customBg) {
+                document.body.style.background = `url('${customBg}') no-repeat center center/cover`;
+                localStorage.setItem('customBg', customBg);
+            }
+
+            closeSettings();
+        }
+
+        // Завантаження налаштувань
+        window.onload = function() {
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.style.background = '#121212';
+                document.getElementById('darkModeToggle').checked = true;
+            }
+
+            if (localStorage.getItem('animations') === 'false') {
+                document.body.style.transition = 'none';
+                document.getElementById('animationToggle').checked = false;
+            }
+
+            const savedBg = localStorage.getItem('customBg');
+            if (savedBg) {
+                document.body.style.background = `url('${savedBg}') no-repeat center center/cover`;
+                document.getElementById('bgInput').value = savedBg;
+            }
+        };
+    </script>
+    <script defer data-domain="bropetro.github.io/bioword.github.io" src="https://plausible.io/js/script.js"></script>
 </body>
 </html>

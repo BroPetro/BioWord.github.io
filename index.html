@@ -93,10 +93,146 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
+        .easter-greeting {
+      position: relative;
+      font-size: 28px;
+      color: #c45b00;
+      font-weight: bold;
+      background-color: rgba(255, 240, 214, 0.5); /* прозорий теплий колір */
+      padding: 20px 40px;
+      border: 2px dashed #ffa500;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      max-width: 90%;
+      text-align: center;
+      backdrop-filter: blur(6px); /* скляний ефект */
+      -webkit-backdrop-filter: blur(6px); /* підтримка для Safari */
+    }
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #c45b00;
+      cursor: pointer;
+    }
+    .close-btn:hover {
+      color: #ff0000;
+    }
+    
+    .account-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background-color: #4caf50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .account-btn:hover {
+      background-color: #388e3c;
+    }
+
+    .popup {
+      display: none;
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 280px;
+      z-index: 1000;
+      color: #000;
+    }
+
+    input[type="text"], input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .popup button {
+      width: 100%;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .popup img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-bottom: 10px;
+    }
+
+    .popup p {
+      margin: 5px 0;
+    }
+
+    .welcome-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: #ffeb3b;
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+      display: none;
+    }
+    #chartContainer {
+      display: none;
+      margin-top: 30px;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+    }
     </style>
 </head>
 <body>
-
+    <div class="welcome-banner" id="welcomeBanner">
+        🎉 Вітаємо на BioWorld! Ти готовий дізнатися більше про біологію?
+      </div>
+    
+      <button class="account-btn" onclick="togglePopup()">👤 Акаунт</button>
+    
+      <div class="popup" id="accountPopup">
+        <div id="accountForm">
+          <input type="text" id="usernameInput" placeholder="Ваше ім'я">
+          <input type="file" id="avatarInput" accept="image/*">
+          <button onclick="registerAccount()">Зареєструватися</button>
+        </div>
+        <div id="accountInfo" style="display:none;">
+          <img id="userAvatar" src="" alt="Аватарка">
+          <p>👋 Привіт, <span id="displayName"></span>!</p>
+          <p id="timeGreeting"></p>
+          <p>📊 Відвідувань: <span id="visitCount"></span></p>
+          <button onclick="logout()">Вийти</button>
+          <button onclick="editProfile()">Редагувати профіль</button>
+          <button onclick="changeAvatar()">Змінити аватарку</button>
+          
+        </div>
+      </div>
     <div class="container">
         <h1>📚 Уроки з біології</h1>
         <p>Досліджуй світ природи разом із нами!</p>
@@ -143,6 +279,10 @@
             <button onclick="applySettings()">✅ Зберегти</button>
             <div class="close-btn" onclick="closeSettings()">❌ Закрити</div>
         </div>
+        
+        <div class="easter-greeting">
+            <button class="close-btn" onclick="this.parentElement.style.display='none';">✖</button>
+            🐣 BioWorld вас вітає з Великоднем! 🌸
     <script>
         let xpPoints = localStorage.getItem('xpPoints') || 0;
         let lastClaimDate = localStorage.getItem('lastClaimDate') || '';
@@ -223,6 +363,93 @@
                 document.getElementById('bgInput').value = savedBg;
             }
         };
+        function togglePopup() {
+      const popup = document.getElementById('accountPopup');
+      popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function registerAccount() {
+      const name = document.getElementById('usernameInput').value.trim();
+      const avatarFile = document.getElementById('avatarInput').files[0];
+
+      if (name && avatarFile) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const avatarUrl = e.target.result;
+          localStorage.setItem('bioUsername', name);
+          localStorage.setItem('bioAvatar', avatarUrl);
+          localStorage.setItem('bioVisits', 1);
+          showAccountInfo(name, avatarUrl, 1);
+        };
+        reader.readAsDataURL(avatarFile);
+      }
+    }
+
+    function showAccountInfo(name, avatarUrl, visits) {
+      document.getElementById('accountForm').style.display = 'none';
+      document.getElementById('accountInfo').style.display = 'block';
+      document.getElementById('displayName').textContent = name;
+      document.getElementById('userAvatar').src = avatarUrl;
+      document.getElementById('visitCount').textContent = visits;
+      document.getElementById('welcomeBanner').style.display = 'block'; // Показати банер
+      setTimeGreeting(); // Вітання в залежності від часу доби
+    }
+
+    function logout() {
+      localStorage.clear();
+      location.reload();
+    }
+
+    function editProfile() {
+      const name = prompt("Введіть нове ім'я", localStorage.getItem('bioUsername'));
+      if (name) {
+        localStorage.setItem('bioUsername', name);
+        showAccountInfo(name, localStorage.getItem('bioAvatar'), localStorage.getItem('bioVisits'));
+      }
+    }
+
+    function changeAvatar() {
+      const avatarFile = prompt("Завантажте нову аватарку", "");
+      if (avatarFile) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const avatarUrl = e.target.result;
+          localStorage.setItem('bioAvatar', avatarUrl);
+          document.getElementById('userAvatar').src = avatarUrl;
+        };
+        reader.readAsDataURL(avatarFile);
+      }
+    }
+
+    function setTimeGreeting() {
+      const hours = new Date().getHours();
+      const greeting = hours < 12 ? "Добрий ранок!" : (hours < 18 ? "Добрий день!" : "Добрий вечір!");
+      document.getElementById('timeGreeting').textContent = greeting;
+    }
+
+    function addCourse() {
+      const title = document.getElementById('courseTitle').value.trim();
+      const description = document.getElementById('courseDescription').value.trim();
+      if (title && description) {
+        alert(`Курс "${title}" додано!`);
+        document.getElementById('courseTitle').value = '';
+        document.getElementById('courseDescription').value = '';
+      } else {
+        alert("Будь ласка, заповніть всі поля!");
+      }
+    }
+
+    window.onload = () => {
+      const name = localStorage.getItem('bioUsername');
+      const avatarUrl = localStorage.getItem('bioAvatar');
+      let visits = localStorage.getItem('bioVisits');
+
+      if (name && avatarUrl) {
+        visits = parseInt(visits || 0) + 1;
+        localStorage.setItem('bioVisits', visits);
+        showAccountInfo(name, avatarUrl, visits);
+      }
+    };
     </script>
     <script defer data-domain="bropetro.github.io/bioword.github.io" src="https://plausible.io/js/script.outbound-links.js"></script>
 </body>

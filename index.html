@@ -207,9 +207,34 @@
       max-width: 100%;
       height: auto;
     }
+    #music-widget {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #222;
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      font-family: sans-serif;
+      z-index: 1000;
+    }
+    #music-widget audio {
+      width: 150px;
+    }
+    #music-title {
+      margin-left: 10px;
+      font-size: 14px;
+    }
     </style>
 </head>
 <body>
+  <div id="music-widget">
+    <audio id="player" controls autoplay></audio>
+    <div id="music-title">🎵</div>
+  </div>
     <div class="welcome-banner" id="welcomeBanner">
         🎉 Вітаємо на BioWorld! Ти готовий дізнатися більше про біологію?
       </div>
@@ -279,7 +304,7 @@
             <button onclick="applySettings()">✅ Зберегти</button>
             <div class="close-btn" onclick="closeSettings()">❌ Закрити</div>
         </div>
-        
+        <img src="Assets/onerepublic-i-aint-worried-(meloua.com) (1).mp3" alt="">
         <div class="easter-greeting">
             <button class="close-btn" onclick="this.parentElement.style.display='none';">✖</button>
             🐣 BioWorld вас вітає з Великоднем! 🌸
@@ -450,6 +475,29 @@
         showAccountInfo(name, avatarUrl, visits);
       }
     };
+    const playlist = [
+    {src: "Assets/84c7b6c6c7a09006789b7410a57a0003.mp3", title: "Пісня 1"},
+    {src: "Assets/g3ox-em-gigachad-theme-phonk-house-version-mp3.mp3", title: "Пісня 2"},
+    {src: "ssets/onerepublic-i-aint-worried-(meloua.com) (1).mp3", title: "Пісня 3"}
+  ];
+
+  let currentTrack = 0;
+  const player = document.getElementById("player");
+  const title = document.getElementById("music-title");
+
+  function loadTrack(index) {
+    player.src = playlist[index].src;
+    title.textContent = "🎵 " + playlist[index].title;
+    player.play();
+  }
+  
+  player.addEventListener("ended", () => {
+    currentTrack = (currentTrack + 1) % playlist.length;
+    loadTrack(currentTrack);
+  });
+
+  // Запускаємо перший трек
+  loadTrack(currentTrack);
     </script>
     <script defer data-domain="bropetro.github.io/bioword.github.io" src="https://plausible.io/js/script.outbound-links.js"></script>
 </body>

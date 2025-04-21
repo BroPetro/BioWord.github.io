@@ -11,6 +11,105 @@
             margin: 20px;
             padding: 20px;
         }
+        .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .stories {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+    .story {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid transparent;
+      position: relative;
+      cursor: pointer;
+      flex-shrink: 0;
+      animation: pop 0.6s ease;
+    }
+    .story.new {
+      border-color: #00b050;
+      box-shadow: 0 0 15px #00b050;
+    }
+    .story.viewed {
+      border-color: gray;
+      opacity: 0.5;
+    }
+    .story img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+    @keyframes pop {
+      from { transform: scale(0.5); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    #viewer {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    #viewer img {
+      max-width: 98%;
+      max-height: 90vh;
+      border-radius: 20px;
+      margin-bottom: 10px;
+      box-shadow: 0 0 25px rgba(0, 255, 100, 0.5);
+    }
+    .reactions, .nav-btns {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .reaction {
+      font-size: 26px;
+      cursor: pointer;
+    }
+    #progressBar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 5px;
+      background: #00b050;
+      width: 0;
+    }
+    #closeBtn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 30px;
+      cursor: pointer;
+    }
+    button.clear-btn {
+      padding: 6px 12px;
+      background: #d9534f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .date {
+      margin-top: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
         .update-container {
             max-width: 800px;
             margin: auto;
@@ -57,8 +156,42 @@
 </head>
 <body>
 
+      
 <div class="update-container">
     <h1>Оновлення сайту</h1>
+    <div class="top-bar">
+        <button class="clear-btn" onclick="clearViewed()" >Очистити переглянуті</button>
+      </div>
+      <div class="stories" id="storiesContainer"></div>
+      
+      <div id="viewer">
+        <div id="progressBar"></div>
+        <div id="closeBtn" onclick="closeViewer()">✖</div>
+        <img id="viewerImg" src="" alt="story">
+        <div class="date" id="storyDate"></div>
+        <div class="reactions">
+          <span class="reaction" onclick="react('❤️')">❤️</span>
+          <span class="reaction" onclick="react('🔥')">🔥</span>
+          <span class="reaction" onclick="react('😂')">😂</span>
+        </div>
+        <div class="nav-btns">
+          <button onclick="prevStory()">⬅️</button>
+          <button onclick="nextStory()">➡️</button>
+        </div>
+      </div>
+      <div class="update">
+        <div class="update">
+            <h2>Користувацьке оновлення !🔥</h2>
+            <p>В цьому оновленні ми додали:<br><br>
+
+                🔹 1️⃣ Ми додали акаунти ,збереження і статистику📚!<br>
+                🔹 2️⃣ Сторіси !Опа так сторіси тепер є в фнофрмації про оновлення  📤👫!<br><br><br>
+                
+                ✨🚀 Короче давай швидше заходь і пробуй реєструйся і тести оновлення! 🎉🔥 😎
+                </p>
+            <p class="date">Дата: 21 квітня 2025</p>
+        </div>
+    </div>
     <div class="update">
         <div class="update">
             <h2>Величезне оновлення "Уроки і нотатки і кастомізація !🧠💡"</h2>
@@ -110,8 +243,84 @@
         <p class="date">Дата: 2 березня 2025</p>
     </div>
     
-    <a href="Index.html" class="button">🏠На головне меню</a>
+    <a href="index.html" class="button">🏠На головне меню</a>
 </div>
+    <script>
+        const stories = [
+    { id: 1, img: 'Assets/Up1_story_story.png', date: '2025-04-21' },
+    { id: 2, img: 'Assets/White Feminine Personal Motivation Reminder Instagram Stories.png', date: '2025-04-21' },
+    { id: 3, img: 'Assets/White Feminine Personal Motivation Reminder Instagram Stories.png', date: '2025-04-18' },
+  ];
 
+  let current = 0;
+  const viewed = JSON.parse(localStorage.getItem('viewedStories') || '[]');
+  const container = document.getElementById('storiesContainer');
+  const viewer = document.getElementById('viewer');
+  const viewerImg = document.getElementById('viewerImg');
+  const storyDate = document.getElementById('storyDate');
+  const progressBar = document.getElementById('progressBar');
+  let timer;
+
+  function renderStories() {
+    container.innerHTML = '';
+    stories.forEach((s, i) => {
+      const el = document.createElement('div');
+      el.className = 'story ' + (viewed.includes(s.id) ? 'viewed' : 'new');
+      el.innerHTML = `<img src="${s.img}">`;
+      el.onclick = () => openStory(i);
+      container.appendChild(el);
+    });
+  }
+
+  function openStory(index) {
+    current = index;
+    const s = stories[index];
+    viewer.style.display = 'flex';
+    viewerImg.src = s.img;
+    storyDate.textContent = '📅 Дата: ' + s.date;
+    if (!viewed.includes(s.id)) {
+      viewed.push(s.id);
+      localStorage.setItem('viewedStories', JSON.stringify(viewed));
+    }
+    renderStories();
+    startTimer();
+  }
+
+  function startTimer() {
+    let p = 0;
+    clearInterval(timer);
+    timer = setInterval(() => {
+      p += 2;
+      progressBar.style.width = p + '%';
+      if (p >= 100) nextStory();
+    }, 100);
+  }
+
+  function closeViewer() {
+    viewer.style.display = 'none';
+    clearInterval(timer);
+    progressBar.style.width = '0';
+  }
+
+  function nextStory() {
+    if (current < stories.length - 1) openStory(current + 1);
+    else closeViewer();
+  }
+
+  function prevStory() {
+    if (current > 0) openStory(current - 1);
+  }
+
+  function react(emoji) {
+    alert(`Твоя реакція: ${emoji}`);
+  }
+
+  function clearViewed() {
+    localStorage.removeItem('viewedStories');
+    location.reload();
+  }
+
+  renderStories();
+    </script>
 </body>
 </html>

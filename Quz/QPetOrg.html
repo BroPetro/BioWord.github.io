@@ -1,122 +1,190 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Квест: Органи та система органів тварин</title>
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            text-align: center;
-            background: white;
-            color: black;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .container {
-            max-width: 500px;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 15px;
-            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.3);
-            color: white;
-        }
-        button {
-            margin: 10px;
-            padding: 12px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: 0.3s;
-            background: #ff5722;
-            color: white;
-        }
-        button:hover {
-            background-color: #e64a19;
-        }
-        #answers button {
-            display: block;
-            width: 100%;
-            background: #607d8b;
-            color: white;
-        }
-        #answers button:hover {
-            background: #455a64;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Квест: Органи та система органів тварин</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      text-align: center;
+      background: white;
+      color: black;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      max-width: 500px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 15px;
+      box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.3);
+      color: white;
+    }
+    button {
+      margin: 10px;
+      padding: 12px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+      background: #ff5722;
+      color: white;
+    }
+    button:hover {
+      background-color: #e64a19;
+    }
+    #answers button {
+      display: block;
+      width: 100%;
+      background: #607d8b;
+      color: white;
+    }
+    #answers button:hover {
+      background: #455a64;
+    }
+    #qr-code {
+      margin: 20px 0;
+    }
+    #home-button {
+      background: #2196f3;
+    }
+    #home-button:hover {
+      background: #1976d2;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2 id="question">Питання 1</h2>
+  <div class="container" id="main-container">
+    <div id="mode-selection">
+      <h2>Оберіть режим гри</h2>
+      <button onclick="startSinglePlayer()">Одиночна гра</button>
+      <button onclick="startMultiPlayer()">Багатокористувацька гра</button>
+    </div>
+  </div>
+
+  <script>
+    const quiz = [
+      {question: "Який орган відповідає за фільтрацію крові та утворення сечі у тварин?", answers: ["Легені", "Печінка", "Нирки"], correct: 2},
+      {question: "Яка система органів забезпечує транспорт поживних речовин і кисню?", answers: ["Нервова система", "Кровоносна система", "Травна система"], correct: 1},
+      {question: "Який основний орган дихальної системи у ссавців?", answers: ["Легені", "Зябра", "Серце"], correct: 0},
+      {question: "Який орган відіграє головну роль у травленні та виділенні жовчі?", answers: ["Печінка", "Серце", "Легені"], correct: 0},
+      {question: "Яка система органів відповідає за рух тварин?", answers: ["Опорно-рухова система", "Травна система", "Видільна система"], correct: 0},
+      {question: "Що є основним компонентом центральної нервової системи у хребетних?", answers: ["Головний і спинний мозок", "Серце", "Печінка"], correct: 0},
+      {question: "Який організм має замкнену кровоносну систему?", answers: ["Комаха", "Риба", "Губка"], correct: 1},
+      {question: "Який орган відповідає за координацію рухів і обробку інформації?", answers: ["Мозок", "Шлунок", "Легені"], correct: 0},
+      {question: "У якої тварини відсутнє серце?", answers: ["Гідра", "Риба", "Черепаха"], correct: 0},
+      {question: "Який орган травної системи у птахів допомагає перетирати їжу?", answers: ["М'язовий шлунок (жорновий)", "Печінка", "Серце"], correct: 0},
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    function startSinglePlayer() {
+      document.getElementById("main-container").innerHTML = `
+        <h2 id="question"></h2>
         <div id="answers"></div>
         <p id="score">Очки: 0</p>
         <p id="progress">Питання: 1 / 10</p>
         <button onclick="restartQuiz()">Перезапустити</button>
-    </div>
-    <script>
-        const quiz = [
-            {question: "Який орган відповідає за фільтрацію крові та утворення сечі у тварин?", answers: ["Легені", "Печінка", "Нирки"], correct: 2},
-            {question: "Яка система органів забезпечує транспорт поживних речовин і кисню?", answers: ["Нервова система", "Кровоносна система", "Травна система"], correct: 1},
-            {question: "Який основний орган дихальної системи у ссавців?", answers: ["Легені", "Зябра", "Серце"], correct: 0},
-            {question: "Який орган відіграє головну роль у травленні та виділенні жовчі?", answers: ["Печінка", "Серце", "Легені"], correct: 0},
-            {question: "Яка система органів відповідає за рух тварин?", answers: ["Опорно-рухова система", "Травна система", "Видільна система"], correct: 0},
-            {question: "Що є основним компонентом центральної нервової системи у хребетних?", answers: ["Головний і спинний мозок", "Серце", "Печінка"], correct: 0},
-            {question: "Який організм має замкнену кровоносну систему?", answers: ["Комаха", "Риба", "Губка"], correct: 1},
-            {question: "Який орган відповідає за координацію рухів і обробку інформації?", answers: ["Мозок", "Шлунок", "Легені"], correct: 0},
-            {question: "У якої тварини відсутнє серце?", answers: ["Гідра", "Риба", "Черепаха"], correct: 0},
-            {question: "Який орган травної системи у птахів допомагає перетирати їжу?", answers: ["М'язовий шлунок (жорновий)", "Печінка", "Серце"], correct: 0},
-        ];
-        let currentQuestion = 0;
-        let score = 0;
+        <button id="home-button" onclick="goHome()">🏠 Головне меню</button>
+      `;
+      loadQuestion();
+    }
 
-        function loadQuestion() {
-            document.getElementById("question").innerText = quiz[currentQuestion].question;
-            let answersDiv = document.getElementById("answers");
-            answersDiv.innerHTML = "";
-            quiz[currentQuestion].answers.forEach((answer, index) => {
-                let btn = document.createElement("button");
-                btn.innerText = answer;
-                btn.onclick = function() { checkAnswer(index); };
-                answersDiv.appendChild(btn);
-            });
-            document.getElementById("progress").innerText = `Питання: ${currentQuestion + 1} / 10`;
-        }
+    function startMultiPlayer() {
+      const quizUrl = window.location.href;
+      document.getElementById("main-container").innerHTML = `
+        <h2>Багатокористувацька гра</h2>
+        <p>Скануйте QR-код, щоб приєднатися до гри:</p>
+        <div id="qr-code"></div>
+        <button onclick="startQuiz()">Почати гру</button>
+        <button id="home-button" onclick="goHome()">🏠 Головне меню</button>
+      `;
+      new QRCode(document.getElementById("qr-code"), {
+        text: quizUrl,
+        width: 200,
+        height: 200,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
 
-        function checkAnswer(index) {
-            if (index === quiz[currentQuestion].correct) {
-                score++;
-            }
-            document.getElementById("score").innerText = "Очки: " + score;
-            setTimeout(nextQuestion, 500);
-        }
+    function startQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      document.getElementById("main-container").innerHTML = `
+        <h2 id="question"></h2>
+        <div id="answers"></div>
+        <p id="score">Очки: 0</p>
+        <p id="progress">Питання: 1 / 10</p>
+        <button onclick="restartQuiz()">Перезапустити</button>
+        <button id="home-button" onclick="goHome()">🏠 Головне меню</button>
+      `;
+      loadQuestion();
+    }
 
-        function nextQuestion() {
-            currentQuestion++;
-            if (currentQuestion < quiz.length) {
-                loadQuestion();
-            } else {
-                document.querySelector(".container").innerHTML = `<h2>Кінець квесту!</h2><p>Ваш рахунок: ${score} з 10</p><button onclick='restartQuiz()'>Перезапустити</button>`;
-            }
-        }
+    function goHome() {
+      location.reload();
+    }
 
-        function restartQuiz() {
-            currentQuestion = 0;
-            score = 0;
-            document.querySelector(".container").innerHTML = `
-                <h2 id="question"></h2>
-                <div id="answers"></div>
-                <p id="score">Очки: 0</p>
-                <p id="progress">Питання: 1 / 10</p>
-                <button onclick="restartQuiz()">Перезапустити</button>
-            `;
-            loadQuestion();
-        }
+    function loadQuestion() {
+      document.getElementById("question").innerText = quiz[currentQuestion].question;
+      let answersDiv = document.getElementById("answers");
+      answersDiv.innerHTML = "";
+      quiz[currentQuestion].answers.forEach((answer, index) => {
+        let btn = document.createElement("button");
+        btn.innerText = answer;
+        btn.onclick = function() { checkAnswer(index, btn); };
+        answersDiv.appendChild(btn);
+      });
+      document.getElementById("progress").innerText = `Питання: ${currentQuestion + 1} / ${quiz.length}`;
+    }
 
+    function checkAnswer(index, btn) {
+      if (index === quiz[currentQuestion].correct) {
+        score++;
+        btn.classList.add('correct');
+      } else {
+        btn.classList.add('incorrect');
+      }
+      document.getElementById("score").innerText = "Очки: " + score;
+      setTimeout(nextQuestion, 500);
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      if (currentQuestion < quiz.length) {
         loadQuestion();
-    </script>
+      } else {
+        document.getElementById("main-container").innerHTML = `
+          <h2>Кінець квесту!</h2>
+          <p>Ваш рахунок: ${score} з ${quiz.length}</p>
+          <button onclick="restartQuiz()">Перезапустити</button>
+          <button id="home-button" onclick="goHome()">🏠 Головне меню</button>
+        `;
+      }
+    }
+
+    function restartQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      document.getElementById("main-container").innerHTML = `
+        <h2 id="question"></h2>
+        <div id="answers"></div>
+        <p id="score">Очки: 0</p>
+        <p id="progress">Питання: 1 / ${quiz.length}</p>
+        <button onclick="restartQuiz()">Перезапустити</button>
+        <button id="home-button" onclick="goHome()">🏠 Головне меню</button>
+      `;
+      loadQuestion();
+    }
+  </script>
 </body>
 </html>

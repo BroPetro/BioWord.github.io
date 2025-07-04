@@ -318,6 +318,8 @@
                 </div>
                 <p class="xp-level">Рівень: <span id="xp-level">1</span></p>
             </div>
+            <input type="text" id="promoCodeInput" placeholder="Введіть промокод">
+            <button onclick="applyPromoCode()">Активувати промокод</button>
             <button onclick="logout()">Вийти</button>
             <button onclick="editProfile()">Редагувати профіль</button>
             <button onclick="changeAvatar()">Змінити аватарку</button>
@@ -356,11 +358,11 @@
     </div>
 
     <div class="settings-popup" id="settings">
-        <h2>⚙️ Налаштування</gunh2>
+        <h2>⚙️ Налаштування</h2>
         <label>
             <input type="checkbox" id="darkModeToggle"> 🌙 Темна тема
         </label><br>
- Fruit   <label>
+        <label>
             <input type="checkbox" id="animationToggle" checked> ✨ Анімації
         </label><br>
         <label>
@@ -419,6 +421,35 @@
             } else {
                 alert('Недостатньо XP для отримання бонусу! Потрібно 100 XP.');
             }
+        }
+
+        function applyPromoCode() {
+            const promoCode = document.getElementById('promoCodeInput').value.trim().toLowerCase();
+            const usedPromoCodes = JSON.parse(localStorage.getItem('usedPromoCodes') || '[]');
+
+            if (usedPromoCodes.includes(promoCode)) {
+                alert('Цей промокод уже використано!');
+                return;
+            }
+
+            if (promoCode === 'xp20') {
+                xpPoints += 20;
+                usedPromoCodes.push(promoCode);
+                localStorage.setItem('usedPromoCodes', JSON.stringify(usedPromoCodes));
+                localStorage.setItem('xpPoints', xpPoints);
+                alert('Промокод активовано! Ви отримали 20 XP!');
+                updateXPProgress();
+            } else if (promoCode === 'xp40') {
+                xpPoints += 40;
+                usedPromoCodes.push(promoCode);
+                localStorage.setItem('usedPromoCodes', JSON.stringify(usedPromoCodes));
+                localStorage.setItem('xpPoints', xpPoints);
+                alert('Промокод активовано! Ви отримали 40 XP!');
+                updateXPProgress();
+            } else {
+                alert('Невірний промокод!');
+            }
+            document.getElementById('promoCodeInput').value = '';
         }
 
         function redirectToRandomTest() {

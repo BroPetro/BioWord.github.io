@@ -6,71 +6,100 @@
     <title>Уроки біології</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            background: url('https://source.unsplash.com/1600x900/?nature,biology') no-repeat center center/cover;
-            background-size: cover;
-            color: white;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #e0f7fa, #4caf50);
+            color: #333;
+            min-height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            overflow-x: hidden;
+            padding-top: 70px;
         }
 
         .container {
-            background: rgba(0, 0, 0, 0.7);
-            padding: 30px;
-            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 800px;
             text-align: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-            width: 80%;
-            max-width: 700px;
+            margin: 20px;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-family: 'Roboto Mono', monospace;
+            color: #2e7d32;
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        p {
+            font-size: 1em;
+            color: #555;
+            margin-bottom: 20px;
         }
 
         .xp-wrapper {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            width: 100%;
+            max-width: 800px;
+            margin-top: 15px;
         }
 
         .xp-container {
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 20px;
-            border-radius: 10px;
+            background: linear-gradient(45deg, #81c784, #4caf50);
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+            font-weight: 600;
             cursor: pointer;
-            font-size: 1.5em;
-            font-weight: bold;
-            color: rgb(255, 255, 255);
-            transition: transform 0.3s ease;
-            flex: 1;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             text-align: center;
         }
 
         .xp-container:hover {
-            transform: scale(1.1);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
         .button {
             display: inline-block;
-            background: linear-gradient(45deg, #28a745, #218838);
+            background: linear-gradient(45deg, #2e7d32, #4caf50);
             color: white;
-            padding: 15px 25px;
+            padding: 12px 25px;
             text-decoration: none;
-            font-size: 1.3em;
+            font-size: 1em;
             border-radius: 50px;
+            margin: 8px;
             transition: all 0.3s ease;
-            margin: 10px;
+            min-width: 120px;
+            text-align: center;
         }
 
         .button:hover {
-            background: linear-gradient(45deg, #218838, #28a745);
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(45deg, #4caf50, #2e7d32);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
         }
 
         .settings-popup {
@@ -78,164 +107,175 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(255, 255, 255, 0.95);
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
             display: none;
             text-align: center;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
-        .settings-popup input {
-            margin: 10px;
+        .settings-popup h2 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .settings-popup input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        .settings-popup input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 0.9em;
         }
 
         .close-btn {
-            background: red;
-            padding: 5px 15px;
+            background: #d32f2f;
+            color: white;
+            padding: 8px 15px;
             border-radius: 5px;
             cursor: pointer;
-        }
-
-        .easter-greeting {
-            position: relative;
-            font-size: 28px;
-            color: #c45b00;
-            font-weight: bold;
-            background-color: rgba(255, 240, 214, 0.5);
-            padding: 20px 40px;
-            border: 2px dashed #ffa500;
-            border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            max-width: 90%;
-            text-align: center;
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: #c45b00;
-            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s ease;
         }
 
         .close-btn:hover {
-            color: #ff0000;
+            background: #b71c1c;
+        }
+
+        .easter-greeting {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(255, 245, 157, 0.9);
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            color: #2e7d32;
+            font-weight: bold;
+            z-index: 1000;
+            font-size: 0.9em;
+            max-width: 80%;
+        }
+
+        .easter-greeting a {
+            color: #1b5e20;
+            text-decoration: underline;
         }
 
         .account-btn {
-            position: absolute;
+            position: fixed;
             top: 15px;
-            right: 20px;
-            background-color: #4caf50;
+            right: 15px;
+            background: #2e7d32;
             color: white;
-            padding: 10px 20px;
-            border: none;
+            padding: 10px 15px;
             border-radius: 10px;
+            border: none;
             cursor: pointer;
             font-weight: bold;
-            transition: 0.3s;
+            transition: background 0.3s ease;
+            font-size: 0.9em;
         }
 
         .account-btn:hover {
-            background-color: #388e3c;
+            background: #1b5e20;
         }
 
         .popup {
             display: none;
-            position: absolute;
-            top: 60px;
-            right: 20px;
-            background: white;
-            border: 1px solid #ccc;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            width: 320px;
+            position: fixed;
+            top: 80px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 350px;
             z-index: 1000;
-            color: #000;
+            color: #333;
+            max-height: 70vh;
+            overflow-y: auto;
         }
 
-        input[type="text"], input[type="file"], input[type="password"] {
+        .popup input[type="text"],
+        .popup input[type="password"],
+        .popup input[type="file"] {
             width: 100%;
             padding: 8px;
-            margin-bottom: 10px;
+            margin: 8px 0;
             border: 1px solid #ccc;
             border-radius: 5px;
+            font-size: 0.9em;
         }
 
         .popup button {
             width: 100%;
-            background-color: #4caf50;
+            background: #2e7d32;
             color: white;
-            border: none;
             padding: 10px;
+            border: none;
             border-radius: 5px;
-            font-weight: bold;
             cursor: pointer;
-            margin-bottom: 10px;
+            margin: 8px 0;
+            transition: background 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .popup button:hover {
+            background: #1b5e20;
         }
 
         .popup img {
             width: 80px;
             height: 80px;
-            object-fit: cover;
             border-radius: 50%;
             margin-bottom: 10px;
-        }
-
-        .popup p {
-            margin: 5px 0;
         }
 
         .welcome-banner {
             position: fixed;
             top: 0;
-            left: 0;
             width: 100%;
-            background-color: #ffeb3b;
+            backgroundPeek: #ffca28;
+            color: #2e7d32;
             padding: 10px;
             text-align: center;
             font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             display: none;
-        }
-
-        #chartContainer {
-            margin-top: 20px;
-            max-width: 100%;
-        }
-
-        canvas {
-            max-width: 100%;
-            height: auto;
+            font-size: 0.9em;
         }
 
         #captchaGame {
-            background: url('https://source.unsplash.com/1600x900/?dark,grunge') no-repeat center center/cover;
-            border: 2px solid #ff0000;
-            border-radius: 5px;
-            padding: 15px;
-            font-family: 'Press Start 2P', cursive;
-            color: #ff0000;
-            text-align: center;
-            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.05);
+            border: 2px solid #2e7d32;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 8px 0;
         }
 
         #captchaGame p {
-            font-size: 12px;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px #000;
+            color: #2e7d32;
+            font-size: 0.85em;
+            margin-bottom: 8px;
         }
 
         #captchaImages {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
             justify-content: center;
         }
 
@@ -243,39 +283,229 @@
             width: 60px;
             height: 60px;
             cursor: pointer;
-            border: 2px solid #000;
+            border: 2px solid #2e7d32;
             transition: transform 0.2s;
         }
 
         #captchaImages img:hover {
             transform: scale(1.1);
-            border-color: #ff0000;
+            border-color: #1b5e20;
         }
 
         .xp-progress-container {
-            margin-top: 15px;
-            width: 100%;
+            margin-top: 10px;
             text-align: left;
         }
 
         .xp-progress-bar {
             width: 100%;
-            background-color: rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.1);
             border-radius: 5px;
+            height: 15px;
             overflow: hidden;
-            height: 20px;
         }
 
         .xp-progress {
             height: 100%;
-            background-color: #4caf50;
+            background: #2e7d32;
             transition: width 0.5s ease-in-out;
         }
 
         .xp-level {
-            margin-top: 10px;
-            font-size: 1.2em;
-            font-weight: bold;
+            font-size: 0.9em;
+            color: ф2e7d32;
+            margin-top: 8px;
+        }
+
+        .promo-history {
+            margin-top: 15px;
+            text-align: left;
+        }
+
+        .promo-history h3 {
+            color: #2e7d32;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .promo-history ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .promo-history li {
+            padding: 5px 0;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .share-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px; 
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            display: none;
+            text-align: center;
+            z-index: 1000;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .share-popup h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .share-popup button {
+            width: 100%;
+            background: #1b5e20;
+            color: white;
+            padding: 10px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.3s ease;
+        }
+
+        .share-popup button:hover {
+            background: #2e7d32;
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 60px;
+                font-size: 16px;
+            }
+
+            .container {
+                padding: 15px;
+                margin: 10px;
+                width: 95%;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            p {
+                font-size: 0.9em;
+            }
+
+            .xp-wrapper {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .xp-container {
+                padding: 12px;
+                font-size: 0.9em;
+            }
+
+            .button {
+                padding: 10px 20px;
+                font-size: 0.9em;
+                min-height: 44px;
+                margin: 5px;
+            }
+
+            .settings-popup, .share-popup {
+                width: 95%;
+                padding: 15px;
+                max-height: 85vh;
+            }
+
+            .settings-popup h2, .share-popup h3 {
+                font-size: 1.3em;
+            }
+
+            .account-btn {
+                top: 10px;
+                right: 10px;
+                padding: 8px 12px;
+                font-size: 0.85em;
+            }
+
+            .popup {
+                top: 60px;
+                right: 10px;
+                width: 95%;
+                padding: 12px;
+                max-height: 75vh;
+            }
+
+            .popup img {
+                width: 60px;
+                height: 60px;
+            }
+
+            .easter-greeting {
+                bottom: 10px;
+                right: 10px;
+                padding: 8px 15px;
+                font-size: 0.8em;
+                max-width: 90%;
+            }
+
+            .welcome-banner {
+                font-size: 0.85em;
+                padding: 8px;
+            }
+
+            #captchaImages img {
+                width: 50px;
+                height: 50px;
+            }
+
+            .xp-progress-bar {
+                height: 12px;
+            }
+
+            .xp-level {
+                font-size: 0.85em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5em;
+            }
+
+            p {
+                font-size: 0.85em;
+            }
+
+            .button {
+                font-size: 0.85em;
+                padding: 8px 15px;
+                min-height: 40px;
+            }
+
+            .settings-popup, .share-popup {
+                padding: 10px;
+            }
+
+            .popup {
+                padding: 10px;
+            }
+
+            .account-btn {
+                padding: 6px 10px;
+                font-size: 0.8em;
+            }
+
+            .easter-greeting {
+                font-size: 0.75em;
+            }
         }
     </style>
 </head>
@@ -320,11 +550,26 @@
             </div>
             <input type="text" id="promoCodeInput" placeholder="Введіть промокод">
             <button onclick="applyPromoCode()">Активувати промокод</button>
+            <button onclick="openSharePopup()">Поділитися запрошенням</button>
+            <div class="promo-history">
+                <h3>Історія промокодів</h3>
+                <ul id="promoHistoryList"></ul>
+            </div>
             <button onclick="logout()">Вийти</button>
             <button onclick="editProfile()">Редагувати профіль</button>
             <button onclick="changeAvatar()">Змінити аватарку</button>
             <button onclick="claimBonus()">Отримати бонус</button>
         </div>
+    </div>
+
+    <div class="share-popup" id="sharePopup">
+        <h3>Поділитися запрошенням</h3>
+        <p>Запроси друга та отримай до 40 XP!</p>
+        <button onclick="shareViaTelegram()">Поділитися через Telegram</button>
+        <button onclick="shareViaViber()">Поділитися через Viber</button>
+        <button onclick="shareViaWhatsApp()">Поділитися через WhatsApp</button>
+        <button onclick="copyShareLink()">Скопіювати посилання</button>
+        <div class="close-btn" onclick="closeSharePopup()">❌ Закрити</div>
     </div>
 
     <div class="container">
@@ -385,6 +630,19 @@
         let lastClaimDate = localStorage.getItem('lastClaimDate') || '';
         const today = new Date().toISOString().split('T')[0];
 
+        // Pre-defined promo codes for invites
+        const promoCodes = {
+            'xp20': { reward: 20, type: 'xp', expires: '2025-12-31', maxUses: 1 },
+            'xp40': { reward: 40, type: 'xp', expires: '2025-12-31', maxUses: 1 },
+            'badge1': { reward: 'Plant Expert Badge', type: 'badge', expires: '2025-12-31', maxUses: 1 },
+            'lesson1': { reward: 'Unlock Exclusive Lesson', type: 'lesson', expires: '2025-12-31', maxUses: 1 },
+            'invite1': { reward: 25, type: 'xp', expires: '2025-12-31', maxUses: 5 },
+            'invite2': { reward: 30, type: 'xp', expires: '2025-12-31', maxUses: 5 },
+            'invite3': { reward: 35, type: 'xp', expires: '2025-12-31', maxUses: 5 },
+            'invite4': { reward: 28, type: 'xp', expires: '2025-12-31', maxUses: 5 },
+            'invite5': { reward: 40, type: 'xp', expires: '2025-12-31', maxUses: 5 }
+        };
+
         function updateXPProgress() {
             const progressPercent = (xpPoints / maxXP) * 100;
             document.getElementById('xp-progress').style.width = `${progressPercent}%`;
@@ -426,30 +684,121 @@
         function applyPromoCode() {
             const promoCode = document.getElementById('promoCodeInput').value.trim().toLowerCase();
             const usedPromoCodes = JSON.parse(localStorage.getItem('usedPromoCodes') || '[]');
+            const promoHistory = JSON.parse(localStorage.getItem('promoHistory') || '[]');
 
             if (usedPromoCodes.includes(promoCode)) {
                 alert('Цей промокод уже використано!');
                 return;
             }
 
-            if (promoCode === 'xp20') {
-                xpPoints += 20;
+            if (promoCodes[promoCode]) {
+                const { reward, type, expires, maxUses } = promoCodes[promoCode];
+                const currentDate = new Date().toISOString().split('T')[0];
+
+                if (currentDate > expires) {
+                    alert('Термін дії промокоду минув!');
+                    return;
+                }
+
+                if (type === 'xp') {
+                    xpPoints += reward;
+                    localStorage.setItem('xpPoints', xpPoints);
+                    alert(`Промокод активовано! Ви отримали ${reward} XP!`);
+                    updateXPProgress();
+                } else if (type === 'badge') {
+                    const userBadges = JSON.parse(localStorage.getItem('userBadges') || '[]');
+                    userBadges.push(reward);
+                    localStorage.setItem('userBadges', JSON.stringify(userBadges));
+                    alert(`Промокод активовано! Ви отримали значок: ${reward}!`);
+                } else if (type === 'lesson') {
+                    const unlockedLessons = JSON.parse(localStorage.getItem('unlockedLessons') || '[]');
+                    unlockedLessons.push(reward);
+                    localStorage.setItem('unlockedLessons', JSON.stringify(unlockedLessons));
+                    alert(`Промокод активовано! Ви розблокували: ${reward}!`);
+                }
+
                 usedPromoCodes.push(promoCode);
                 localStorage.setItem('usedPromoCodes', JSON.stringify(usedPromoCodes));
-                localStorage.setItem('xpPoints', xpPoints);
-                alert('Промокод активовано! Ви отримали 20 XP!');
-                updateXPProgress();
-            } else if (promoCode === 'xp40') {
-                xpPoints += 40;
-                usedPromoCodes.push(promoCode);
-                localStorage.setItem('usedPromoCodes', JSON.stringify(usedPromoCodes));
-                localStorage.setItem('xpPoints', xpPoints);
-                alert('Промокод активовано! Ви отримали 40 XP!');
-                updateXPProgress();
+                promoHistory.push({ code: promoCode, reward: reward, date: currentDate });
+                localStorage.setItem('promoHistory', JSON.stringify(promoHistory));
+                updatePromoHistory();
             } else {
                 alert('Невірний промокод!');
             }
             document.getElementById('promoCodeInput').value = '';
+        }
+
+        function updatePromoHistory() {
+            const promoHistory = JSON.parse(localStorage.getItem('promoHistory') || '[]');
+            const promoHistoryList = document.getElementById('promoHistoryList');
+            promoHistoryList.innerHTML = '';
+            promoHistory.forEach(entry => {
+                const li = document.createElement('li');
+                li.textContent = `${entry.date}: ${entry.code} - ${entry.reward}`;
+                promoHistoryList.appendChild(li);
+            });
+        }
+
+        function openSharePopup() {
+            document.getElementById('sharePopup').style.display = 'block';
+        }
+
+        function closeSharePopup() {
+            document.getElementById('sharePopup').style.display = 'none';
+        }
+
+        function shareViaTelegram() {
+            const promoCode = getRandomInviteCode();
+            const shareText = `Приєднуйся до BioWorld та дізнайся більше про біологію! Використай промокод ${promoCode} для бонусу! 🌿🔬 ${window.location.href}?code=${promoCode}`;
+            const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(shareText)}`;
+            window.open(telegramUrl, '_blank');
+            trackSharedCode(promoCode);
+            closeSharePopup();
+        }
+
+        function shareViaViber() {
+            const promoCode = getRandomInviteCode();
+            const shareText = `Приєднуйся до BioWorld та дізнайся більше про біологію! Використай промокод ${promoCode} для бонусу! 🌿🔬 ${window.location.href}?code=${promoCode}`;
+            const viberUrl = `viber://forward?text=${encodeURIComponent(shareText)}`;
+            window.open(viberUrl, '_blank');
+            trackSharedCode(promoCode);
+            closeSharePopup();
+        }
+
+        function shareViaWhatsApp() {
+            const promoCode = getRandomInviteCode();
+            const shareText = `Приєднуйся до BioWorld та дізнайся більше про біологію! Використай промокод ${promoCode} для бонусу! 🌿🔬 ${window.location.href}?code=${promoCode}`;
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+            window.open(whatsappUrl, '_blank');
+            trackSharedCode(promoCode);
+            closeSharePopup();
+        }
+
+        function copyShareLink() {
+            const promoCode = getRandomInviteCode();
+            const shareText = `Приєднуйся до BioWorld та дізнайся більше про біологію! Використай промокод ${promoCode} для бонусу! 🌿🔬 ${window.location.href}?code=${promoCode}`;
+            navigator.clipboard.writeText(shareText).then(() => {
+                alert('Посилання скопійовано до буфера обміну!');
+                trackSharedCode(promoCode);
+                closeSharePopup();
+            });
+        }
+
+        function getRandomInviteCode() {
+            const inviteCodes = ['invite1', 'invite2', 'invite3', 'invite4', 'invite5'];
+            return inviteCodes[Math.floor(Math.random() * inviteCodes.length)];
+        }
+
+        function trackSharedCode(code) {
+            const sharedCodes = JSON.parse(localStorage.getItem('sharedCodes') || '{}');
+            sharedCodes[code] = (sharedCodes[code] || 0) + 1;
+            localStorage.setItem('sharedCodes', JSON.stringify(sharedCodes));
+            // Simulate reward for sharing (in a real app, verify redemption server-side)
+            const reward = promoCodes[code].reward;
+            xpPoints += reward;
+            localStorage.setItem('xpPoints', xpPoints);
+            alert(`Ви отримали ${reward} XP за запрошення друга!`);
+            updateXPProgress();
         }
 
         function redirectToRandomTest() {
@@ -480,7 +829,7 @@
             if (darkMode) {
                 document.body.style.background = '#121212';
             } else {
-                document.body.style.background = "url('https://source.unsplash.com/1600x900/?nature,biology') no-repeat center center/cover";
+                document.body.style.background = "linear-gradient(135deg, #e0f7fa, #4caf50)";
             }
             localStorage.setItem('darkMode', darkMode);
 
@@ -532,6 +881,7 @@
             }
 
             updateXPProgress();
+            updatePromoHistory();
         };
 
         function togglePopup() {
@@ -662,6 +1012,7 @@
             setTimeGreeting();
             drawLoginChart();
             updateXPProgress();
+            updatePromoHistory();
         }
 
         function logout() {
@@ -731,8 +1082,8 @@
                     datasets: [{
                         label: 'Відвідування за день',
                         data: data,
-                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(46, 125, 50, 0.5)',
+                        borderColor: 'rgba(46, 125, 50, 1)',
                         borderWidth: 1
                     }]
                 },

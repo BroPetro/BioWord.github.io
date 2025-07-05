@@ -94,6 +94,7 @@
             transition: all 0.3s ease;
             min-width: 120px;
             text-align: center;
+            min-height: 44px;
         }
 
         .button:hover {
@@ -231,6 +232,7 @@
             margin: 8px 0;
             transition: background 0.3s ease;
             font-size: 0.9em;
+            min-height: 44px;
         }
 
         .popup button:hover {
@@ -248,7 +250,7 @@
             position: fixed;
             top: 0;
             width: 100%;
-            backgroundPeek: #ffca28;
+            background: #ffca28;
             color: #2e7d32;
             padding: 10px;
             text-align: center;
@@ -313,30 +315,55 @@
 
         .xp-level {
             font-size: 0.9em;
-            color: ф2e7d32;
+            color: #2e7d32;
             margin-top: 8px;
         }
 
-        .promo-history {
+        .promo-history, .achievements {
             margin-top: 15px;
             text-align: left;
         }
 
-        .promo-history h3 {
+        .promo-history h3, .achievements h3 {
             color: #2e7d32;
             font-size: 1.1em;
             margin-bottom: 10px;
         }
 
-        .promo-history ul {
+        .promo-history ul, .achievements ul {
             list-style: none;
             padding: 0;
         }
 
-        .promo-history li {
+        .promo-history li, .achievements li {
             padding: 5px 0;
             font-size: 0.9em;
             color: #555;
+            line-height: 1.4;
+            pointer-events: all;
+        }
+
+        .achievements li span.emoji {
+            font-size: 1.2em;
+            margin-right: 8px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .achievements li span.achievement-details {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .achievements li:hover span.achievement-details {
+            opacity: 1;
+        }
+
+        .achievements li sup {
+            font-size: 0.7em;
+            color: #2e7d32;
+            vertical-align: super;
+            margin-left: 4px;
         }
 
         .share-popup {
@@ -346,7 +373,7 @@
             transform: translate(-50%, -50%);
             background: rgba(255, 255, 255, 0.95);
             padding: 20px;
-            border-radius: 15px; 
+            border-radius: 15px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
             display: none;
             text-align: center;
@@ -374,6 +401,7 @@
             cursor: pointer;
             font-size: 0.9em;
             transition: background 0.3s ease;
+            min-height: 44px;
         }
 
         .share-popup button:hover {
@@ -473,6 +501,23 @@
             .xp-level {
                 font-size: 0.85em;
             }
+
+            .promo-history h3, .achievements h3 {
+                font-size: 1em;
+            }
+
+            .promo-history li, .achievements li {
+                font-size: 0.85em;
+                line-height: 1.3;
+            }
+
+            .achievements li span.emoji {
+                font-size: 1.1em;
+            }
+
+            .achievements li sup {
+                font-size: 0.65em;
+            }
         }
 
         @media (max-width: 480px) {
@@ -505,6 +550,14 @@
 
             .easter-greeting {
                 font-size: 0.75em;
+            }
+
+            .achievements li span.emoji {
+                font-size: 1em;
+            }
+
+            .achievements li sup {
+                font-size: 0.6em;
             }
         }
     </style>
@@ -555,6 +608,10 @@
                 <h3>Історія промокодів</h3>
                 <ul id="promoHistoryList"></ul>
             </div>
+            <div class="achievements">
+                <h3>🏆 Досягнення</h3>
+                <ul id="achievementsList"></ul>
+            </div>
             <button onclick="logout()">Вийти</button>
             <button onclick="editProfile()">Редагувати профіль</button>
             <button onclick="changeAvatar()">Змінити аватарку</button>
@@ -567,7 +624,7 @@
         <p>Запроси друга та отримай до 40 XP!</p>
         <button onclick="shareViaTelegram()">Поділитися через Telegram</button>
         <button onclick="shareViaViber()">Поділитися через Viber</button>
-        <button onclick="shareViaWhatsApp()">Поділитися через WhatsApp</button>
+        <button onclick="shareViaWhatsApp()">Podілитися через WhatsApp</button>
         <button onclick="copyShareLink()">Скопіювати посилання</button>
         <div class="close-btn" onclick="closeSharePopup()">❌ Закрити</div>
     </div>
@@ -643,6 +700,13 @@
             'invite5': { reward: 40, type: 'xp', expires: '2025-12-31', maxUses: 5 }
         };
 
+        // Achievement emojis
+        const achievementEmojis = {
+            'Ти що, геній?': '🏆',
+            'Майстер біології': '🌟',
+            'Мега мозок!': '🚀'
+        };
+
         function updateXPProgress() {
             const progressPercent = (xpPoints / maxXP) * 100;
             document.getElementById('xp-progress').style.width = `${progressPercent}%`;
@@ -659,6 +723,41 @@
                 localStorage.setItem('xpPoints', xpPoints);
                 alert('Вітаємо! Ви досягли максимального рівня! XP скинуто.');
             }
+        }
+
+        function updateAchievements() {
+            const achievements = JSON.parse(localStorage.getItem('userAchievements') || '[]');
+            const achievementsList = document.getElementById('achievementsList');
+            achievementsList.innerHTML = '';
+
+            if (achievements.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = 'Ще немає досягнень. Отримайте їх у розділі "Досягнення та Призи"!';
+                achievementsList.appendChild(li);
+                return;
+            }
+
+            // Aggregate achievements by name and get the latest date
+            const aggregated = {};
+            achievements.forEach(achievement => {
+                if (!aggregated[achievement.name]) {
+                    aggregated[achievement.name] = { count: 0, date: achievement.date };
+                }
+                aggregated[achievement.name].count += 1;
+                if (new Date(achievement.date) > new Date(aggregated[achievement.name].date)) {
+                    aggregated[achievement.name].date = achievement.date;
+                }
+            });
+
+            // Display aggregated achievements
+            Object.keys(aggregated).forEach(name => {
+                const { count, date } = aggregated[name];
+                const emoji = achievementEmojis[name] || '🏅';
+                const li = document.createElement('li');
+                const multiplier = count > 1 ? `<sup>x${count}</sup>` : '';
+                li.innerHTML = `<span class="emoji">${emoji}</span>${name} <span class="achievement-details">(${date})${multiplier}</span>`;
+                achievementsList.appendChild(li);
+            });
         }
 
         if (lastClaimDate !== today) {
@@ -793,7 +892,6 @@
             const sharedCodes = JSON.parse(localStorage.getItem('sharedCodes') || '{}');
             sharedCodes[code] = (sharedCodes[code] || 0) + 1;
             localStorage.setItem('sharedCodes', JSON.stringify(sharedCodes));
-            // Simulate reward for sharing (in a real app, verify redemption server-side)
             const reward = promoCodes[code].reward;
             xpPoints += reward;
             localStorage.setItem('xpPoints', xpPoints);
@@ -882,6 +980,7 @@
 
             updateXPProgress();
             updatePromoHistory();
+            updateAchievements();
         };
 
         function togglePopup() {
@@ -1013,6 +1112,7 @@
             drawLoginChart();
             updateXPProgress();
             updatePromoHistory();
+            updateAchievements();
         }
 
         function logout() {

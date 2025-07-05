@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
@@ -38,6 +39,7 @@
             border-radius: 50px;
             transition: all 0.3s ease;
             margin: 10px;
+            min-height: 44px;
         }
 
         .button:hover {
@@ -75,35 +77,59 @@
             transition: width 1s ease-in-out;
         }
 
-        .leaderboard {
-            margin-top: 30px;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 10px;
-        }
-
-        .leaderboard h3 {
-            margin-bottom: 15px;
-        }
-
-        .leaderboard table {
-            width: 100%;
-            border-collapse: collapse;
-            color: white;
-        }
-
-        .leaderboard th, .leaderboard td {
-            padding: 10px;
-            border-bottom: 1px solid #444;
-        }
-
-        .leaderboard th {
-            background: #ff9800;
-        }
-
         canvas {
             margin: 20px auto;
             max-width: 100%;
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .button {
+                font-size: 1.1em;
+                padding: 12px 20px;
+                min-height: 40px;
+            }
+
+            .prize-container {
+                padding: 10px;
+            }
+
+            .prize-info {
+                font-size: 1em;
+            }
+
+            .progress-bar {
+                width: 90%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .button {
+                font-size: 0.9em;
+                padding: 10px 15px;
+                min-height: 36px;
+            }
+
+            .prize-container {
+                padding: 8px;
+            }
+
+            .prize-info {
+                font-size: 0.9em;
+            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -140,34 +166,6 @@
             <p class="prize-info" id="mega-brain-count">Придбано: 0</p>
         </div>
 
-
-
-        <div class="leaderboard">
-            <h3>🏆 Таблиця лідерів</h3>
-            <table>
-                <tr>
-                    <th>Місце</th>
-                    <th>Користувач</th>
-                    <th>XP</th>
-                </tr>
-                <tr>
-                    <td>1</td>
-                    <td>БіоФанат</td>
-                    <td>1500</td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>Природознавець</td>
-                    <td>1200</td>
-                </tr>
-                <tr>
-                    <td>3</td>
-                    <td>ЕкоВоїн</td>
-                    <td>900</td>
-                </tr>
-            </table>
-        </div>
-
         <a href="index.html" class="button">🏠 Назад</a>
     </div>
 
@@ -176,12 +174,11 @@
         let geniusCount = parseInt(localStorage.getItem('geniusCount')) || 0;
         let bioMasterCount = parseInt(localStorage.getItem('bioMasterCount')) || 0;
         let megaBrainCount = parseInt(localStorage.getItem('megaBrainCount')) || 0;
-        let insectTests = parseInt(localStorage.getItem('insectTests')) || 0;
-        let plantsRecognized = parseInt(localStorage.getItem('plantsRecognized')) || 0;
+        let userAchievements = JSON.parse(localStorage.getItem('userAchievements') || '[]');
 
         function updateProgressBar() {
             const nextPrize = xpPoints < 100 ? 100 : xpPoints < 200 ? 200 : 300;
-            const progressPercent = (xpPoints / nextPrize) * 100;
+            const progressPercent = Math.min((xpPoints / nextPrize) * 100, 100);
             document.getElementById('progress').style.width = `${progressPercent}%`;
             document.getElementById('progress-text').textContent = `Прогрес до наступного призу: ${xpPoints}/${nextPrize} XP`;
         }
@@ -191,8 +188,6 @@
             document.getElementById('genius-count').textContent = `Придбано: ${geniusCount}`;
             document.getElementById('bio-master-count').textContent = `Придбано: ${bioMasterCount}`;
             document.getElementById('mega-brain-count').textContent = `Придбано: ${megaBrainCount}`;
-            document.getElementById('insect-expert-count').textContent = `Прогрес: ${insectTests}/5`;
-            document.getElementById('botany-guru-count').textContent = `Прогрес: ${plantsRecognized}/10`;
             updateProgressBar();
         }
 
@@ -210,6 +205,8 @@
                     megaBrainCount++;
                     localStorage.setItem('megaBrainCount', megaBrainCount);
                 }
+                userAchievements.push({ name: prizeName, date: new Date().toISOString().split('T')[0] });
+                localStorage.setItem('userAchievements', JSON.stringify(userAchievements));
                 alert(`🎉 Ви отримали приз: '${prizeName}'`);
                 updateUI();
                 updateChart();
@@ -225,8 +222,8 @@
                 data: {
                     labels: ['Ваш XP', 'Ти що, геній?', 'Майстер біології', 'Мега мозок!'],
                     datasets: [{
-                        label: 'XP Прогрес',
-                        data: [xpPoints, 100, 200, 300],
+                        label: 'Досягнення',
+                        data: [xpPoints, geniusCount * 100, bioMasterCount * 200, megaBrainCount * 300],
                         backgroundColor: ['#4caf50', '#ff9800', '#ff9800', '#ff9800'],
                         borderColor: ['#388e3c', '#e65100', '#e65100', '#e65100'],
                         borderWidth: 1
@@ -254,35 +251,10 @@
             });
         }
 
-        // Імітація прогресу для нових досягнень
-        function simulateProgress() {
-            // Ці функції потрібно підключити до Test.html і інших сторінок
-            // Для прикладу додаємо можливість імітації
-            document.addEventListener('keydown', (e) => {
-                if (e.key === '1') {
-                    insectTests++;
-                    localStorage.setItem('insectTests', insectTests);
-                    if (insectTests >= 5) {
-                        alert('🎉 Ви отримали досягнення: "Експерт з комах"!');
-                    }
-                } else if (e.key === '2') {
-                    plantsRecognized++;
-                    localStorage.setItem('plantsRecognized', plantsRecognized);
-                    if (plantsRecognized >= 10) {
-                        alert('🎉 Ви отримали досягнення: "Ботанічний гуру"!');
-                    }
-                } else if (e.key === '3') {
-                    xpPoints += 50;
-                    localStorage.setItem('xpPoints', xpPoints);
-                }
-                updateUI();
-                updateChart();
-            });
-        }
-
-        updateUI();
-        updateChart();
-        simulateProgress();
+        window.onload = function() {
+            updateUI();
+            updateChart();
+        };
     </script>
 </body>
 </html>

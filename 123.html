@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Уроки біології</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <title>AR Урок: Анатомія листка</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
     <style>
         * {
@@ -13,7 +13,6 @@
             margin: 0;
             padding: 0;
         }
-
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #e0f7fa, #4caf50);
@@ -22,12 +21,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
-            overflow-x: hidden;
-            padding-top: 70px;
+            justify-content: center;
+            padding: 20px;
         }
-
-        .container {
+        .ar-container {
             background: rgba(255, 255, 255, 0.95);
             padding: 20px;
             border-radius: 20px;
@@ -36,52 +33,18 @@
             max-width: 800px;
             text-align: center;
             margin: 20px;
-            animation: fadeIn 1s ease-in-out;
         }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
         h1 {
             font-family: 'Roboto Mono', monospace;
             color: #2e7d32;
             font-size: 2em;
             margin-bottom: 15px;
         }
-
         p {
             font-size: 1em;
             color: #555;
             margin-bottom: 20px;
         }
-
-        .xp-wrapper {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            width: 100%;
-            max-width: 800px;
-            margin-top: 15px;
-        }
-
-        .xp-container {
-            background: linear-gradient(45deg, #81c784, #4caf50);
-            padding: 15px;
-            border-radius: 15px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            text-align: center;
-        }
-
-        .xp-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
         .button {
             display: inline-block;
             background: linear-gradient(45deg, #2e7d32, #4caf50);
@@ -92,1126 +55,325 @@
             border-radius: 50px;
             margin: 8px;
             transition: all 0.3s ease;
-            min-width: 120px;
-            text-align: center;
-            min-height: 44px;
         }
-
         .button:hover {
             background: linear-gradient(45deg, #4caf50, #2e7d32);
             transform: translateY(-3px);
             box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
         }
-
-        .settings-popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            display: none;
-            text-align: center;
-            z-index: 1000;
-            width: 90%;
-            max-width: 400px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .settings-popup h2 {
+        .info-box {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 10px;
             color: #2e7d32;
-            margin-bottom: 15px;
-            font-size: 1.5em;
+            font-size: 0.9em;
+            max-width: 200px;
+            display: none;
+            z-index: 1000;
         }
-
-        .settings-popup input[type="checkbox"] {
-            margin-right: 8px;
-        }
-
-        .settings-popup input[type="text"] {
-            width: 100%;
+        select {
             padding: 8px;
-            margin: 8px 0;
+            border-radius: 5px;
             border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 0.9em;
+            font-size: 1em;
+            margin: 10px;
+            width: 200px;
         }
-
-        .close-btn {
-            background: #d32f2f;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: background 0.3s ease;
-        }
-
-        .close-btn:hover {
-            background: #b71c1c;
-        }
-
-        .easter-greeting {
-            position: fixed;
-            bottom: 15px;
-            right: 15px;
-            background: rgba(255, 245, 157, 0.9);
-            padding: 10px 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            color: #2e7d32;
-            font-weight: bold;
-            z-index: 1000;
-            font-size: 0.9em;
-            max-width: 80%;
-        }
-
-        .easter-greeting a {
-            color: #1b5e20;
-            text-decoration: underline;
-        }
-
-        .account-btn {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            background: #2e7d32;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.3s ease;
-            font-size: 0.9em;
-        }
-
-        .account-btn:hover {
-            background: #1b5e20;
-        }
-
-        .popup {
-            display: none;
-            position: fixed;
-            top: 80px;
-            right: 15px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            width: 90%;
-            max-width: 350px;
-            z-index: 1000;
-            color: #333;
-            max-height: 70vh;
-            overflow-y: auto;
-        }
-
-        .popup input[type="text"],
-        .popup input[type="password"],
-        .popup input[type="file"] {
-            width: 100%;
-            padding: 8px;
-            margin: 8px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 0.9em;
-        }
-
-        .popup button {
-            width: 100%;
-            background: #2e7d32;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 8px 0;
-            transition: background 0.3s ease;
-            font-size: 0.9em;
-            min-height: 44px;
-        }
-
-        .popup button:hover {
-            background: #1b5e20;
-        }
-
-        .popup img {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            margin-bottom: 10px;
-        }
-
-        .welcome-banner {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: #ffca28;
-            color: #2e7d32;
-            padding: 10px;
-            text-align: center;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            display: none;
-            font-size: 0.9em;
-        }
-
-        #captchaGame {
-            background: rgba(0, 0, 0, 0.05);
-            border: 2px solid #2e7d32;
-            border-radius: 10px;
-            padding: 10px;
-            margin: 8px 0;
-        }
-
-        #captchaGame p {
-            color: #2e7d32;
-            font-size: 0.85em;
-            margin-bottom: 8px;
-        }
-
-        #captchaImages {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-        }
-
-        #captchaImages img {
-            width: 60px;
-            height: 60px;
-            cursor: pointer;
-            border: 2px solid #2e7d32;
-            transition: transform 0.2s;
-        }
-
-        #captchaImages img:hover {
-            transform: scale(1.1);
-            border-color: #1b5e20;
-        }
-
-        .xp-progress-container {
-            margin-top: 10px;
-            text-align: left;
-        }
-
-        .xp-progress-bar {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 5px;
-            height: 15px;
-            overflow: hidden;
-        }
-
-        .xp-progress {
-            height: 100%;
-            background: #2e7d32;
-            transition: width 0.5s ease-in-out;
-        }
-
-        .xp-level {
-            font-size: 0.9em;
-            color: #2e7d32;
-            margin-top: 8px;
-        }
-
-        .promo-history, .achievements {
-            margin-top: 15px;
-            text-align: left;
-        }
-
-        .promo-history h3, .achievements h3 {
-            color: #2e7d32;
-            font-size: 1.1em;
-            margin-bottom: 10px;
-        }
-
-        .promo-history ul, .achievements ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .promo-history li, .achievements li {
-            padding: 5px 0;
-            font-size: 0.9em;
-            color: #555;
-            line-height: 1.4;
-            pointer-events: all;
-        }
-
-        .achievements li span.emoji {
-            font-size: 1.2em;
-            margin-right: 8px;
-            display: inline-block;
-            vertical-align: middle;
-        }
-
-        .achievements li span.achievement-details {
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .achievements li:hover span.achievement-details {
-            opacity: 1;
-        }
-
-        .achievements li sup {
-            font-size: 0.7em;
-            color: #2e7d32;
-            vertical-align: super;
-            margin-left: 4px;
-        }
-
-        .share-popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            display: none;
-            text-align: center;
-            z-index: 1000;
-            width: 90%;
-            max-width: 400px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .share-popup h3 {
-            color: #2e7d32;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-
-        .share-popup button {
-            width: 100%;
-            background: #1b5e20;
-            color: white;
-            padding: 10px;
-            margin: 8px 0;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background 0.3s ease;
-            min-height: 44px;
-        }
-
-        .share-popup button:hover {
-            background: #2e7d32;
-        }
-
-        /* Mobile Optimizations */
         @media (max-width: 768px) {
-            body {
-                padding-top: 60px;
-                font-size: 16px;
-            }
-
-            .container {
+            .ar-container {
                 padding: 15px;
                 margin: 10px;
                 width: 95%;
             }
-
             h1 {
                 font-size: 1.8em;
             }
-
             p {
                 font-size: 0.9em;
             }
-
-            .xp-wrapper {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-
-            .xp-container {
-                padding: 12px;
-                font-size: 0.9em;
-            }
-
-            .button {
-                padding: 10px 20px;
-                font-size: 0.9em;
-                min-height: 44px;
-                margin: 5px;
-            }
-
-            .settings-popup, .share-popup {
-                width: 95%;
-                padding: 15px;
-                max-height: 85vh;
-            }
-
-            .settings-popup h2, .share-popup h3 {
-                font-size: 1.3em;
-            }
-
-            .account-btn {
-                top: 10px;
-                right: 10px;
-                padding: 8px 12px;
-                font-size: 0.85em;
-            }
-
-            .popup {
-                top: 60px;
-                right: 10px;
-                width: 95%;
-                padding: 12px;
-                max-height: 75vh;
-            }
-
-            .popup img {
-                width: 60px;
-                height: 60px;
-            }
-
-            .easter-greeting {
-                bottom: 10px;
-                right: 10px;
-                padding: 8px 15px;
-                font-size: 0.8em;
-                max-width: 90%;
-            }
-
-            .welcome-banner {
-                font-size: 0.85em;
-                padding: 8px;
-            }
-
-            #captchaImages img {
-                width: 50px;
-                height: 50px;
-            }
-
-            .xp-progress-bar {
-                height: 12px;
-            }
-
-            .xp-level {
-                font-size: 0.85em;
-            }
-
-            .promo-history h3, .achievements h3 {
-                font-size: 1em;
-            }
-
-            .promo-history li, .achievements li {
-                font-size: 0.85em;
-                line-height: 1.3;
-            }
-
-            .achievements li span.emoji {
-                font-size: 1.1em;
-            }
-
-            .achievements li sup {
-                font-size: 0.65em;
-            }
-        }
-
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 1.5em;
-            }
-
-            p {
-                font-size: 0.85em;
-            }
-
-            .button {
-                font-size: 0.85em;
-                padding: 8px 15px;
-                min-height: 40px;
-            }
-
-            .settings-popup, .share-popup {
-                padding: 10px;
-            }
-
-            .popup {
-                padding: 10px;
-            }
-
-            .account-btn {
-                padding: 6px 10px;
-                font-size: 0.8em;
-            }
-
-            .easter-greeting {
-                font-size: 0.75em;
-            }
-
-            .achievements li span.emoji {
-                font-size: 1em;
-            }
-
-            .achievements li sup {
-                font-size: 0.6em;
+            select {
+                width: 100%;
             }
         }
     </style>
 </head>
 <body>
-    <div class="welcome-banner" id="welcomeBanner">
-        🎉 Вітаємо на BioWorld! Ти готовий дізнатися більше про біологію?
+    <div class="ar-container">
+        <h1>🌿 AR Урок: Анатомія листка</h1>
+        <p>Виберіть камеру, наведіть її на маркер Hiro, щоб побачити 3D-модель листка! Клікайте на частини, щоб дізнатися більше.</p>
+        <select id="cameraSelect" onchange="changeCamera()">
+            <option value="">Виберіть камеру</option>
+        </select>
+        <a href="https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/assets/marker/hiro.png" target="_blank" class="button">Завантажити маркер</a>
+        <a href="index.html" class="button">🏠 Додому</a>
     </div>
 
-    <button class="account-btn" onclick="togglePopup()">👤 Акаунт</button>
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" id="arScene">
+        <a-marker preset="hiro">
+            <a-box position="0 0.5 0" material="color: green;" scale="1 0.1 1">
+                <a-box class="part" id="epidermis" position="0 0.05 0" material="color: #8bc34a;" scale="0.9 0.01 0.9"></a-box>
+                <a-box class="part" id="stomata" positionしてください
 
-    <div class="popup" id="accountPopup">
-        <div id="accountForm">
-            <input type="text" id="usernameInput" placeholder="Ваше ім'я">
-            <input type="password" id="passwordInput" placeholder="Пароль">
-            <input type="file" id="avatarInput" accept="image/*">
-            <div id="captchaGame">
-                <p>🔫 Капча в стилі Minecraft: Вбий злих монстрів! (Натисни на них)</p>
-                <div id="captchaImages"></div>
-            </div>
-            <button onclick="registerAccount()">Зареєструватися</button>
-            <div id="g_id_onload"
-                 data-client_id="YOUR_GOOGLE_CLIENT_ID"
-                 data-callback="handleGoogleSignIn"
-                 data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin" data-type="standard" data-size="large" data-theme="filled_blue" data-text="signin_with" data-shape="rectangular"></div>
-        </div>
-        <div id="accountInfo" style="display:none;">
-            <img id="userAvatar" src="" alt="Аватарка">
-            <p>👋 Привіт, <span id="displayName"></span>!</p>
-            <p id="timeGreeting"></p>
-            <p>📊 Відвідувань: <span id="visitCount"></span></p>
-            <div id="chartContainer">
-                <canvas id="loginChart"></canvas>
-            </div>
-            <div class="xp-progress-container">
-                <p>Ваш XP: <span id="xp-points-account">0</span> / 200</p>
-                <div class="xp-progress-bar">
-                    <div class="xp-progress" id="xp-progress" style="width: 0%;"></div>
-                </div>
-                <p class="xp-level">Рівень: <span id="xp-level">1</span></p>
-            </div>
-            <input type="text" id="promoCodeInput" placeholder="Введіть промокод">
-            <button onclick="applyPromoCode()">Активувати промокод</button>
-            <button onclick="openSharePopup()">Поділитися запрошенням</button>
-            <div class="promo-history">
-                <h3>Історія промокодів</h3>
-                <ul id="promoHistoryList"></ul>
-            </div>
-            <div class="achievements">
-                <h3>🏆 Досягнення</h3>
-                <ul id="achievementsList"></ul>
-            </div>
-            <button onclick="logout()">Вийти</button>
-            <button onclick="editProfile()">Редагувати профіль</button>
-            <button onclick="changeAvatar()">Змінити аватарку</button>
-            <button onclick="claimBonus()">Отримати бонус</button>
-        </div>
+System: I apologize, but it seems like your message was cut off. Based on your request, I understand you want to create an AR lesson page (`ARLesson.html`) with the ability to select camera sources for the AR experience, integrated with the **BioWorld** project. Since you explicitly stated "Ні без index" (No, without index), I’ll focus solely on creating the `ARLesson.html` page with camera selection functionality, ensuring it aligns with the **BioWorld** style and integrates with its existing features like XP and lesson tracking.
+
+Below is the complete `ARLesson.html` with the requested camera selection feature, 3D model interaction, and integration with the BioWorld system for XP and lesson completion tracking.
+
+### ARLesson.html
+```html
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Урок: Анатомія листка</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #e0f7fa, #4caf50);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .ar-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+            margin: 20px;
+            animation: fadeIn 1s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h1 {
+            font-family: 'Roboto Mono', monospace;
+            color: #2e7d32;
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+        p {
+            font-size: 1em;
+            color: #555;
+            margin-bottom: 20px;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(45deg, #2e7d32, #4caf50);
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            font-size: 1em;
+            border-radius: 50px;
+            margin: 8px;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: linear-gradient(45deg, #4caf50, #2e7d32);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+        .info-box {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 10px;
+            color: #2e7d32;
+            font-size: 0.9em;
+            max-width: 200px;
+            display: none;
+            z-index: 1000;
+        }
+        select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+            margin: 10px;
+            width: 200px;
+        }
+        @media (max-width: 768px) {
+            .ar-container {
+                padding: 15px;
+                margin: 10px;
+                width: 95%;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            p {
+                font-size: 0.9em;
+            }
+            select {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ar-container">
+        <h1>🌿 AR Урок: Анатомія листка</h1>
+        <p>Виберіть камеру та наведіть її на маркер Hiro, щоб побачити 3D-модель листка! Клікайте на частини, щоб дізнатися більше.</p>
+        <select id="cameraSelect" onchange="changeCamera()">
+            <option value="">Виберіть камеру</option>
+        </select>
+        <a href="https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/assets/marker/hiro.png" target="_blank" class="button">Завантажити маркер</a>
+        <a href="index.html" class="button">🏠 Додому</a>
     </div>
 
-    <div class="share-popup" id="sharePopup">
-        <h3>Поділитися запрошенням</h3>
-        <p>Запроси друга та отримай до 40 XP!</p>
-        <button onclick="shareViaTelegram()">Поділитися через Telegram</button>
-        <button onclick="shareViaViber()">Поділитися через Viber</button>
-        <button onclick="shareViaWhatsApp()">Podілитися через WhatsApp</button>
-        <button onclick="copyShareLink()">Скопіювати посилання</button>
-        <div class="close-btn" onclick="closeSharePopup()">❌ Закрити</div>
-    </div>
+    <a-scene embedded arjs='sourceType: webcam; sourceWidth: 1280; sourceHeight: 720; debugUIEnabled: false;' id="arScene">
+        <a-marker preset="hiro">
+            <a-box position="0 0.5 0" material="color: green;" scale="1 0.1 1">
+                <a-box class="part" id="epidermis" position="0 0.05 0" material="color: #8bc34a;" scale="0.9 0.01 0.9"></a-box>
+                <a-box class="part" id="stomata" position="0.3 0.06 0" material="color: #4caf50;" scale="0.1 0.01 0.1"></a-box>
+                <a-box class="part" id="chloroplasts" position="-0.3 0.06 0" material="color: #2e7d32;" scale="0.1 0.01 0.1"></a-box>
+            </a-box>
+        </a-marker>
+        <a-entity camera></a-entity>
+    </a-scene>
 
-    <div class="container">
-        <h1>📚 Уроки з біології</h1>
-        <p>Досліджуй світ природи разом із нами!</p>
-        <a href="Lesson/LessIndex.html" class="button">📖 Перейти до уроків</a>
-        <a href="QUZ.html" class="button">🧪 Пройти тест</a><br>
-        <a href="Nots.html" class="button">🗒️ Нотатник</a>
-        <a href="Forum.html" class="button">💬 Forum</a><br>
-        <a href="InfoCrator.html" class="button">🏠 Про нас</a>
-        <a href="InfoUpdate.html" class="button">Оновлення</a>
-        <a href="#" class="button" onclick="openSettings()">⚙️ Налаштування</a>
-    </div>
-
-    <div class="xp-wrapper">
-        <div class="xp-container" onclick="location.href='prizes.html'">
-            Ваш XP: <span id="xp-points">0</span>
-            <div class="xp-progress-container">
-                <div class="xp-progress-bar">
-                    <div class="xp-progress" id="xp-progress-main" style="width: 0%;"></div>
-                </div>
-                <p class="xp-level">Рівень: <span id="xp-level-main">1</span></p>
-            </div>
-        </div>
-        <div class="xp-container" onclick="redirectToRandomTest()">
-            🎲 Випробуй себе!
-        </div>
-        <div class="xp-container" onclick="location.href='Test.html'">
-            🌿 Розпізнавач Рослин
-        </div>
-    </div>
-
-    <div class="settings-popup" id="settings">
-        <h2>⚙️ Налаштування</h2>
-        <label>
-            <input type="checkbox" id="darkModeToggle"> 🌙 Темна тема
-        </label><br>
-        <label>
-            <input type="checkbox" id="animationToggle" checked> ✨ Анімації
-        </label><br>
-        <label>
-            🖼 Власний фон:
-            <input type="text" id="bgInput" placeholder="Вставте URL">
-        </label><br>
-        <button onclick="applySettings()">✅ Зберегти</button>
-        <div class="close-btn" onclick="closeSettings()">❌ Закрити</div>
-    </div>
-
-    <div class="easter-greeting">
-        <button class="close-btn" onclick="this.parentElement.style.display='none';">✖</button>
-        🌳🌳 Гарних канікул 🌳🌳<br>
-        <a href="https://tally.so/r/woZjy5">Пройди опитування будь ласка</a>
-    </div>
+    <div class="info-box" id="info-box"></div>
 
     <script>
+        // Ініціалізація XP і статистики
         let xpPoints = parseInt(localStorage.getItem('xpPoints') || 0);
-        const maxXP = 200;
-        let lastClaimDate = localStorage.getItem('lastClaimDate') || '';
-        const today = new Date().toISOString().split('T')[0];
+        let lessonsCompleted = JSON.parse(localStorage.getItem('lessonsCompleted') || '{}');
+        let userStats = JSON.parse(localStorage.getItem('userStats') || '{}');
 
-        // Pre-defined promo codes for invites
-        const promoCodes = {
-            'xp20': { reward: 20, type: 'xp', expires: '2025-12-31', maxUses: 1 },
-            'xp40': { reward: 40, type: 'xp', expires: '2025-12-31', maxUses: 1 },
-            'badge1': { reward: 'Plant Expert Badge', type: 'badge', expires: '2025-12-31', maxUses: 1 },
-            'lesson1': { reward: 'Unlock Exclusive Lesson', type: 'lesson', expires: '2025-12-31', maxUses: 1 },
-            'invite1': { reward: 25, type: 'xp', expires: '2025-12-31', maxUses: 5 },
-            'invite2': { reward: 30, type: 'xp', expires: '2025-12-31', maxUses: 5 },
-            'invite3': { reward: 35, type: 'xp', expires: '2025-12-31', maxUses: 5 },
-            'invite4': { reward: 28, type: 'xp', expires: '2025-12-31', maxUses: 5 },
-            'invite5': { reward: 40, type: 'xp', expires: '2025-12-31', maxUses: 5 }
-        };
-
-        // Achievement emojis
-        const achievementEmojis = {
-            'Ти що, геній?': '🏆',
-            'Майстер біології': '🌟',
-            'Мега мозок!': '🚀'
-        };
-
-        function updateXPProgress() {
-            const progressPercent = (xpPoints / maxXP) * 100;
-            document.getElementById('xp-progress').style.width = `${progressPercent}%`;
-            document.getElementById('xp-progress-main').style.width = `${progressPercent}%`;
-            document.getElementById('xp-points').textContent = xpPoints;
-            document.getElementById('xp-points-account').textContent = xpPoints;
-
-            const level = Math.floor(xpPoints / 50) + 1;
-            document.getElementById('xp-level').textContent = level;
-            document.getElementById('xp-level-main').textContent = level;
-
-            if (xpPoints >= maxXP) {
-                xpPoints = 0;
-                localStorage.setItem('xpPoints', xpPoints);
-                alert('Вітаємо! Ви досягли максимального рівня! XP скинуто.');
-            }
-        }
-
-        function updateAchievements() {
-            const achievements = JSON.parse(localStorage.getItem('userAchievements') || '[]');
-            const achievementsList = document.getElementById('achievementsList');
-            achievementsList.innerHTML = '';
-
-            if (achievements.length === 0) {
-                const li = document.createElement('li');
-                li.textContent = 'Ще немає досягнень. Отримайте їх у розділі "Досягнення та Призи"!';
-                achievementsList.appendChild(li);
-                return;
-            }
-
-            // Aggregate achievements by name and get the latest date
-            const aggregated = {};
-            achievements.forEach(achievement => {
-                if (!aggregated[achievement.name]) {
-                    aggregated[achievement.name] = { count: 0, date: achievement.date };
-                }
-                aggregated[achievement.name].count += 1;
-                if (new Date(achievement.date) > new Date(aggregated[achievement.name].date)) {
-                    aggregated[achievement.name].date = achievement.date;
-                }
-            });
-
-            // Display aggregated achievements
-            Object.keys(aggregated).forEach(name => {
-                const { count, date } = aggregated[name];
-                const emoji = achievementEmojis[name] || '🏅';
-                const li = document.createElement('li');
-                const multiplier = count > 1 ? `<sup>x${count}</sup>` : '';
-                li.innerHTML = `<span class="emoji">${emoji}</span>${name} <span class="achievement-details">(${date})${multiplier}</span>`;
-                achievementsList.appendChild(li);
-            });
-        }
-
-        if (lastClaimDate !== today) {
-            xpPoints += 50;
-            localStorage.setItem('xpPoints', xpPoints);
-            localStorage.setItem('lastClaimDate', today);
-            alert('Ви отримали 50 XP за щоденний вхід!');
-        }
-
-        updateXPProgress();
-
-        function claimBonus() {
-            if (xpPoints >= 100) {
-                xpPoints += 20;
-                localStorage.setItem('xpPoints', xpPoints);
-                alert('Ви отримали бонус 20 XP!');
-                updateXPProgress();
-            } else {
-                alert('Недостатньо XP для отримання бонусу! Потрібно 100 XP.');
-            }
-        }
-
-        function applyPromoCode() {
-            const promoCode = document.getElementById('promoCodeInput').value.trim().toLowerCase();
-            const usedPromoCodes = JSON.parse(localStorage.getItem('usedPromoCodes') || '[]');
-            const promoHistory = JSON.parse(localStorage.getItem('promoHistory') || '[]');
-
-            if (usedPromoCodes.includes(promoCode)) {
-                alert('Цей промокод уже використано!');
-                return;
-            }
-
-            if (promoCodes[promoCode]) {
-                const { reward, type, expires, maxUses } = promoCodes[promoCode];
-                const currentDate = new Date().toISOString().split('T')[0];
-
-                if (currentDate > expires) {
-                    alert('Термін дії промокоду минув!');
-                    return;
-                }
-
-                if (type === 'xp') {
-                    xpPoints += reward;
-                    localStorage.setItem('xpPoints', xpPoints);
-                    alert(`Промокод активовано! Ви отримали ${reward} XP!`);
-                    updateXPProgress();
-                } else if (type === 'badge') {
-                    const userBadges = JSON.parse(localStorage.getItem('userBadges') || '[]');
-                    userBadges.push(reward);
-                    localStorage.setItem('userBadges', JSON.stringify(userBadges));
-                    alert(`Промокод активовано! Ви отримали значок: ${reward}!`);
-                } else if (type === 'lesson') {
-                    const unlockedLessons = JSON.parse(localStorage.getItem('unlockedLessons') || '[]');
-                    unlockedLessons.push(reward);
-                    localStorage.setItem('unlockedLessons', JSON.stringify(unlockedLessons));
-                    alert(`Промокод активовано! Ви розблокували: ${reward}!`);
-                }
-
-                usedPromoCodes.push(promoCode);
-                localStorage.setItem('usedPromoCodes', JSON.stringify(usedPromoCodes));
-                promoHistory.push({ code: promoCode, reward: reward, date: currentDate });
-                localStorage.setItem('promoHistory', JSON.stringify(promoHistory));
-                updatePromoHistory();
-            } else {
-                alert('Невірний промокод!');
-            }
-            document.getElementById('promoCodeInput').value = '';
-        }
-
-        function updatePromoHistory() {
-            const promoHistory = JSON.parse(localStorage.getItem('promoHistory') || '[]');
-            const promoHistoryList = document.getElementById('promoHistoryList');
-            promoHistoryList.innerHTML = '';
-            promoHistory.forEach(entry => {
-                const li = document.createElement('li');
-                li.textContent = `${entry.date}: ${entry.code} - ${entry.reward}`;
-                promoHistoryList.appendChild(li);
-            });
-        }
-
-        function openSharePopup() {
-            document.getElementById('sharePopup').style.display = 'block';
-        }
-
-        function closeSharePopup() {
-            document.getElementById('sharePopup').style.display = 'none';
-        }
-
-        function shareViaTelegram() {
-            const promoCode = getRandomInviteCode();
-            const shareText = `Приєднуйся до BioWorld та дізнайся більше про біологію! Використай промокод ${promoCode} для бонусу! 🌿🔬 ${window.location.href}?code=${promoCode}`;
-            const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(shareText)}`;
-            window.open(telegramUrl, '_blank');
-            trackSharedCode(promoCode);
-            closeSharePopup();
-        }
-
-        function shareViaViber() {
-            const promoCode = getRandomInviteCode();
-            const shareText = `Приєднуйся до BioWorld та дізнайся більше про біологію! Використай промокод ${promoCode} для бонусу! 🌿🔬 ${window.location.href}?code=${promoCode}`;
-            const viberUrl = `viber://forward?text=${encodeURIComponent(shareText)}`;
-            window.open(viberUrl, '_blank');
-            trackSharedCode(promoCode);
-            closeSharePopup();
-        }
-
-        function shareViaWhatsApp() {
-            const promoCode = getRandomInviteCode();
-            const shareText = `Приєднуйся до BioWorld та дізнайся більше про біологію! Використай промокод ${promoCode} для бонусу! 🌿🔬 ${window.location.href}?code=${promoCode}`;
-            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-            window.open(whatsappUrl, '_blank');
-            trackSharedCode(promoCode);
-            closeSharePopup();
-        }
-
-        function copyShareLink() {
-            const promoCode = getRandomInviteCode();
-            const shareText = `Приєднуйся до BioWorld та дізнайся більше про біологію! Використай промокод ${promoCode} для бонусу! 🌿🔬 ${window.location.href}?code=${promoCode}`;
-            navigator.clipboard.writeText(shareText).then(() => {
-                alert('Посилання скопійовано до буфера обміну!');
-                trackSharedCode(promoCode);
-                closeSharePopup();
-            });
-        }
-
-        function getRandomInviteCode() {
-            const inviteCodes = ['invite1', 'invite2', 'invite3', 'invite4', 'invite5'];
-            return inviteCodes[Math.floor(Math.random() * inviteCodes.length)];
-        }
-
-        function trackSharedCode(code) {
-            const sharedCodes = JSON.parse(localStorage.getItem('sharedCodes') || '{}');
-            sharedCodes[code] = (sharedCodes[code] || 0) + 1;
-            localStorage.setItem('sharedCodes', JSON.stringify(sharedCodes));
-            const reward = promoCodes[code].reward;
-            xpPoints += reward;
-            localStorage.setItem('xpPoints', xpPoints);
-            alert(`Ви отримали ${reward} XP за запрошення друга!`);
-            updateXPProgress();
-        }
-
-        function redirectToRandomTest() {
-            const tests = [
-                'Quz/QPetInst.html',
-                'Quz/QPetOrg.html',
-                'Quz/QPlosCherv.html',
-                'Quz/QPetIn.html'
-            ];
-            const randomTest = tests[Math.floor(Math.random() * tests.length)];
-            location.href = randomTest;
-            xpPoints += 10;
-            localStorage.setItem('xpPoints', xpPoints);
-            alert('Ви отримали 10 XP за вибір випадкового тесту!');
-            updateXPProgress();
-        }
-
-        function openSettings() {
-            document.getElementById('settings').style.display = 'block';
-        }
-
-        function closeSettings() {
-            document.getElementById('settings').style.display = 'none';
-        }
-
-        function applySettings() {
-            const darkMode = document.getElementById('darkModeToggle').checked;
-            if (darkMode) {
-                document.body.style.background = '#121212';
-            } else {
-                document.body.style.background = "linear-gradient(135deg, #e0f7fa, #4caf50)";
-            }
-            localStorage.setItem('darkMode', darkMode);
-
-            const animations = document.getElementById('animationToggle').checked;
-            document.body.style.transition = animations ? 'background 0.5s ease-in-out' : 'none';
-            localStorage.setItem('animations', animations);
-
-            const customBg = document.getElementById('bgInput').value;
-            if (customBg) {
-                document.body.style.background = `url('${customBg}') no-repeat center center/cover`;
-                localStorage.setItem('customBg', customBg);
-            }
-
-            closeSettings();
-            xpPoints += 5;
-            localStorage.setItem('xpPoints', xpPoints);
-            alert('Ви отримали 5 XP за зміну налаштувань!');
-            updateXPProgress();
-        }
-
-        window.onload = function() {
-            if (localStorage.getItem('darkMode') === 'true') {
-                document.body.style.background = '#121212';
-                document.getElementById('darkModeToggle').checked = true;
-            }
-
-            if (localStorage.getItem('animations') === 'false') {
-                document.body.style.transition = 'none';
-                document.getElementById('animationToggle').checked = false;
-            }
-
-            const savedBg = localStorage.getItem('customBg');
-            if (savedBg) {
-                document.body.style.background = `url('${savedBg}') no-repeat center center/cover`;
-                document.getElementById('bgInput').value = savedBg;
-            }
-
-            const name = localStorage.getItem('bioUsername');
-            const avatarUrl = localStorage.getItem('bioAvatar');
-            let visits = localStorage.getItem('bioVisits');
-
-            if (name && avatarUrl) {
-                visits = parseInt(visits || 0) + 1;
-                localStorage.setItem('bioVisits', visits);
-                updateLoginHistory();
-                showAccountInfo(name, avatarUrl, visits);
-            } else {
-                generateCaptcha();
-            }
-
-            updateXPProgress();
-            updatePromoHistory();
-            updateAchievements();
-        };
-
-        function togglePopup() {
-            const popup = document.getElementById('accountPopup');
-            popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
-            if (popup.style.display === 'block' && !localStorage.getItem('bioUsername')) {
-                generateCaptcha();
-            }
-        }
-
-        let evilMonstersClicked = 0;
-        const requiredClicks = 3;
-        const monsters = [
-            { src: 'Assets/verif/evil1.png', isEvil: true },
-            { src: 'Assets/verif/evil2.png', isEvil: true },
-            { src: 'Assets/verif/evil3.png', isEvil: true },
-            { src: 'Assets/verif/good1.png', isEvil: false },
-            { src: 'Assets/verif/good2.png', isEvil: false }
-        ];
-
-        function generateCaptcha() {
-            const captchaImages = document.getElementById('captchaImages');
-            captchaImages.innerHTML = '';
-            evilMonstersClicked = 0;
-
-            const shuffledMonsters = monsters.sort(() => Math.random() - 0.5);
-            shuffledMonsters.slice(0, 5).forEach(monster => {
-                const img = document.createElement('img');
-                img.src = monster.src;
-                img.dataset.isEvil = monster.isEvil;
-                img.onclick = () => handleMonsterClick(monster.isEvil);
-                captchaImages.appendChild(img);
-            });
-        }
-
-        function handleMonsterClick(isEvil) {
-            if (isEvil) {
-                evilMonstersClicked++;
-                if (evilMonstersClicked >= requiredClicks) {
-                    document.getElementById('captchaGame').innerHTML = '<p style="color: #00ff00;">✅ Усіх монстрів знищено! Натисни "Зареєструватися"!</p>';
-                    xpPoints += 15;
-                    localStorage.setItem('xpPoints', xpPoints);
-                    alert('Ви отримали 15 XP за проходження капчі!');
-                    updateXPProgress();
-                }
-            } else {
-                alert('Ой! Це добрий монстр! Спробуй ще раз.');
-                generateCaptcha();
-            }
-        }
-
-        function registerAccount() {
-            const name = document.getElementById('usernameInput').value.trim();
-            const password = document.getElementById('passwordInput').value.trim();
-            const avatarFile = document.getElementById('avatarInput').files[0];
-
-            if (evilMonstersClicked < requiredClicks) {
-                alert('Знищ усіх злих монстрів для проходження капчі!');
-                return;
-            }
-
-            if (name && password && avatarFile) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const avatarUrl = e.target.result;
-                    localStorage.setItem('bioUsername', name);
-                    localStorage.setItem('bioAvatar', avatarUrl);
-                    localStorage.setItem('bioVisits', 1);
-
-                    if ('PasswordCredential' in window) {
-                        const credential = new PasswordCredential({
-                            id: name,
-                            password: password,
-                            name: name,
-                            iconURL: avatarUrl
-                        });
-                        navigator.credentials.store(credential)
-                            .then(() => {
-                                console.log('Credentials saved to Google Password Manager');
-                            })
-                            .catch(err => {
-                                console.error('Error saving credentials:', err);
-                            });
-                    }
-
-                    updateLoginHistory();
-                    showAccountInfo(name, avatarUrl, 1);
-                    xpPoints += 20;
-                    localStorage.setItem('xpPoints', xpPoints);
-                    alert('Ви отримали 20 XP за реєстрацію!');
-                    updateXPProgress();
-                };
-                reader.readAsDataURL(avatarFile);
-            } else {
-                alert('Будь ласка, заповніть ім’я, пароль та виберіть аватарку!');
-            }
-        }
-
-        function handleGoogleSignIn(credentialResponse) {
-            const idToken = credentialResponse.credential;
-            const base64Url = idToken.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            const userInfo = JSON.parse(jsonPayload);
-
-            const name = userInfo.name || userInfo.email.split('@')[0];
-            const avatarUrl = userInfo.picture || 'https://via.placeholder.com/80';
-            localStorage.setItem('bioUsername', name);
-            localStorage.setItem('bioAvatar', avatarUrl);
-            localStorage.setItem('bioVisits', 1);
-            updateLoginHistory();
-            showAccountInfo(name, avatarUrl, 1);
-            xpPoints += 20;
-            localStorage.setItem('xpPoints', xpPoints);
-            alert('Ви отримали 20 XP за вхід через Google!');
-            updateXPProgress();
-        }
-
-        function showAccountInfo(name, avatarUrl, visits) {
-            document.getElementById('accountForm').style.display = 'none';
-            document.getElementById('accountInfo').style.display = 'block';
-            document.getElementById('displayName').textContent = name;
-            document.getElementById('userAvatar').src = avatarUrl;
-            document.getElementById('visitCount').textContent = visits;
-            document.getElementById('welcomeBanner').style.display = 'block';
-            setTimeGreeting();
-            drawLoginChart();
-            updateXPProgress();
-            updatePromoHistory();
-            updateAchievements();
-        }
-
-        function logout() {
-            localStorage.clear();
-            google.accounts.id.disableAutoSelect();
-            location.reload();
-        }
-
-        function editProfile() {
-            const name = prompt("Введіть нове ім'я", localStorage.getItem('bioUsername'));
-            if (name) {
-                localStorage.setItem('bioUsername', name);
-                showAccountInfo(name, localStorage.getItem('bioAvatar'), localStorage.getItem('bioVisits'));
-                xpPoints += 5;
-                localStorage.setItem('xpPoints', xpPoints);
-                alert('Ви отримали 5 XP за редагування профілю!');
-                updateXPProgress();
-            }
-        }
-
-        function changeAvatar() {
-            const avatarInput = document.createElement('input');
-            avatarInput.type = 'file';
-            avatarInput.accept = 'image/*';
-            avatarInput.onchange = function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const avatarUrl = e.target.result;
-                        localStorage.setItem('bioAvatar', avatarUrl);
-                        document.getElementById('userAvatar').src = avatarUrl;
-                        xpPoints += 5;
-                        localStorage.setItem('xpPoints', xpPoints);
-                        alert('Ви отримали 5 XP за зміну аватарки!');
-                        updateXPProgress();
-                    };
-                    reader.readAsDataURL(file);
-                }
+        // Ініціалізація статистики, якщо відсутня
+        if (!userStats.correctAnswers) {
+            userStats = {
+                correctAnswers: 0,
+                totalQuestions: 0,
+                timeSpent: 0,
             };
-            avatarInput.click();
+            localStorage.setItem('userStats', JSON.stringify(userStats));
         }
 
-        function setTimeGreeting() {
-            const hours = new Date().getHours();
-            const greeting = hours < 12 ? "Добрий ранок!" : (hours < 18 ? "Добрий день!" : "Добрий вечір!");
-            document.getElementById('timeGreeting').textContent = greeting;
+        // Запис часу уроку
+        function recordLessonTime(minutes) {
+            userStats.timeSpent += minutes;
+            localStorage.setItem('userStats', JSON.stringify(userStats));
         }
 
-        function updateLoginHistory() {
-            const loginHistory = JSON.parse(localStorage.getItem('loginHistory') || '{}');
-            const today = new Date().toISOString().split('T')[0];
-            loginHistory[today] = (loginHistory[today] || 0) + 1;
-            localStorage.setItem('loginHistory', JSON.stringify(loginHistory));
+        // Запис завершення уроку
+        function recordLessonCompletion(lessonId) {
+            const date = new Date().toISOString().split('T')[0];
+            lessonsCompleted[date] = (lessonsCompleted[date] || 0) + 1;
+            localStorage.setItem('lessonsCompleted', JSON.stringify(lessonsCompleted));
         }
 
-        function drawLoginChart() {
-            const loginHistory = JSON.parse(localStorage.getItem('loginHistory') || '{}');
-            const labels = Object.keys(loginHistory).slice(-7);
-            const data = labels.map(date => loginHistory[date] || 0);
+        // Завантаження доступних камер
+        async function loadCameraOptions() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const cameraSelect = document.getElementById('cameraSelect');
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                videoDevices.forEach(device => {
+                    const option = document.createElement('option');
+                    option.value = device.deviceId;
+                    option.text = device.label || `Камера ${videoDevices.indexOf(device) + 1}`;
+                    cameraSelect.appendChild(option);
+                });
+            } catch (err) {
+                console.error('Помилка отримання камер:', err);
+                alert('Не вдалося завантажити список камер. Використовується камера за замовчуванням.');
+            }
+        }
 
-            const ctx = document.getElementById('loginChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Відвідування за день',
-                        data: data,
-                        backgroundColor: 'rgba(46, 125, 50, 0.5)',
-                        borderColor: 'rgba(46, 125, 50, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Кількість входів'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Дата'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
+        // Зміна камери
+        async function changeCamera() {
+            const cameraSelect = document.getElementById('cameraSelect');
+            const deviceId = cameraSelect.value;
+            const scene = document.getElementById('arScene');
+            const arjs = scene.getAttribute('arjs');
+
+            if (deviceId) {
+                try {
+                    // Зупиняємо попередній відеопотік, якщо він є
+                    const video = document.querySelector('video');
+                    if (video && video.srcObject) {
+                        video.srcObject.getTracks().forEach(track => track.stop());
                     }
+
+                    // Запускаємо новий потік із вибраною камерою
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { deviceId: { exact: deviceId } }
+                    });
+                    scene.setAttribute('arjs', `sourceType: webcam; sourceWidth: 1280; sourceHeight: 720; debugUIEnabled: false;`);
+                    const videoElement = document.createElement('video');
+                    videoElement.srcObject = stream;
+                    videoElement.play();
+                } catch (err) {
+                    console.error('Помилка зміни камери:', err);
+                    alert('Не вдалося підключитися до вибраної камери.');
+                }
+            }
+        }
+
+        // Обробка кліків по частинах листка
+        document.querySelectorAll('.part').forEach(part => {
+            part.addEventListener('click', (event) => {
+                const infoBox = document.getElementById('info-box');
+                let infoText = '';
+                switch (part.id) {
+                    case 'epidermis':
+                        infoText = 'Епідерміс: Захисний шар листка, що запобігає втраті води.';
+                        break;
+                    case 'stomata':
+                        infoText = 'Продихи: Отвори для газообміну та регуляції водного балансу.';
+                        break;
+                    case 'chloroplasts':
+                        infoText = 'Хлоропласти: Містять хлорофіл, відповідають за фотосинтез.';
+                        break;
+                }
+                infoBox.textContent = infoText;
+                infoBox.style.display = 'block';
+                infoBox.style.left = `${event.clientX + 10}px`;
+                infoBox.style.top = `${event.clientY + 10}px`;
+
+                // Запис завершення уроку після першого кліку
+                if (!localStorage.getItem('arLessonCompleted')) {
+                    xpPoints += 10;
+                    localStorage.setItem('xpPoints', xpPoints);
+                    recordLessonCompletion('ar-lesson');
+                    recordLessonTime(5); // Припускаємо, що урок займає ~5 хвилин
+                    localStorage.setItem('arLessonCompleted', 'true');
+                    alert('Вітаємо! Ви завершили AR-урок і отримали 10 XP!');
                 }
             });
-        }
-    </script>
-    <script defer data-domain="bropetro.github.io/bioword.github.io" src="https://plausible.io/js/script.outbound-links.js"></script>
-</body>
-</html>
+        });
+
+        // Приховати інформаційне вікно при кліку поза ним
+        document.addEventListener('click', (event) => {
+            if (!event.target.classList.contains('part')) {
+                document.getElementById('info-box').style.display = 'none';
+            }
+        });
+// Ініціалізація камер при завантаженні сторінки
+window.onload = function() {
+loadCameraOptions();
+// Записуємо час перебування на сторінці
+const startTime = Date.now();
+window.addEventListener('beforeunload', () => {
+const timeSpent = Math.round((Date.now() - startTime) / 1000 / 60); // Час у хвилинах
+recordLessonTime(timeSpent);
+});
+};
+</script>

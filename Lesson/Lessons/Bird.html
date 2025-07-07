@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подорож у світ птахів | BioWorld</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #74ebd5, #9face6);
+            margin: 0;
+            padding: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            font-size: 28px;
+            margin: 15px 0;
+        }
+        p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px;
+            text-align: center;
+            font-size: 16px;
+        }
+        th {
+            background-color: #2980b9;
+            color: #fff;
+        }
+        td {
+            background-color: #ecf0f1;
+        }
+        ul {
+            text-align: left;
+            margin: 0 auto;
+            display: inline-block;
+            padding-left: 20px;
+        }
+        li {
+            font-size: 16px;
+            margin-bottom: 10px;
+            padding-left: 10px;
+            position: relative;
+        }
+        li::before {
+            content: "•";
+            color: #2980b9;
+            font-size: 18px;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        a {
+            color: #2980b9;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            width: 90%;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ddd;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 24px; }
+            h2 { font-size: 20px; }
+            p, li { font-size: 14px; }
+            .container { width: 95%; padding: 10px; }
+            table { display: block; overflow-x: auto; white-space: nowrap; }
+            th, td { min-width: 120px; padding: 8px; font-size: 14px; }
+            .mobile-table tr { display: block; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; }
+            .mobile-table td { display: flex; justify-content: space-between; background-color: #ecf0f1; padding: 8px; text-align: left; }
+            .mobile-table td::before { content: attr(data-label); font-weight: bold; color: #2980b9; margin-right: 10px; width: 40%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Подорож у світ птахів 🐦🌄</h1>
+        <div class="section">
+            <h2>Хто такі птахи?</h2>
+            <p>
+                Птахи – це пернаті створіння, які вражають красою та різноманітністю. Вони літають, співають і адаптуються до різних середовищ! 🎶
+            </p>
+            <ul>
+                <li>Особливості: пір’я, дзьоб, яйця.</li>
+                <li>Кількість видів: понад 10 000!</li>
+                <li>Приклади: горобець, орел, папуга.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Адаптації птахів</h2>
+            <p>
+                Птахи мають унікальні пристосування до життя. Ось кілька прикладів:
+            </p>
+            <table class="mobile-table">
+                <tr>
+                    <td data-label="Птах">Пінгвін</td>
+                    <td data-label="Адаптація">Товстий шар жиру для тепла</td>
+                    <td data-label="Середовище">Антарктида</td>
+                </tr>
+                <tr>
+                    <td data-label="Птах">Орел</td>
+                    <td data-label="Адаптація">Гострий зір і сильні крила</td>
+                    <td data-label="Середовище">Гори</td>
+                </tr>
+                <tr>
+                    <td data-label="Птах">Колібрі</td>
+                    <td data-label="Адаптація">Швидке биття крил</td>
+                    <td data-label="Середовище">Тропіки</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Роль птахів у природі</h2>
+            <p>
+                Птахи відіграють ключову роль у збереженні балансу природи. Дізнайся більше!
+            </p>
+            <ul>
+                <li>Запилюють квіти (наприклад, колібрі).</li>
+                <li>Контролюють шкідників (сови, горобці).</li>
+                <li>Розсіюють насіння (папуги, голуби).</li>
+            </ul>
+        </div>
+
+    </div>
+</body>
+</html>

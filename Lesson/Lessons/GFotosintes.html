@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Збери молекулу глюкози | BioWorld</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #74ebd5, #9face6);
+            margin: 0;
+            padding: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+        h1 {
+            color: #2c3e50;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        .container {
+            width: 90%;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .game-area {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .molecule {
+            width: 80px;
+            height: 80px;
+            background-color: #ecf0f1;
+            border: 2px solid #2980b9;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px;
+            cursor: move;
+            user-select: none;
+        }
+        .drop-zone {
+            width: 100px;
+            height: 100px;
+            border: 2px dashed #2980b9;
+            margin: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #666;
+        }
+        .correct {
+            border-color: #27ae60;
+            background-color: #e8f8e8;
+        }
+        .incorrect {
+            border-color: #e74c3c;
+            background-color: #fceaea;
+        }
+        p {
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 24px; }
+            .molecule { width: 60px; height: 60px; font-size: 14px; }
+            .drop-zone { width: 80px; height: 80px; font-size: 12px; }
+            p { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Збери молекулу глюкози 🌿☀️</h1>
+        <p>Спробуй нашу гру "Збери молекулу глюкози"! Розстав молекули CO₂ і H₂O у правильному порядку, щоб відтворити процес фотосинтезу.</p>
+        <div class="game-area">
+            <div class="drop-zone" id="zone1">Зона 1</div>
+            <div class="drop-zone" id="zone2">Зона 2</div>
+            <div class="drop-zone" id="zone3">Зона 3</div>
+            <div class="drop-zone" id="zone4">Зона 4</div>
+            <div class="drop-zone" id="zone5">Зона 5</div>
+            <div class="drop-zone" id="zone6">Зона 6</div>
+        </div>
+        <div class="game-area" id="molecules">
+            <div class="molecule" draggable="true" data-type="CO2">CO₂</div>
+            <div class="molecule" draggable="true" data-type="CO2">CO₂</div>
+            <div class="molecule" draggable="true" data-type="CO2">CO₂</div>
+            <div class="molecule" draggable="true" data-type="CO2">CO₂</div>
+            <div class="molecule" draggable="true" data-type="CO2">CO₂</div>
+            <div class="molecule" draggable="true" data-type="CO2">CO₂</div>
+            <div class="molecule" draggable="true" data-type="H2O">H₂O</div>
+            <div class="molecule" draggable="true" data-type="H2O">H₂O</div>
+            <div class="molecule" draggable="true" data-type="H2O">H₂O</div>
+            <div class="molecule" draggable="true" data-type="H2O">H₂O</div>
+            <div class="molecule" draggable="true" data-type="H2O">H₂O</div>
+            <div class="molecule" draggable="true" data-type="H2O">H₂O</div>
+        </div>
+        <p id="message"></p>
+    </div>
+
+    <script>
+        const molecules = document.querySelectorAll('.molecule');
+        const dropZones = document.querySelectorAll('.drop-zone');
+        let draggedItem = null;
+
+        molecules.forEach(molecule => {
+            molecule.addEventListener('dragstart', (e) => {
+                draggedItem = molecule;
+                e.dataTransfer.setData('text/plain', molecule.dataset.type);
+            });
+        });
+
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', (e) => e.preventDefault());
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (draggedItem) {
+                    const type = e.dataTransfer.getData('text');
+                    const zoneId = zone.id;
+                    zone.appendChild(draggedItem);
+                    draggedItem = null;
+
+                    // Перевірка правильності розміщення
+                    checkSolution();
+                }
+            });
+        });
+
+        function checkSolution() {
+            const zones = ['zone1', 'zone2', 'zone3', 'zone4', 'zone5', 'zone6'];
+            const correctOrder = ['CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'H2O', 'H2O', 'H2O', 'H2O', 'H2O', 'H2O'];
+            let userOrder = [];
+            dropZones.forEach(zone => {
+                const molecule = zone.querySelector('.molecule');
+                userOrder.push(molecule ? molecule.dataset.type : null);
+            });
+
+            let isCorrect = true;
+            for (let i = 0; i < zones.length; i++) {
+                const zone = document.getElementById(zones[i]);
+                const molecule = zone.querySelector('.molecule');
+                if (molecule) {
+                    if (molecule.dataset.type !== correctOrder[i]) {
+                        isCorrect = false;
+                        zone.classList.add('incorrect');
+                        zone.classList.remove('correct');
+                    } else {
+                        zone.classList.add('correct');
+                        zone.classList.remove('incorrect');
+                    }
+                } else {
+                    isCorrect = false;
+                    zone.classList.remove('correct', 'incorrect');
+                }
+            }
+
+            const message = document.getElementById('message');
+            if (isCorrect && userOrder.every(item => item !== null)) {
+                message.textContent = 'Вітаємо! Ти правильно відтворив фотосинтез! 🌱';
+                message.style.color = '#27ae60';
+            } else {
+                message.textContent = 'Спробуй ще! Розташуй 6 CO₂ і 6 H₂O. 🎯';
+                message.style.color = '#e74c3c';
+            }
+        }
+    </script>
+</body>
+</html>

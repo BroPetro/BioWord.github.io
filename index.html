@@ -108,50 +108,116 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(145deg, #ffffff, #e6f3e6);
+            padding: 25px;
+            border-radius: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             display: none;
-            text-align: center;
+            text-align: left;
             z-index: 1000;
             width: 90%;
-            max-width: 400px;
+            max-width: 450px;
             max-height: 80vh;
             overflow-y: auto;
+            border: 2px solid #2e7d32;
         }
 
         .settings-popup h2 {
             color: #2e7d32;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+            font-family: 'Roboto Mono', monospace;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .settings-popup label {
+            display: flex;
+            align-items: center;
+            font-size: 1em;
+            color: #333;
             margin-bottom: 15px;
-            font-size: 1.5em;
+            padding: 10px;
+            background: rgba(46, 125, 50, 0.05);
+            border-radius: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .settings-popup label:hover {
+            background: rgba(46, 125, 50, 0.1);
         }
 
         .settings-popup input[type="checkbox"] {
-            margin-right: 8px;
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            accent-color: #2e7d32;
         }
 
         .settings-popup input[type="text"] {
             width: 100%;
-            padding: 8px;
-            margin: 8px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 0.9em;
+            padding: 10px;
+            margin-top: 8px;
+            border: 1px solid #2e7d32;
+            border-radius: 8px;
+            font-size: 0.95em;
+            background: #f9f9f9;
+            transition: border-color 0.3s ease;
+        }
+
+        .settings-popup input[type="text"]:focus {
+            border-color: #1b5e20;
+            outline: none;
+        }
+
+        .settings-popup select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            border: 1px solid #2e7d32;
+            border-radius: 8px;
+            font-size: 0.95em;
+            background: #f9f9f9;
+            transition: border-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .settings-popup select:focus {
+            border-color: #1b5e20;
+            outline: none;
+        }
+
+        .settings-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .settings-popup button, .close-btn {
+            background: linear-gradient(45deg, #2e7d32, #4caf50);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: background 0.3s ease, transform 0.2s ease;
+            min-height: 44px;
+        }
+
+        .settings-popup button:hover, .close-btn:hover {
+            background: linear-gradient(45deg, #4caf50, #2e7d32);
+            transform: translateY(-2px);
         }
 
         .close-btn {
-            background: #d32f2f;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: background 0.3s ease;
+            background: linear-gradient(45deg, #d32f2f, #b71c1c);
         }
 
         .close-btn:hover {
-            background: #b71c1c;
+            background: linear-gradient(45deg, #b71c1c, #d32f2f);
         }
 
         .easter-greeting {
@@ -662,17 +728,25 @@
     <div class="settings-popup" id="settings">
         <h2>⚙️ Налаштування</h2>
         <label>
-            <input type="checkbox" id="darkModeToggle"> 🌙 Темна тема
-        </label><br>
+            🎨 Вибрати тему:
+            <select id="themeSelect">
+                <option value="default">За замовчуванням (Лісова зелень)</option>
+                <option value="ocean">Океанська блакить</option>
+                <option value="sunset">Захід сонця</option>
+                <option value="dark">Темна тема</option>
+            </select>
+        </label>
         <label>
             <input type="checkbox" id="animationToggle" checked> ✨ Анімації
-        </label><br>
+        </label>
         <label>
             🖼 Власний фон:
             <input type="text" id="bgInput" placeholder="Вставте URL">
-        </label><br>
-        <button onclick="applySettings()">✅ Зберегти</button>
-        <div class="close-btn" onclick="closeSettings()">❌ Закрити</div>
+        </label>
+        <div class="settings-buttons">
+            <button onclick="applySettings()">✅ Зберегти</button>
+            <div class="close-btn" onclick="closeSettings()">❌ Закрити</div>
+        </div>
     </div>
 
     <div class="easter-greeting">
@@ -705,6 +779,34 @@
             'Ти що, геній?': '🏆',
             'Майстер біології': '🌟',
             'Мега мозок!': '🚀'
+        };
+
+        // Theme configurations
+        const themes = {
+            default: {
+                background: 'linear-gradient(135deg, #e0f7fa, #4caf50)',
+                textColor: '#333',
+                buttonGradient: 'linear-gradient(45deg, #2e7d32, #4caf50)',
+                buttonHoverGradient: 'linear-gradient(45deg, #4caf50, #2e7d32)'
+            },
+            ocean: {
+                background: 'linear-gradient(135deg, #a1c4fd, #2196f3)',
+                textColor: '#1e3a8a',
+                buttonGradient: 'linear-gradient(45deg, #1565c0, #42a5f5)',
+                buttonHoverGradient: 'linear-gradient(45deg, #42a5f5, #1565c0)'
+            },
+            sunset: {
+                background: 'linear-gradient(135deg, #ffccbc, #f57c00)',
+                textColor: '#4a2c00',
+                buttonGradient: 'linear-gradient(45deg, #d84315, #ff9800)',
+                buttonHoverGradient: 'linear-gradient(45deg, #ff9800, #d84315)'
+            },
+            dark: {
+                background: '#121212',
+                textColor: '#e0e0e0',
+                buttonGradient: 'linear-gradient(45deg, #424242, #757575)',
+                buttonHoverGradient: 'linear-gradient(45deg, #757575, #424242)'
+            }
         };
 
         function updateXPProgress() {
@@ -923,23 +1025,37 @@
         }
 
         function applySettings() {
-            const darkMode = document.getElementById('darkModeToggle').checked;
-            if (darkMode) {
-                document.body.style.background = '#121212';
-            } else {
-                document.body.style.background = "linear-gradient(135deg, #e0f7fa, #4caf50)";
-            }
-            localStorage.setItem('darkMode', darkMode);
-
+            const theme = document.getElementById('themeSelect').value;
             const animations = document.getElementById('animationToggle').checked;
-            document.body.style.transition = animations ? 'background 0.5s ease-in-out' : 'none';
-            localStorage.setItem('animations', animations);
-
             const customBg = document.getElementById('bgInput').value;
+
+            // Apply theme
+            if (theme !== 'custom') {
+                const selectedTheme = themes[theme];
+                document.body.style.background = selectedTheme.background;
+                document.body.style.color = selectedTheme.textColor;
+                document.querySelectorAll('.button, .settings-popup button, .close-btn:not(.close-btn), .account-btn').forEach(btn => {
+                    btn.style.background = selectedTheme.buttonGradient;
+                    btn.onmouseover = () => btn.style.background = selectedTheme.buttonHoverGradient;
+                    btn.onmouseout = () => btn.style.background = selectedTheme.buttonGradient;
+                });
+                document.querySelectorAll('.xp-container').forEach(container => {
+                    container.style.background = selectedTheme.buttonGradient;
+                });
+                localStorage.setItem('theme', theme);
+            }
+
+            // Apply custom background if provided
             if (customBg) {
                 document.body.style.background = `url('${customBg}') no-repeat center center/cover`;
                 localStorage.setItem('customBg', customBg);
+            } else {
+                localStorage.removeItem('customBg');
             }
+
+            // Apply animations
+            document.body.style.transition = animations ? 'background 0.5s ease-in-out' : 'none';
+            localStorage.setItem('animations', animations);
 
             closeSettings();
             xpPoints += 5;
@@ -949,9 +1065,20 @@
         }
 
         window.onload = function() {
-            if (localStorage.getItem('darkMode') === 'true') {
-                document.body.style.background = '#121212';
-                document.getElementById('darkModeToggle').checked = true;
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme && themes[savedTheme]) {
+                document.getElementById('themeSelect').value = savedTheme;
+                const selectedTheme = themes[savedTheme];
+                document.body.style.background = selectedTheme.background;
+                document.body.style.color = selectedTheme.textColor;
+                document.querySelectorAll('.button, .settings-popup button, .close-btn:not(.close-btn), .account-btn').forEach(btn => {
+                    btn.style.background = selectedTheme.buttonGradient;
+                    btn.onmouseover = () => btn.style.background = selectedTheme.buttonHoverGradient;
+                    btn.onmouseout = () => btn.style.background = selectedTheme.buttonGradient;
+                });
+                document.querySelectorAll('.xp-container').forEach(container => {
+                    container.style.background = selectedTheme.buttonGradient;
+                });
             }
 
             if (localStorage.getItem('animations') === 'false') {

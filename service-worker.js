@@ -2,7 +2,7 @@ const CACHE_NAME = 'offline-BIOWORLD-V1';
 const urlsToCache = [
   'index.html',
   'manifest.json',
-  'icon.png'
+  'icon-for-app.png'
   '123.html'
   'Forum.html'
   'Info.txt'

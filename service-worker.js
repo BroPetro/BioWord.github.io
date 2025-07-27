@@ -3,6 +3,18 @@ const urlsToCache = [
   'index.html',
   'manifest.json',
   'icon.png'
+  '123.html'
+  'Forum.html'
+  'Info.txt'
+  'InfoCrator.html'
+  'InfoUpdate.html'
+  'Nots.html'
+  'Profil.html'
+  'QUZ.html'
+  'Quz.html'
+  'Test.html'
+  'prizes.html'
+  
 ];
 
 self.addEventListener('install', event => {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'offline-BIOWORLD-V1';
+const CACHE_NAME = 'offline-BIOWORLD-V1.1';
 const urlsToCache = [
   'index.html',
   'manifest.json',

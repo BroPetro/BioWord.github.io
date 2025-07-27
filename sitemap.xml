@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Головна -->
+  <url>
+    <loc>https://bropetro.github.io/BioWord.github.io/</loc>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Уроки -->
+  <url>
+    <loc>https://bropetro.github.io/BioWord.github.io/Lesson/LessIndex.html</loc>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Квіз -->
+  <url>
+    <loc>https://bropetro.github.io/BioWord.github.io/QUZ.html</loc>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Нотатки -->
+  <url>
+    <loc>https://bropetro.github.io/BioWord.github.io/Nots.html</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Про нас -->
+  <url>
+    <loc>https://bropetro.github.io/BioWord.github.io/InfoCrator.html</loc>
+    <priority>0.7</priority>
+  </url>
+
+</urlset>

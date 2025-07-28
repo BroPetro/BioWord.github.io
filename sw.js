@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bioworld-v1.0.2';
+const CACHE_NAME = 'bioworld-v1.0.2'; // 🔥 змінюй цю версію при оновленнях
 const urlsToCache = [
   '/',
   'index.html',
@@ -16,43 +16,31 @@ const urlsToCache = [
   'Test.html',
   'prizes.html',
   'offline.html',
-  'Assets/', // додаємо саму папку
-  'Lesson/', // додаємо папку Lesson
-  'Quz/' // додаємо папку Quz
-];
-
-// Ти додав файли, але щоб додати вміст папок, ти повинен вручну вказати їхні файли
-// Наприклад, якщо в папці Assets є файли assets1.jpg, assets2.jpg, то додаєш їх тут:
-
-const assetsToCache = [
   'Assets/assets1.jpg',
-  'Assets/assets2.jpg',
-  'Assets/style.css',
-  // додай тут усі файли з папки Assets
+  'Assets',
+  'Lesson',
+  'Quz',
+  // ➕ додай решту файлів
 ];
-
-const lessonToCache = [
-  'Lesson/lesson1.html',
-  'Lesson/lesson2.html',
-  'Lesson/style.css',
-  // додай всі файли з папки Lesson
-];
-
-const quzToCache = [
-  'Quz/quiz1.html',
-  'Quz/quiz2.html',
-  'Quz/style.css',
-  // додай всі файли з папки Quz
-];
-
-// Об'єднуємо всі файли для кешування
-const allUrlsToCache = urlsToCache.concat(assetsToCache, lessonToCache, quzToCache);
 
 self.addEventListener('install', event => {
+  self.skipWaiting(); // 🚨 одразу активує SW
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(allUrlsToCache);
-    })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+  );
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(name => {
+          if (name !== CACHE_NAME) {
+            return caches.delete(name); // 🔥 Видаляємо старі версії
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
   );
 });
 
@@ -65,4 +53,3 @@ self.addEventListener('fetch', event => {
     })
   );
 });
-

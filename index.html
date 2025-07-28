@@ -21,14 +21,19 @@
   <!-- PWA підтримка для iOS -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#317EFB"/>
-  <script>
-    // Реєстрація Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(reg => console.log('✅ Service Worker зареєстровано!', reg))
-        .catch(err => console.error('❌ Помилка Service Worker:', err));
-    }
-  </script>
+<link rel="manifest" href="manifest.json" />
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').then(reg => {
+        console.log('✅ Service Worker зареєстровано:', reg.scope);
+      }).catch(err => {
+        console.log('❌ Помилка реєстрації Service Worker:', err);
+      });
+    });
+  }
+</script>
+
       <!-- Мета-опис (до 160 символів, як реклама в пошуку) -->
   <meta name="description" content="BIOWORLD — сайт, де біологія стає цікавою! Просто про клітини, ДНК, віруси, фотосинтез і все, що треба знати. Без нудьги, з гумором і любов’ю до науки!">
 

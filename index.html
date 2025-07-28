@@ -1,45 +1,83 @@
 <!DOCTYPE html>
 <html lang="uk">
-<meta charset="UTF-8">
-    <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Уроки біології</title>
 
-  <title>Уроки біології</title>
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/icon.png">
 
-  <!-- PWA manifest -->
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icon.png" type="image/png">
-  <link rel="apple-touch-icon" href="icon.png">
+    <!-- PWA підтримка -->
+    <meta name="theme-color" content="#317EFB">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
 
-  <!-- PWA підтримка -->
-  <meta name="theme-color" content="#317EFB" />
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
+    <!-- Шрифти -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
 
-  <!-- Шрифти -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
+    <!-- SEO -->
+    <meta name="description" content="BIOWORLD — сайт, де біологія стає цікавою! Просто про клітини, ДНК, віруси, фотосинтез і все, що треба знати. Без нудьги, з гумором і любов’ю до науки!">
+    <meta name="keywords" content="біологія, клітина, тварина, ігри, шкільна програма, BioWorld, рослини, BIOWORLD">
+    <meta name="author" content="BroPetro">
 
-  <!-- SEO -->
-  <meta name="description" content="BIOWORLD — сайт, де біологія стає цікавою! Просто про клітини, ДНК, віруси, фотосинтез і все, що треба знати. Без нудьги, з гумором і любов’ю до науки!">
-  <meta name="keywords" content="біологія, клітина, тварина, ігри, шкільна програма, BioWord, рослини, BIOWORLD">
-  <meta name="author" content="BroPetro">
+    <!-- Скрипти -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-  <!-- Скрипти -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(reg => {
+                    console.log('✅ Service Worker зареєстровано:', reg.scope);
+                    reg.onupdatefound = () => {
+                        const newWorker = reg.installing;
+                        newWorker.onstatechange = () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                showUpdateMenu();
+                            }
+                        };
+                    };
+                }).catch(err => {
+                    console.log('❌ Помилка реєстрації Service Worker:', err);
+                });
+            });
+        }
 
-  <!-- Service Worker -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then(reg => {
-          console.log('✅ Service Worker зареєстровано:', reg.scope);
-        }).catch(err => {
-          console.log('❌ Помилка реєстрації Service Worker:', err);
-        });
-      });
-    }
-  </script>
+        function showUpdateMenu() {
+            const bar = document.createElement('div');
+            bar.style.cssText = `
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                background: #222;
+                color: white;
+                text-align: center;
+                padding: 15px;
+                z-index: 9999;
+                font-family: sans-serif;
+            `;
+            bar.innerHTML = `
+                ⚡ Доступне нове оновлення!
+                <button style="margin-left: 15px; padding: 8px 15px; cursor: pointer;">Оновити</button>
+            `;
+            document.body.appendChild(bar);
+
+            bar.querySelector('button').addEventListener('click', () => {
+                navigator.serviceWorker.getRegistration().then(reg => {
+                    if (reg.waiting) {
+                        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                });
+                window.location.reload();
+            });
+        }
+    </script>
+
     <style>
         * {
             box-sizing: border-box;
@@ -723,7 +761,7 @@
         <p>Запроси друга та отримай до 40 XP!</p>
         <button onclick="shareViaTelegram()">Поділитися через Telegram</button>
         <button onclick="shareViaViber()">Поділитися через Viber</button>
-        <button onclick="shareViaWhatsApp()">Podілитися через WhatsApp</button>
+        <button onclick="shareViaWhatsApp()">Поділитися через WhatsApp</button>
         <button onclick="copyShareLink()">Скопіювати посилання</button>
         <div class="close-btn" onclick="closeSharePopup()">❌ Закрити</div>
     </div>
@@ -731,17 +769,17 @@
     <div class="container">
         <h1>📚 Уроки з біології</h1>
         <p>Досліджуй світ природи разом із нами!</p>
-        <a href="Lesson/LessIndex.html" class="button">📖 Перейти до уроків</a>
-        <a href="QUZ.html" class="button">🧪 Пройти тест</a><br>
-        <a href="Nots.html" class="button">🗒️ Нотатник</a>
-        <a href="Forum.html" class="button">💬 Forum</a><br>
-        <a href="InfoCrator.html" class="button">🏠 Про нас</a>
-        <a href="InfoUpdate.html" class="button">Оновлення</a>
+        <a href="/Lesson/LessIndex.html" class="button">📖 Перейти до уроків</a>
+        <a href="/QUZ.html" class="button">🧪 Пройти тест</a><br>
+        <a href="/Nots.html" class="button">🗒️ Нотатник</a>
+        <a href="/Forum.html" class="button">💬 Форум</a><br>
+        <a href="/InfoCrator.html" class="button">🏠 Про нас</a>
+        <a href="/InfoUpdate.html" class="button">Оновлення</a>
         <a href="#" class="button" onclick="openSettings()">⚙️ Налаштування</a>
     </div>
 
     <div class="xp-wrapper">
-        <div class="xp-container" onclick="location.href='prizes.html'">
+        <div class="xp-container" onclick="location.href='/prizes.html'">
             Ваш XP: <span id="xp-points">0</span>
             <div class="xp-progress-container">
                 <div class="xp-progress-bar">
@@ -753,7 +791,7 @@
         <div class="xp-container" onclick="redirectToRandomTest()">
             🎲 Випробуй себе!
         </div>
-        <div class="xp-container" onclick="location.href='Test.html'">
+        <div class="xp-container" onclick="location.href='/Test.html'">
             🌿 Розпізнавач Рослин
         </div>
     </div>
@@ -1036,10 +1074,10 @@
 
         function redirectToRandomTest() {
             const tests = [
-                'Quz/QPetInst.html',
-                'Quz/QPetOrg.html',
-                'Quz/QPlosCherv.html',
-                'Quz/QPetIn.html'
+                '/Quz/QPetInst.html',
+                '/Quz/QPetOrg.html',
+                '/Quz/QPlosCherv.html',
+                '/Quz/QPetIn.html'
             ];
             const randomTest = tests[Math.floor(Math.random() * tests.length)];
             location.href = randomTest;
@@ -1154,11 +1192,11 @@
         let evilMonstersClicked = 0;
         const requiredClicks = 3;
         const monsters = [
-            { src: 'Assets/verif/evil1.png', isEvil: true },
-            { src: 'Assets/verif/evil2.png', isEvil: true },
-            { src: 'Assets/verif/evil3.png', isEvil: true },
-            { src: 'Assets/verif/good1.png', isEvil: false },
-            { src: 'Assets/verif/good2.png', isEvil: false }
+            { src: '/Assets/verif/evil1.png', isEvil: true },
+            { src: '/Assets/verif/evil2.png', isEvil: true },
+            { src: '/Assets/verif/evil3.png', isEvil: true },
+            { src: '/Assets/verif/good1.png', isEvil: false },
+            { src: '/Assets/verif/good2.png', isEvil: false }
         ];
 
         function generateCaptcha() {
@@ -1371,53 +1409,6 @@
                 }
             });
         }
-        if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js')
-    .then(reg => {
-      console.log('✅ Service Worker зареєстрований!');
-
-      // Перевірка на оновлення
-      reg.onupdatefound = () => {
-        const newWorker = reg.installing;
-        newWorker.onstatechange = () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // 💥 ПОКАЗАТИ МЕНЮ ОНОВЛЕННЯ
-            showUpdateMenu();
-          }
-        };
-      };
-    });
-
-  function showUpdateMenu() {
-    const bar = document.createElement('div');
-    bar.style = `
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      background: #222;
-      color: white;
-      text-align: center;
-      padding: 15px;
-      z-index: 9999;
-      font-family: sans-serif;
-    `;
-    bar.innerHTML = `
-      ⚡ Доступне нове оновлення!
-      <button style="margin-left: 15px; padding: 8px 15px; cursor: pointer;">Оновити</button>
-    `;
-    document.body.appendChild(bar);
-
-    bar.querySelector('button').addEventListener('click', () => {
-      navigator.serviceWorker.getRegistration().then(reg => {
-        if (reg.waiting) {
-          reg.waiting.postMessage('SKIP_WAITING');
-        }
-      });
-      window.location.reload();
-    });
-  }
-}
-
     </script>
     <script defer data-domain="bropetro.github.io/bioword.github.io" src="https://plausible.io/js/script.outbound-links.js"></script>
 </body>

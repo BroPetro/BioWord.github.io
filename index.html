@@ -1372,6 +1372,53 @@
                 }
             });
         }
+        if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js')
+    .then(reg => {
+      console.log('✅ Service Worker зареєстрований!');
+
+      // Перевірка на оновлення
+      reg.onupdatefound = () => {
+        const newWorker = reg.installing;
+        newWorker.onstatechange = () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // 💥 ПОКАЗАТИ МЕНЮ ОНОВЛЕННЯ
+            showUpdateMenu();
+          }
+        };
+      };
+    });
+
+  function showUpdateMenu() {
+    const bar = document.createElement('div');
+    bar.style = `
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #222;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      z-index: 9999;
+      font-family: sans-serif;
+    `;
+    bar.innerHTML = `
+      ⚡ Доступне нове оновлення!
+      <button style="margin-left: 15px; padding: 8px 15px; cursor: pointer;">Оновити</button>
+    `;
+    document.body.appendChild(bar);
+
+    bar.querySelector('button').addEventListener('click', () => {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (reg.waiting) {
+          reg.waiting.postMessage('SKIP_WAITING');
+        }
+      });
+      window.location.reload();
+    });
+  }
+}
+
     </script>
     <script defer data-domain="bropetro.github.io/bioword.github.io" src="https://plausible.io/js/script.outbound-links.js"></script>
 </body>

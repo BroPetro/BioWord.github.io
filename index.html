@@ -2,14 +2,13 @@
 <html lang="uk">
 <meta charset="UTF-8">
 <head>
-  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Уроки біології</title>
 
   <!-- PWA manifest -->
-  <link rel="manifest" href="/BioWord.github.io/manifest.json" />
-  <link rel="icon" href="/BioWord.github.io/icon.png" type="image/png">
-  <link rel="apple-touch-icon" href="/BioWord.github.io/icon-for-app.png">
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon-for-app.png">
 
   <!-- PWA підтримка -->
   <meta name="theme-color" content="#317EFB" />
@@ -33,7 +32,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/BioWord.github.io/sw.js').then(reg => {
+        navigator.serviceWorker.register('sw.js').then(reg => {
           console.log('✅ Service Worker зареєстровано:', reg.scope);
         }).catch(err => {
           console.log('❌ Помилка реєстрації Service Worker:', err);

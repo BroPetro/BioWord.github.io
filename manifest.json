@@ -2,7 +2,7 @@
   "name": "BioWorld",
   "short_name": "BioWorld",
   "description": "BIOWORLD — сайт, де біологія стає цікавою!",
-  "start_url": "/index.html",
+  "start_url": "https://bropetro.github.io/BioWord.github.io/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#317EFB",

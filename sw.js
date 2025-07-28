@@ -1,21 +1,21 @@
-const CACHE_NAME = 'bioworld-v1';
+const CACHE_NAME = 'bioworld-v1.0.1';
 const urlsToCache = [
   '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-for-app.png',
-  '/123.html',
-  '/Forum.html',
-  '/Info.txt',
-  '/InfoCrator.html',
-  '/InfoUpdate.html',
-  '/Nots.html',
-  '/Profil.html',
-  '/QUZ.html',
-  '/Quz.html',
-  '/Test.html',
-  '/prizes.html',
-  '/offline.html'
+  'index.html',
+  'manifest.json',
+  'icon-for-app.png',
+  '123.html',
+  'Forum.html',
+  'Info.txt',
+  'InfoCrator.html',
+  'InfoUpdate.html',
+  'Nots.html',
+  'Profil.html',
+  'QUZ.html',
+  'Quz.html',
+  'Test.html',
+  'prizes.html',
+  'offline.html'
 ];
 
 self.addEventListener('install', event => {

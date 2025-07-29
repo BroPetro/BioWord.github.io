@@ -3,83 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎁 Досягнення та Призи</title>
+    <title>🎯 Досягнення та Нагороди</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
-            background: url('https://source.unsplash.com/1600x900/?galaxy,stars') no-repeat center center/cover;
-            background-size: cover;
-            color: white;
+            background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4e 100%);
+            color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             flex-direction: column;
+            overflow-x: hidden;
         }
 
         .container {
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
             padding: 30px;
-            border-radius: 15px;
+            border-radius: 20px;
             text-align: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-            width: 80%;
-            max-width: 900px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px;
         }
 
-        .button {
-            display: inline-block;
-            background: linear-gradient(45deg, #ff9800, #e65100);
-            color: white;
-            padding: 15px 25px;
-            text-decoration: none;
-            font-size: 1.3em;
-            border-radius: 50px;
-            transition: all 0.3s ease;
-            margin: 10px;
-            min-height: 44px;
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
-        .button:hover {
-            background: linear-gradient(45deg, #e65100, #ff9800);
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .prize-container {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .prize-info {
-            margin-top: 10px;
-            font-size: 1.1em;
-            color: #ffeb3b;
+        .xp-info {
+            font-size: 1.5em;
+            margin: 10px 0;
+            color: #ffd700;
         }
 
         .progress-bar {
             width: 80%;
-            background: #333;
-            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
             overflow: hidden;
             margin: 20px auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .progress {
-            height: 20px;
-            background: linear-gradient(45deg, #4caf50, #8bc34a);
-            transition: width 1s ease-in-out;
+            height: 24px;
+            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+            transition: width 1.5s ease-in-out, background 0.3s ease;
+            position: relative;
+        }
+
+        .progress::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .achievement-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .achievement-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .achievement-card i {
+            font-size: 2em;
+            color: #ffd700;
+            margin-right: 15px;
+        }
+
+        .achievement-info {
+            flex-grow: 1;
+            text-align: left;
+        }
+
+        .achievement-info h3 {
+            margin: 0;
+            font-size: 1.4em;
+            color: #fff;
+        }
+
+        .achievement-info p {
+            margin: 5px 0;
+            color: #ccc;
+        }
+
+        .button {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            min-height: 44px;
+        }
+
+        .button:hover {
+            background: linear-gradient(45deg, #ff8e53, #ff6b6b);
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         canvas {
-            margin: 20px auto;
+            margin: 30px auto;
             max-width: 100%;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
         }
 
         /* Mobile Optimizations */
@@ -90,21 +164,22 @@
             }
 
             h1 {
-                font-size: 1.8em;
+                font-size: 2em;
+            }
+
+            .achievement-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .achievement-info {
+                text-align: center;
+                margin-bottom: 10px;
             }
 
             .button {
-                font-size: 1.1em;
-                padding: 12px 20px;
-                min-height: 40px;
-            }
-
-            .prize-container {
-                padding: 10px;
-            }
-
-            .prize-info {
                 font-size: 1em;
+                padding: 10px 20px;
             }
 
             .progress-bar {
@@ -114,80 +189,83 @@
 
         @media (max-width: 480px) {
             h1 {
-                font-size: 1.5em;
+                font-size: 1.6em;
+            }
+
+            .achievement-info h3 {
+                font-size: 1.2em;
             }
 
             .button {
                 font-size: 0.9em;
-                padding: 10px 15px;
-                min-height: 36px;
-            }
-
-            .prize-container {
-                padding: 8px;
-            }
-
-            .prize-info {
-                font-size: 0.9em;
+                padding: 8px 16px;
             }
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>🎁 Досягнення та Призи</h1>
-        <p>Ваш XP: <span id="xp-points">0</span></p>
+        <h1><i class="fas fa-trophy"></i> Досягнення та Нагороди</h1>
+        <p class="xp-info">Ваш XP: <span id="xp-points">0</span></p>
         <div class="progress-bar">
             <div id="progress" class="progress" style="width: 0%"></div>
         </div>
-        <p id="progress-text">Прогрес до наступного призу: 0/100 XP</p>
+        <p id="progress-text">Прогрес до наступного рівня: 0/100 XP</p>
 
         <canvas id="xpChart" width="400" height="200"></canvas>
 
-        <div class="prize-container">
-            <h3>🥇 "Ти що, геній?"</h3>
-            <p>Ціна: 100 XP</p>
-            <button class="button" onclick="redeemPrize(100, 'Ти що, геній?')">Обміняти</button>
-            <p class="prize-info" id="genius-count">Придбано: 0</p>
+        <div class="achievement-card">
+            <i class="fas fa-star"></i>
+            <div class="achievement-info">
+                <h3>🥉 Бронзовий Геній</h3>
+                <p>Ціна: 100 XP</p>
+                <p id="bronze-genius-count">Отримано: 0</p>
+            </div>
+            <button class="button" onclick="redeemPrize(100, 'Бронзовий Геній')">Обміняти</button>
         </div>
 
-        <div class="prize-container">
-            <h3>🌟 "Майстер біології"</h3>
-            <p>Ціна: 200 XP</p>
-            <button class="button" onclick="redeemPrize(200, 'Майстер біології')">Обміняти</button>
-            <p class="prize-info" id="bio-master-count">Придбано: 0</p>
+        <div class="achievement-card">
+            <i class="fas fa-medal"></i>
+            <div class="achievement-info">
+                <h3>🥈 Срібний Біолог</h3>
+                <p>Ціна: 200 XP</p>
+                <p id="silver-biologist-count">Отримано: 0</p>
+            </div>
+            <button class="button" onclick="redeemPrize(200, 'Срібний Біолог')">Обміняти</button>
         </div>
 
-        <div class="prize-container">
-            <h3>🚀 "Мега мозок!"</h3>
-            <p>Ціна: 300 XP</p>
-            <button class="button" onclick="redeemPrize(300, 'Мега мозок!')">Обміняти</button>
-            <p class="prize-info" id="mega-brain-count">Придбано: 0</p>
+        <div class="achievement-card">
+            <i class="fas fa-crown"></i>
+            <div class="achievement-info">
+                <h3>🥇 Золотий Мозок</h3>
+                <p>Ціна: 300 XP</p>
+                <p id="gold-brain-count">Отримано: 0</p>
+            </div>
+            <button class="button" onclick="redeemPrize(300, 'Золотий Мозок')">Обміняти</button>
         </div>
 
-        <a href="index.html" class="button">🏠 Назад</a>
+        <a href="index.html" class="button"><i class="fas fa-home"></i> Назад</a>
     </div>
 
     <script>
         let xpPoints = parseInt(localStorage.getItem('xpPoints')) || 0;
-        let geniusCount = parseInt(localStorage.getItem('geniusCount')) || 0;
-        let bioMasterCount = parseInt(localStorage.getItem('bioMasterCount')) || 0;
-        let megaBrainCount = parseInt(localStorage.getItem('megaBrainCount')) || 0;
+        let bronzeGeniusCount = parseInt(localStorage.getItem('bronzeGeniusCount')) || 0;
+        let silverBiologistCount = parseInt(localStorage.getItem('silverBiologistCount')) || 0;
+        let goldBrainCount = parseInt(localStorage.getItem('goldBrainCount')) || 0;
         let userAchievements = JSON.parse(localStorage.getItem('userAchievements') || '[]');
 
         function updateProgressBar() {
             const nextPrize = xpPoints < 100 ? 100 : xpPoints < 200 ? 200 : 300;
             const progressPercent = Math.min((xpPoints / nextPrize) * 100, 100);
             document.getElementById('progress').style.width = `${progressPercent}%`;
-            document.getElementById('progress-text').textContent = `Прогрес до наступного призу: ${xpPoints}/${nextPrize} XP`;
+            document.getElementById('progress-text').textContent = `Прогрес до наступного рівня: ${xpPoints}/${nextPrize} XP`;
         }
 
         function updateUI() {
             document.getElementById('xp-points').textContent = xpPoints;
-            document.getElementById('genius-count').textContent = `Придбано: ${geniusCount}`;
-            document.getElementById('bio-master-count').textContent = `Придбано: ${bioMasterCount}`;
-            document.getElementById('mega-brain-count').textContent = `Придбано: ${megaBrainCount}`;
+            document.getElementById('bronze-genius-count').textContent = `Отримано: ${bronzeGeniusCount}`;
+            document.getElementById('silver-biologist-count').textContent = `Отримано: ${silverBiologistCount}`;
+            document.getElementById('gold-brain-count').textContent = `Отримано: ${goldBrainCount}`;
             updateProgressBar();
         }
 
@@ -195,23 +273,23 @@
             if (xpPoints >= cost) {
                 xpPoints -= cost;
                 localStorage.setItem('xpPoints', xpPoints);
-                if (prizeName === 'Ти що, геній?') {
-                    geniusCount++;
-                    localStorage.setItem('geniusCount', geniusCount);
-                } else if (prizeName === 'Майстер біології') {
-                    bioMasterCount++;
-                    localStorage.setItem('bioMasterCount', bioMasterCount);
-                } else if (prizeName === 'Мега мозок!') {
-                    megaBrainCount++;
-                    localStorage.setItem('megaBrainCount', megaBrainCount);
+                if (prizeName === 'Бронзовий Геній') {
+                    bronzeGeniusCount++;
+                    localStorage.setItem('bronzeGeniusCount', bronzeGeniusCount);
+                } else if (prizeName === 'Срібний Біолог') {
+                    silverBiologistCount++;
+                    localStorage.setItem('silverBiologistCount', silverBiologistCount);
+                } else if (prizeName === 'Золотий Мозок') {
+                    goldBrainCount++;
+                    localStorage.setItem('goldBrainCount', goldBrainCount);
                 }
                 userAchievements.push({ name: prizeName, date: new Date().toISOString().split('T')[0] });
                 localStorage.setItem('userAchievements', JSON.stringify(userAchievements));
-                alert(`🎉 Ви отримали приз: '${prizeName}'`);
+                alert(`🎉 Вітаємо! Ви отримали: '${prizeName}'`);
                 updateUI();
                 updateChart();
             } else {
-                alert("❌ Недостатньо XP!");
+                alert("❌ Недостатньо XP для обміну!");
             }
         }
 
@@ -220,12 +298,12 @@
             new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['Ваш XP', 'Ти що, геній?', 'Майстер біології', 'Мега мозок!'],
+                    labels: ['Ваш XP', 'Бронзовий Геній', 'Срібний Біолог', 'Золотий Мозок'],
                     datasets: [{
                         label: 'Досягнення',
-                        data: [xpPoints, geniusCount * 100, bioMasterCount * 200, megaBrainCount * 300],
-                        backgroundColor: ['#4caf50', '#ff9800', '#ff9800', '#ff9800'],
-                        borderColor: ['#388e3c', '#e65100', '#e65100', '#e65100'],
+                        data: [xpPoints, bronzeGeniusCount * 100, silverBiologistCount * 200, goldBrainCount * 300],
+                        backgroundColor: ['#ffd700', '#cd7f32', '#c0c0c0', '#ffd700'],
+                        borderColor: ['#d4a017', '#a55e1b', '#a0a0a0', '#d4a017'],
                         borderWidth: 1
                     }]
                 },
@@ -236,16 +314,17 @@
                             title: {
                                 display: true,
                                 text: 'XP',
-                                color: '#fff'
+                                color: '#fff',
+                                font: { size: 14 }
                             },
                             ticks: { color: '#fff' }
                         },
                         x: {
-                            ticks: { color: '#fff' }
+                            ticks: { color: '#fff', font: { size: 12 } }
                         }
                     },
                     plugins: {
-                        legend: { labels: { color: '#fff' } }
+                        legend: { labels: { color: '#fff', font: { size: 14 } } }
                     }
                 }
             });

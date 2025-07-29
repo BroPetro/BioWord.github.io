@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bioworld-v1.0.2-F'; // 🔥 змінюй цю версію при оновленнях
+const CACHE_NAME = 'bioworld-v1.0.3-P'; // 🔥 змінюй цю версію при оновленнях
 const urlsToCache = [
   '/',
   'index.html',

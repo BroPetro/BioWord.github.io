@@ -744,7 +744,7 @@
       <input type="password" id="passwordInput" placeholder="Пароль">
       <input type="file" id="avatarInput" accept="image/*">
       <div id="captchaGame">
-        <p>🔫 Капча в стилі Minecraft: Вбий злих монстрів! (Натисни на них)</p>
+        <p>🌿 Вибери живі організми! (Натисни на них)</p>
         <div id="captchaImages"></div>
       </div>
       <button onclick="registerAccount()">Зареєструватися</button>
@@ -863,7 +863,7 @@
     const maxXP = 200;
     let lastClaimDate = localStorage.getItem('lastClaimDate') || '';
     const today = new Date().toISOString().split('T')[0];
-    let isCaptchaPassed = false; // Змінна для перевірки проходження капчі
+    let isCaptchaPassed = false;
 
     // Pre-defined promo codes for invites
     const promoCodes = {
@@ -882,7 +882,19 @@
     const achievementEmojis = {
       'Ти що, геній?': '🏆',
       'Майстер біології': '🌟',
-      'Мега мозок!': '🚀'
+      'Мега мозок!': '🚀',
+      'Щоденний вхід': '📅',
+      'Проходження капчі': '🔍',
+      'Активація промокоду': '🎁',
+      'Отримання бонусу': '💰',
+      'Запрошення друга': '🤝',
+      'Випадковий тест': '🎲',
+      'Зміна налаштувань': '⚙️',
+      'Встановлення додатку': '📱',
+      'Реєстрація акаунту': '👤',
+      'Вхід до акаунту': '🔑',
+      'Редагування профілю': '✏️',
+      'Зміна аватарки': '🖼️'
     };
 
     // Theme configurations
@@ -975,9 +987,7 @@
       localStorage.setItem('userAchievements', JSON.stringify(achievements));
       const user = auth.currentUser;
       if (user) {
-        update(ref(database, 'users/' + user.uid), {
-          achievements: achievements
-        });
+        update(ref(database, 'users/' + user.uid), { achievements: achievements });
       }
       updateAchievements();
     }
@@ -1260,6 +1270,75 @@
       window.deferredPrompt = e;
     });
 
+    // Нова капча
+    let livingOrganismsClicked = 0;
+    const requiredClicks = 3;
+    const organisms = [
+      { src: './Assets/verif/living1.png', isLiving: true },
+      { src: './Assets/verif/living2.png', isLiving: true },
+      { src: './Assets/verif/living3.png', isLiving: true },
+      { src: './Assets/verif/nonliving1.png', isLiving: false },
+      { src: './Assets/verif/nonliving2.png', isLiving: false }
+    ];
+
+    function generateCaptcha() {
+      const captchaImages = document.getElementById('captchaImages');
+      captchaImages.innerHTML = '';
+      livingOrganismsClicked = 0;
+      isCaptchaPassed = false;
+
+      const shuffledOrganisms = [...organisms].sort(() => Math.random() - 0.5);
+      const selectedOrganisms = shuffledOrganisms.slice(0, 5);
+      const livingCount = selectedOrganisms.filter(o => o.isLiving).length;
+
+      if (livingCount < requiredClicks) {
+        console.log('Недостатньо живих організмів, перегенерація капчі...');
+        generateCaptcha();
+        return;
+      }
+
+      selectedOrganisms.forEach(organism => {
+        const img = document.createElement('img');
+        img.src = organism.src;
+        img.dataset.isLiving = organism.isLiving;
+        img.style.cursor = 'pointer';
+        img.alt = organism.isLiving ? 'Живий організм' : 'Неживий об’єкт';
+        img.onerror = () => {
+          console.error(`Помилка завантаження зображення: ${organism.src}`);
+          captchaImages.innerHTML = '<p style="color: #ff0000;">Помилка: Не вдалося завантажити зображення капчі. Перевірте папку Assets/verif.</p>';
+        };
+        img.onload = () => {
+          console.log(`Зображення завантажено успішно: ${organism.src}`);
+        };
+        img.onclick = () => handleOrganismClick(organism.isLiving, img);
+        captchaImages.appendChild(img);
+      });
+    }
+
+    function handleOrganismClick(isLiving, imgElement) {
+      if (isLiving) {
+        livingOrganismsClicked++;
+        imgElement.style.opacity = '0.3';
+        imgElement.style.pointerEvents = 'none';
+        if (livingOrganismsClicked >= requiredClicks) {
+          document.getElementById('captchaGame').innerHTML = '<p style="color: #00ff00;">✅ Усі живі організми вибрано! Натисни "Зареєструватися"!</p>';
+          isCaptchaPassed = true;
+          xpPoints += 15;
+          localStorage.setItem('xpPoints', xpPoints);
+          const user = auth.currentUser;
+          if (user) {
+            update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
+          }
+          alert('Ви отримали 15 XP за проходження капчі!');
+          addAchievement('Проходження капчі');
+          updateXPProgress();
+        }
+      } else {
+        alert('Ой! Це неживий об’єкт! Спробуй ще раз.');
+        generateCaptcha();
+      }
+    }
+
     window.onload = function() {
       const savedTheme = localStorage.getItem('theme');
       if (savedTheme && themes[savedTheme]) {
@@ -1293,10 +1372,12 @@
           loadUserData(user.uid);
           document.getElementById('accountForm').style.display = 'none';
           document.getElementById('accountInfo').style.display = 'block';
+          document.getElementById('welcomeBanner').style.display = 'block';
         } else {
           generateCaptcha();
           document.getElementById('accountForm').style.display = 'block';
           document.getElementById('accountInfo').style.display = 'none';
+          document.getElementById('welcomeBanner').style.display = 'none';
         }
       });
 
@@ -1309,82 +1390,14 @@
       const popup = document.getElementById('accountPopup');
       popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
       if (popup.style.display === 'block' && !auth.currentUser) {
-        isCaptchaPassed = false; // Скидаємо стан капчі
-        generateCaptcha();
-      }
-    }
-
-    let evilMonstersClicked = 0;
-    const requiredClicks = 3;
-    const monsters = [
-      { src: './Assets/verif/evil1.png', isEvil: true },
-      { src: './Assets/verif/evil2.png', isEvil: true },
-      { src: './Assets/verif/evil3.png', isEvil: true },
-      { src: './Assets/verif/good1.png', isEvil: false },
-      { src: './Assets/verif/good2.png', isEvil: false }
-    ];
-
-    function generateCaptcha() {
-      const captchaImages = document.getElementById('captchaImages');
-      captchaImages.innerHTML = '';
-      evilMonstersClicked = 0;
-      isCaptchaPassed = false;
-
-      const shuffledMonsters = [...monsters].sort(() => Math.random() - 0.5);
-      const selectedMonsters = shuffledMonsters.slice(0, 5);
-      const evilCount = selectedMonsters.filter(m => m.isEvil).length;
-
-      if (evilCount < requiredClicks) {
-        console.log('Недостатньо злих монстрів, перегенерація капчі...');
-        generateCaptcha();
-        return;
-      }
-
-      selectedMonsters.forEach(monster => {
-        const img = document.createElement('img');
-        img.src = monster.src;
-        img.dataset.isEvil = monster.isEvil;
-        img.style.cursor = 'pointer';
-        img.alt = monster.isEvil ? 'Злий монстр' : 'Добрий монстр';
-        img.onerror = () => {
-          console.error(`Помилка завантаження зображення: ${monster.src}`);
-          captchaImages.innerHTML = '<p style="color: #ff0000;">Помилка: Не вдалося завантажити зображення капчі. Перевірте папку Assets/verif.</p>';
-        };
-        img.onload = () => {
-          console.log(`Зображення завантажено успішно: ${monster.src}`);
-        };
-        img.onclick = () => handleMonsterClick(monster.isEvil, img);
-        captchaImages.appendChild(img);
-      });
-    }
-
-    function handleMonsterClick(isEvil, imgElement) {
-      if (isEvil) {
-        evilMonstersClicked++;
-        imgElement.style.opacity = '0.3';
-        imgElement.style.pointerEvents = 'none';
-        if (evilMonstersClicked >= requiredClicks) {
-          document.getElementById('captchaGame').innerHTML = '<p style="color: #00ff00;">✅ Усіх монстрів знищено! Натисни "Зареєструватися"!</p>';
-          isCaptchaPassed = true;
-          xpPoints += 15;
-          localStorage.setItem('xpPoints', xpPoints);
-          const user = auth.currentUser;
-          if (user) {
-            update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
-          }
-          alert('Ви отримали 15 XP за проходження капчі!');
-          addAchievement('Проходження капчі');
-          updateXPProgress();
-        }
-      } else {
-        alert('Ой! Це добрий монстр! Спробуй ще раз.');
+        isCaptchaPassed = false;
         generateCaptcha();
       }
     }
 
     function registerAccount() {
       if (!isCaptchaPassed) {
-        alert('Знищ усіх злих монстрів для проходження капчі!');
+        alert('Виберіть усі живі організми для проходження капчі!');
         return;
       }
 

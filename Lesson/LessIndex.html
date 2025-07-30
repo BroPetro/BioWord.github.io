@@ -60,97 +60,19 @@
             border-radius: 5px;
             border: 1px solid #ccc;
         }
-        #showFavorites, #showUserLessons, #createLessonBtn {
+        #showFavorites {
             background: gold;
             border: none;
             padding: 10px;
             font-size: 16px;
             border-radius: 5px;
             cursor: pointer;
-            margin: 10px;
-        }
-        #createLessonBtn.hidden {
-            display: none;
-        }
-        #createLessonForm {
-            display: none;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            width: 80%;
-            max-width: 600px;
-            margin: 20px auto;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-        }
-        #createLessonForm textarea, #createLessonForm input, #createLessonForm select {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-        #userLessonsContainer {
-            display: none;
-        }
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #4caf50;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            display: none;
-        }
-        .notification.error {
-            background: #f44336;
+            margin-left: 10px;
         }
     </style>
-    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-storage.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-analytics.js"></script>
     <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDLJGPbMVGY-5b-aRbFlqgYSqn9c8azZ_E",
-            authDomain: "bioworld-1.firebaseapp.com",
-            databaseURL: "https://bioworld-1-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "bioworld-1",
-            storageBucket: "bioworld-1.firebasestorage.app",
-            messagingSenderId: "691211086040",
-            appId: "1:691211086040:web:7fcbbfaca4916e8b788fad",
-            measurementId: "G-QE0SMWMVWE"
-        };
-
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const analytics = firebase.analytics(app);
-        const auth = firebase.auth();
-        const database = firebase.database();
-        const storage = firebase.storage();
-
-        // Variables
         let favoriteLessons = new Set(JSON.parse(localStorage.getItem("favorites")) || []);
-        let xpPoints = parseInt(localStorage.getItem("xpPoints")) || 0;
 
-        // Firebase Authentication state listener
-        auth.onAuthStateChanged(user => {
-            const createLessonBtn = document.getElementById("createLessonBtn");
-            if (user) {
-                createLessonBtn.classList.remove("hidden");
-            } else {
-                createLessonBtn.classList.add("hidden");
-                if (document.getElementById("createLessonForm").style.display === "block") {
-                    showNotification("Будь ласка, увійдіть, щоб створити урок!", true);
-                    document.getElementById("createLessonForm").style.display = "none";
-                    window.location.href = "login.html";
-                }
-            }
-        });
-
-        // Toggle favorite lessons
         function toggleFavorite(button, lesson) {
             if (favoriteLessons.has(lesson)) {
                 favoriteLessons.delete(lesson);
@@ -164,7 +86,6 @@
             localStorage.setItem("favorites", JSON.stringify(Array.from(favoriteLessons)));
         }
 
-        // Restore favorite lessons
         function restoreFavorites() {
             document.querySelectorAll(".lesson-card").forEach(card => {
                 let lesson = card.querySelector(".lesson-link").textContent;
@@ -176,178 +97,33 @@
             });
         }
 
-        // Search lessons
         function searchLessons() {
             let input = document.getElementById("searchBox").value.toLowerCase();
             let cards = document.getElementsByClassName("lesson-card");
+            
             for (let card of cards) {
                 let text = card.innerText.toLowerCase();
                 card.style.display = text.includes(input) ? "flex" : "none";
             }
         }
 
-        // Show favorite lessons
         function showFavorites() {
             let cards = document.getElementsByClassName("lesson-card");
+            
             for (let card of cards) {
                 let link = card.querySelector(".lesson-link").textContent;
                 card.style.display = favoriteLessons.has(link) ? "flex" : "none";
             }
-            document.getElementById("userLessonsContainer").style.display = "none";
         }
 
-        // Show user-created lessons
-        async function showUserLessons() {
-            document.getElementById("userLessonsContainer").style.display = "block";
-            document.querySelectorAll(".lesson-card").forEach(card => card.style.display = "none");
-            loadUserLessons();
-        }
-
-        // Show create lesson form
-        function showCreateLessonForm() {
-            if (!auth.currentUser) {
-                showNotification("Будь ласка, увійдіть, щоб створити урок!", true);
-                window.location.href = "login.html";
-                return;
-            }
-            const form = document.getElementById("createLessonForm");
-            form.style.display = form.style.display === "none" ? "block" : "none";
-        }
-
-        // Load user-created lessons
-        async function loadUserLessons() {
-            try {
-                const lessonsRef = database.ref("userLessons");
-                const snapshot = await lessonsRef.once("value");
-                const lessons = snapshot.val();
-                const lessonsList = document.getElementById("userLessonsList");
-                lessonsList.innerHTML = "";
-
-                if (lessons) {
-                    for (const [lessonId, lesson] of Object.entries(lessons)) {
-                        if (lesson.status === "approved") {
-                            const lessonDiv = document.createElement("div");
-                            lessonDiv.className = "lesson-card";
-                            lessonDiv.innerHTML = `
-                                <img src="${lesson.files?.[0] || 'Assets/default.jpg'}" class="lesson-img" alt="${lesson.title}">
-                                <a href="#" class="lesson-link" onclick="viewUserLesson('${lessonId}')">${lesson.title} #userLesson</a>
-                                <button class="favorite-btn" onclick="toggleFavorite(this, '${lesson.title} #userLesson')">⭐</button>
-                            `;
-                            lessonsList.appendChild(lessonDiv);
-                        }
-                    }
-                    restoreFavorites();
-                } else {
-                    lessonsList.innerHTML = "<p>Поки немає користувацьких уроків.</p>";
-                }
-            } catch (error) {
-                console.error("Помилка завантаження уроків:", error.message);
-                showNotification("Помилка завантаження уроків: " + error.message, true);
-            }
-        }
-
-        // View user lesson
-        function viewUserLesson(lessonId) {
-            localStorage.setItem("currentLessonId", lessonId);
-            window.location.href = "LessonView.html";
-        }
-
-        // Create lesson
-        document.getElementById("createLessonForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const user = auth.currentUser;
-            if (!user) {
-                showNotification("Будь ласка, увійдіть, щоб створити урок!", true);
-                window.location.href = "login.html";
-                return;
-            }
-
-            const title = document.getElementById("lessonTitle").value.trim();
-            const content = document.getElementById("lessonContent").value.trim();
-            const category = document.getElementById("lessonCategory").value;
-            const files = document.getElementById("lessonFiles").files;
-
-            try {
-                const fileUrls = [];
-                for (const file of files) {
-                    const fileRef = storage.ref(`userLessons/${user.uid}/${Date.now()}_${file.name}`);
-                    await fileRef.put(file);
-                    const url = await fileRef.getDownloadURL();
-                    fileUrls.push(url);
-                }
-
-                const lessonsRef = database.ref("userLessons");
-                const newLessonRef = lessonsRef.push();
-                const lessonData = {
-                    authorUid: user.uid,
-                    authorName: user.displayName || localStorage.getItem("bioUsername") || "Анонім",
-                    title: title,
-                    content: content,
-                    category: category,
-                    createdAt: new Date().toISOString(),
-                    files: fileUrls,
-                    status: "pending",
-                    likes: 0
-                };
-                await newLessonRef.set(lessonData);
-                xpPoints += 30;
-                localStorage.setItem("xpPoints", xpPoints);
-                await database.ref(`users/${user.uid}`).update({ xpPoints: xpPoints });
-                showNotification("Урок створено! Очікує на модерацію. Ви отримали 30 XP!");
-                console.log("Урок збережено:", lessonData);
-                document.getElementById("createLessonForm").reset();
-                document.getElementById("createLessonForm").style.display = "none";
-            } catch (error) {
-                console.error("Помилка створення уроку:", error.message);
-                showNotification("Помилка створення уроку: " + error.message, true);
-            }
-        });
-
-        // Notification function
-        function showNotification(message, isError = false) {
-            const notification = document.createElement("div");
-            notification.className = `notification ${isError ? "error" : ""}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            notification.style.display = "block";
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-
-        // Load favorites and user lessons on page load
-        document.addEventListener("DOMContentLoaded", () => {
-            restoreFavorites();
-            loadUserLessons();
-        });
+        document.addEventListener("DOMContentLoaded", restoreFavorites);
     </script>
 </head>
 <body>
     <h1>📖 Уроки з біології</h1>
     <input type="text" id="searchBox" onkeyup="searchLessons()" placeholder="🔍 Введіть тему для пошуку...">
     <button id="showFavorites" onclick="showFavorites()">⭐ Улюблені</button>
-    <button id="showUserLessons" onclick="showUserLessons()">📚 Користувацькі уроки</button>
-    <button id="createLessonBtn" class="hidden" onclick="showCreateLessonForm()">➕ Створити урок</button>
-
-    <form id="createLessonForm">
-        <h2>Створити новий урок</h2>
-        <input type="text" id="lessonTitle" placeholder="Назва уроку" required>
-        <textarea id="lessonContent" placeholder="Зміст уроку (можна використовувати Markdown)" rows="10" required></textarea>
-        <select id="lessonCategory" required>
-            <option value="biology">Біологія</option>
-            <option value="botany">Ботаніка</option>
-            <option value="zoology">Зоологія</option>
-            <option value="ecology">Екологія</option>
-        </select>
-        <input type="file" id="lessonFiles" accept="image/*,application/pdf" multiple>
-        <button type="submit" class="button">📤 Опублікувати урок</button>
-    </form>
-
-    <div id="userLessonsContainer">
-        <h2>Користувацькі уроки</h2>
-        <div id="userLessonsList"></div>
-    </div>
-
+    
     <div class="lesson-card">
         <img src="Assets/PlosCherv.jpg" class="lesson-img" alt="Плоскі черви">
         <a href="Lessons/PlsCherv.html" class="lesson-link">Плоскі черви #lesson</a>
@@ -389,7 +165,7 @@
         <button class="favorite-btn" onclick="toggleFavorite(this, 'Розвиток і поведінка тварин #lesson')">⭐</button>
     </div>
     <div class="lesson-card">
-        <img src="Lessons/Assets/Organ.png" class="lesson-img" alt="Органи та система огранів тварин">
+        <img src="Lessons/Assets/Organ.png" class="lesson-img" alt="Органи та система огранів тварин ">
         <a href="Lessons/OrganAnimals.html" class="lesson-link">Органи та система огранів тварин #lesson</a>
         <button class="favorite-btn" onclick="toggleFavorite(this, 'Органи та система огранів тварин #lesson')">⭐</button>
     </div>
@@ -418,18 +194,18 @@
         <a href="Lessons/GeneratorDNK.html" class="lesson-link">Генератор ДНК #DNK</a>
         <button class="favorite-btn" onclick="toggleFavorite(this, 'Генератор ДНК #DNK')">⭐</button>
     </div>
-    <div class="lesson-card">
+        <div class="lesson-card">
         <img src="Lessons/Assets/depositphotos_2901993-stock-photo-chanterelles-isolated.jpg" class="lesson-img" alt="Гриби">
         <a href="Lessons/Mushrooms.html" class="lesson-link">Гриби #lesson</a>
         <button class="favorite-btn" onclick="toggleFavorite(this, 'Гриби #lesson')">⭐</button>
     </div>
-    <div class="lesson-card">
+            <div class="lesson-card">
         <img src="https://lh6.googleusercontent.com/3uWKNM11XynLXimqSzjPKF7hquANi-F2l0JQKQXtd1JvZlvxRs0K7zxb_LKOymtOPfVzJ9vt7dYHAwRIDgOYFVLjXM1dMAl1YYkQF4MrHeK7UOdLymGsuAUgBmy0hZGR_HksbIg6" class="lesson-img" alt="Фотосинтез">
         <a href="Lessons/Fotosintez.html" class="lesson-link">Фотосинтез #lesson</a>
         <button class="favorite-btn" onclick="toggleFavorite(this, 'Фотосинтез #lesson')">⭐</button>
     </div>
-    <div class="lesson-card">
-        <img src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQjaZqoKF8yK88wv0RQrglNCHojWUuSZQt17pddpwQVVyjIqZfonSl85849PK3Es0KLxpBNx11PACke7SujhbDJTA" class="lesson-img" alt="Птахи">
+     <div class="lesson-card">
+        <img src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQjaZqoKF8yK88wv0RQrglNCHojWUuSZQt17pddpwQVVyjIqZfonSl85849PK3Es0KLxpBNx11PACke7SujhbDJTA" class="lesson-img" alt="Фотосинтез">
         <a href="Lessons/Bird.html" class="lesson-link">Птахи 🐦🌄 #lesson</a>
         <button class="favorite-btn" onclick="toggleFavorite(this, 'Птахи 🐦🌄 #lesson')">⭐</button>
     </div>

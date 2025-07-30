@@ -144,14 +144,6 @@
         const auth = getAuth(app);
         const database = getDatabase(app);
 
-        window.auth = auth;
-        window.database = database;
-        window.ref = ref;
-        window.push = push;
-        window.set = set;
-        window.get = get;
-    </script>
-    <script>
         let favoriteLessons = new Set(JSON.parse(localStorage.getItem("favorites")) || []);
 
         function toggleFavorite(button, lesson) {
@@ -181,7 +173,6 @@
         function searchLessons() {
             let input = document.getElementById("searchBox").value.toLowerCase();
             let cards = document.getElementsByClassName("lesson-card");
-            
             for (let card of cards) {
                 let text = card.innerText.toLowerCase();
                 card.style.display = text.includes(input) ? "flex" : "none";
@@ -190,7 +181,7 @@
 
         function showFavorites() {
             let cards = document.getElementsByClassName("lesson-card");
-            const communityLessonsContainer = document.getElementById("communityLessonsContainer");
+            const communityLessonsContainer = document.getElementById("lessonsContainer");
             for (let card of cards) {
                 let link = card.querySelector(".lesson-link").textContent;
                 card.style.display = favoriteLessons.has(link) ? "flex" : "none";
@@ -204,7 +195,7 @@
             notification.style.display = "block";
             setTimeout(() => {
                 notification.style.display = "none";
-            }, 5000); // Increased duration for better visibility
+            }, 5000);
         }
 
         function openCreateLessonPopup() {
@@ -236,24 +227,21 @@
 
             onAuthStateChanged(auth, (user) => {
                 if (user) {
-                    const lessonRef = push(ref(database, 'communityLessons'));
+                    const lessonRef = push(ref(database, 'lessons'));
                     set(lessonRef, {
                         title: title,
                         imageUrl: imageUrl,
                         content: content,
                         creatorId: user.uid,
                         creatorName: user.displayName || "Анонім",
-                        createdAt: new Date().toISOString()
+                        createdAt: new Date().toISOString(),
+                        tags: title.includes("#") ? title.split("#")[1].trim() : "lesson"
                     }).then(() => {
-                        showNotification("Урок успішно створено та доступний усім!");
+                        showNotification("Урок успішно створено!");
                         closeCreateLessonPopup();
-                        loadCommunityLessons();
+                        loadLessons();
                     }).catch(error => {
-                        if (error.code === "PERMISSION_DENIED") {
-                            showNotification("Помилка: Недостатньо прав для створення уроку. Перевірте налаштування Firebase.");
-                        } else {
-                            showNotification("Помилка при створенні уроку: " + error.message);
-                        }
+                        showNotification("Помилка при створенні уроку: " + error.message);
                     });
                 } else {
                     showNotification("Будь ласка, увійдіть в акаунт!");
@@ -261,12 +249,12 @@
             });
         }
 
-        function loadCommunityLessons() {
-            const communityLessonsContainer = document.getElementById("communityLessonsContainer");
-            communityLessonsContainer.innerHTML = "<p>Завантаження уроків...</p>";
+        function loadLessons() {
+            const lessonsContainer = document.getElementById("lessonsContainer");
+            lessonsContainer.innerHTML = "<p>Завантаження уроків...</p>";
             
-            get(ref(database, 'communityLessons')).then(snapshot => {
-                communityLessonsContainer.innerHTML = "";
+            get(ref(database, 'lessons')).then(snapshot => {
+                lessonsContainer.innerHTML = "";
                 if (snapshot.exists()) {
                     snapshot.forEach(childSnapshot => {
                         const lesson = childSnapshot.val();
@@ -274,29 +262,25 @@
                         card.className = "lesson-card";
                         card.innerHTML = `
                             <img src="${lesson.imageUrl}" class="lesson-img" alt="${lesson.title}">
-                            <a href="#" class="lesson-link" onclick="viewCommunityLesson('${childSnapshot.key}')">${lesson.title} #communityLesson</a>
-                            <button class="favorite-btn" onclick="toggleFavorite(this, '${lesson.title} #communityLesson')">⭐</button>
+                            <a href="#" class="lesson-link" onclick="viewLesson('${childSnapshot.key}')">${lesson.title}</a>
+                            <button class="favorite-btn" onclick="toggleFavorite(this, '${lesson.title}')">⭐</button>
                         `;
-                        communityLessonsContainer.appendChild(card);
+                        lessonsContainer.appendChild(card);
                     });
                     restoreFavorites();
                 } else {
                     const noLessons = document.createElement("p");
-                    noLessons.textContent = "Поки що немає уроків від спільноти.";
-                    communityLessonsContainer.appendChild(noLessons);
+                    noLessons.textContent = "Поки що немає уроків.";
+                    lessonsContainer.appendChild(noLessons);
                 }
             }).catch(error => {
-                if (error.code === "PERMISSION_DENIED") {
-                    showNotification("Помилка: Недостатньо прав для перегляду уроків. Перевірте налаштування Firebase.");
-                } else {
-                    showNotification("Помилка завантаження уроків: " + error.message);
-                }
-                communityLessonsContainer.innerHTML = "<p>Не вдалося завантажити уроки. Спробуйте пізніше.</p>";
+                showNotification("Помилка завантаження уроків: " + error.message);
+                lessonsContainer.innerHTML = "<p>Не вдалося завантажити уроки. Спробуйте пізніше.</p>";
             });
         }
 
-        function viewCommunityLesson(lessonId) {
-            get(ref(database, 'communityLessons/' + lessonId)).then(snapshot => {
+        function viewLesson(lessonId) {
+            get(ref(database, 'lessons/' + lessonId)).then(snapshot => {
                 if (snapshot.exists()) {
                     const lesson = snapshot.val();
                     const lessonContentDiv = document.createElement("div");
@@ -329,28 +313,14 @@
                     showNotification("Урок не знайдено!");
                 }
             }).catch(error => {
-                if (error.code === "PERMISSION_DENIED") {
-                    showNotification("Помилка: Недостатньо прав для перегляду уроку. Перевірте налаштування Firebase.");
-                } else {
-                    showNotification("Помилка завантаження уроку: " + error.message);
-                }
+                showNotification("Помилка завантаження уроку: " + error.message);
             });
-        }
-
-        function showCommunityLessons() {
-            const cards = document.getElementsByClassName("lesson-card");
-            const communityLessonsContainer = document.getElementById("communityLessonsContainer");
-            for (let card of cards) {
-                card.style.display = "none";
-            }
-            communityLessonsContainer.style.display = "block";
-            loadCommunityLessons();
         }
 
         document.addEventListener("DOMContentLoaded", () => {
             restoreFavorites();
-            document.getElementById("communityLessonsContainer").style.display = "none";
-            loadCommunityLessons();
+            document.getElementById("lessonsContainer").style.display = "block";
+            loadLessons();
         });
     </script>
 </head>
@@ -359,7 +329,6 @@
     <input type="text" id="searchBox" onkeyup="searchLessons()" placeholder="🔍 Введіть тему для пошуку...">
     <button id="showFavorites" onclick="showFavorites()">⭐ Улюблені</button>
     <button id="createLessonBtn" onclick="openCreateLessonPopup()">✍️ Створити урок</button>
-    <button id="showCommunityLessons" onclick="showCommunityLessons()">🌍 Уроки спільноти</button>
     
     <div class="notification" id="notification"></div>
     <div class="create-lesson-popup" id="createLessonPopup">
@@ -371,92 +340,6 @@
         <button onclick="closeCreateLessonPopup()">Закрити</button>
     </div>
     
-    <div id="communityLessonsContainer"></div>
-    
-    <div class="lesson-card">
-        <img src="Assets/PlosCherv.jpg" class="lesson-img" alt="Плоскі черви">
-        <a href="Lessons/PlsCherv.html" class="lesson-link">Плоскі черви #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Плоскі черви #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/Crab.jpg" class="lesson-img" alt="Членистоногі">
-        <a href="Lessons/Clenuston.html" class="lesson-link">Загальна характеристика членистоногих #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Загальна характеристика членистоногих #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/GummiPig.jpg" class="lesson-img" alt="Морські свинки">
-        <a href="Project/Project1/Project.html" class="lesson-link">Морські свинки: поведінка, догляд та цікаві факти #project</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Морські свинки: поведінка, догляд та цікаві факти #project')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/Molusk.jpg" class="lesson-img" alt="Молюски">
-        <a href="Lessons/Molusk.html" class="lesson-link">Значення молюсків у природі та житті людини #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Значення молюсків у природі та житті людини #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/OMG.jpg" class="lesson-img" alt="Top 6 незвичайних тварин">
-        <a href="Lessons/TOP6_Pet.html" class="lesson-link">Top 6 незвичайних тварин #pet</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Top 6 незвичайних тварин #pet')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/IQ.png" class="lesson-img" alt="Top 6 розумних тварин">
-        <a href="Lessons/TOP6_petiq.html" class="lesson-link">Top 6 розумних тварин #pet</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Top 6 розумних тварин #pet')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Lessons/Assets/InsestSun.JPG" class="lesson-img" alt="Комахи різноманітність комах">
-        <a href="Lessons/Insects.html" class="lesson-link">Комахи різноманітність комах #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Комахи різноманітність комах #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/Rozvitok.png" class="lesson-img" alt="Розвиток і поведінка тварин">
-        <a href="Lessons/Animal_development.html" class="lesson-link">Розвиток і поведінка тварин #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Розвиток і поведінка тварин #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Lessons/Assets/Organ.png" class="lesson-img" alt="Органи та система огранів тварин">
-        <a href="Lessons/OrganAnimals.html" class="lesson-link">Органи та система огранів тварин #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Органи та система огранів тварин #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/praying-mantis-pix.jpg" class="lesson-img" alt="Роль комах у природі та житті людини">
-        <a href="Lessons/Insectwalk.html" class="lesson-link">Роль комах у природі та житті людини #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Роль комах у природі та житті людини #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/723c21c23946439ec29896a02ab9934f.jpeg" class="lesson-img" alt="Павукоподібні">
-        <a href="Lessons/Pavykopodibni.html" class="lesson-link">Павукоподібні #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Павукоподібні #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/Лайфхаки.png" class="lesson-img" alt="Лайфхаки для ШКОЛИ">
-        <a href="Lessons/Layfaki1.html" class="lesson-link">Лайфхаки для ШКОЛИ #lifehacks</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Лайфхаки для ШКОЛИ #lifehacks')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/Лайфхаки (1).png" class="lesson-img" alt="Цікаві факти">
-        <a href="Lessons/InterestedFacts.html" class="lesson-link">Цікаві факти #Facts</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Цікаві факти #Facts')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Lessons/Assets/dna (2).png" class="lesson-img" alt="Генератор ДНК">
-        <a href="Lessons/GeneratorDNK.html" class="lesson-link">Генератор ДНК #DNK</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Генератор ДНК #DNK')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Lessons/Assets/depositphotos_2901993-stock-photo-chanterelles-isolated.jpg" class="lesson-img" alt="Гриби">
-        <a href="Lessons/Mushrooms.html" class="lesson-link">Гриби #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Гриби #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="https://lh6.googleusercontent.com/3uWKNM11XynLXimqSzjPKF7hquANi-F2l0JQKQXtd1JvZlvxRs0K7zxb_LKOymtOPfVzJ9vt7dYHAwRIDgOYFVLjXM1dMAl1YYkQF4MrHeK7UOdLymGsuAUgBmy0hZGR_HksbIg6" class="lesson-img" alt="Фотосинтез">
-        <a href="Lessons/Fotosintez.html" class="lesson-link">Фотосинтез #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Фотосинтез #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQjaZqoKF8yK88wv0RQrglNCHojWUuSZQt17pddpwQVVyjIqZfonSl85849PK3Es0KLxpBNx11PACke7SujhbDJTA" class="lesson-img" alt="Птахи">
-        <a href="Lessons/Bird.html" class="lesson-link">Птахи 🐦🌄 #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Птахи 🐦🌄 #lesson')">⭐</button>
-    </div>
+    <div id="lessonsContainer"></div>
 </body>
 </html>

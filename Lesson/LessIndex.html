@@ -69,6 +69,9 @@
             cursor: pointer;
             margin: 10px;
         }
+        #createLessonBtn.hidden {
+            display: none;
+        }
         #createLessonForm {
             display: none;
             background: white;
@@ -98,6 +101,9 @@
             padding: 10px;
             border-radius: 5px;
             display: none;
+        }
+        .notification.error {
+            background: #f44336;
         }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js"></script>
@@ -131,11 +137,16 @@
 
         // Firebase Authentication state listener
         auth.onAuthStateChanged(user => {
-            if (!user) {
-                document.getElementById("createLessonBtn").style.display = "none";
-                showNotification("Увійдіть, щоб створювати уроки!");
+            const createLessonBtn = document.getElementById("createLessonBtn");
+            if (user) {
+                createLessonBtn.classList.remove("hidden");
             } else {
-                document.getElementById("createLessonBtn").style.display = "inline-block";
+                createLessonBtn.classList.add("hidden");
+                if (document.getElementById("createLessonForm").style.display === "block") {
+                    showNotification("Будь ласка, увійдіть, щоб створити урок!", true);
+                    document.getElementById("createLessonForm").style.display = "none";
+                    window.location.href = "login.html";
+                }
             }
         });
 
@@ -186,7 +197,7 @@
         }
 
         // Show user-created lessons
-        function showUserLessons() {
+        async function showUserLessons() {
             document.getElementById("userLessonsContainer").style.display = "block";
             document.querySelectorAll(".lesson-card").forEach(card => card.style.display = "none");
             loadUserLessons();
@@ -194,49 +205,60 @@
 
         // Show create lesson form
         function showCreateLessonForm() {
+            if (!auth.currentUser) {
+                showNotification("Будь ласка, увійдіть, щоб створити урок!", true);
+                window.location.href = "login.html";
+                return;
+            }
             const form = document.getElementById("createLessonForm");
             form.style.display = form.style.display === "none" ? "block" : "none";
         }
 
         // Load user-created lessons
         async function loadUserLessons() {
-            const lessonsRef = database.ref("userLessons");
-            const snapshot = await lessonsRef.once("value");
-            const lessons = snapshot.val();
-            const lessonsList = document.getElementById("userLessonsList");
-            lessonsList.innerHTML = "";
+            try {
+                const lessonsRef = database.ref("userLessons");
+                const snapshot = await lessonsRef.once("value");
+                const lessons = snapshot.val();
+                const lessonsList = document.getElementById("userLessonsList");
+                lessonsList.innerHTML = "";
 
-            if (lessons) {
-                for (const [lessonId, lesson] of Object.entries(lessons)) {
-                    if (lesson.status === "approved") {
-                        const lessonDiv = document.createElement("div");
-                        lessonDiv.className = "lesson-card";
-                        lessonDiv.innerHTML = `
-                            <img src="${lesson.files?.[0] || 'Assets/default.jpg'}" class="lesson-img" alt="${lesson.title}">
-                            <a href="#" class="lesson-link" onclick="viewUserLesson('${lessonId}')">${lesson.title} #userLesson</a>
-                            <button class="favorite-btn" onclick="toggleFavorite(this, '${lesson.title} #userLesson')">⭐</button>
-                        `;
-                        lessonsList.appendChild(lessonDiv);
+                if (lessons) {
+                    for (const [lessonId, lesson] of Object.entries(lessons)) {
+                        if (lesson.status === "approved") {
+                            const lessonDiv = document.createElement("div");
+                            lessonDiv.className = "lesson-card";
+                            lessonDiv.innerHTML = `
+                                <img src="${lesson.files?.[0] || 'Assets/default.jpg'}" class="lesson-img" alt="${lesson.title}">
+                                <a href="#" class="lesson-link" onclick="viewUserLesson('${lessonId}')">${lesson.title} #userLesson</a>
+                                <button class="favorite-btn" onclick="toggleFavorite(this, '${lesson.title} #userLesson')">⭐</button>
+                            `;
+                            lessonsList.appendChild(lessonDiv);
+                        }
                     }
+                    restoreFavorites();
+                } else {
+                    lessonsList.innerHTML = "<p>Поки немає користувацьких уроків.</p>";
                 }
-                restoreFavorites();
-            } else {
-                lessonsList.innerHTML = "<p>Поки немає користувацьких уроків.</p>";
+            } catch (error) {
+                console.error("Помилка завантаження уроків:", error.message);
+                showNotification("Помилка завантаження уроків: " + error.message, true);
             }
         }
 
-        // View user lesson (placeholder for lesson details page)
+        // View user lesson
         function viewUserLesson(lessonId) {
             localStorage.setItem("currentLessonId", lessonId);
-            window.location.href = "LessonView.html"; // Create this page separately
+            window.location.href = "LessonView.html";
         }
 
         // Create lesson
-        document.getElementById("createLessonForm")?.addEventListener("submit", async (e) => {
+        document.getElementById("createLessonForm").addEventListener("submit", async (e) => {
             e.preventDefault();
             const user = auth.currentUser;
             if (!user) {
-                showNotification("Увійдіть, щоб створити урок!");
+                showNotification("Будь ласка, увійдіть, щоб створити урок!", true);
+                window.location.href = "login.html";
                 return;
             }
 
@@ -248,15 +270,15 @@
             try {
                 const fileUrls = [];
                 for (const file of files) {
-                    const fileRef = storage.ref(`userLessons/${user.uid}/${file.name}`);
+                    const fileRef = storage.ref(`userLessons/${user.uid}/${Date.now()}_${file.name}`);
                     await fileRef.put(file);
                     const url = await fileRef.getDownloadURL();
                     fileUrls.push(url);
                 }
 
-                const lessonRef = database.ref("userLessons");
-                const newLessonRef = lessonRef.push();
-                await newLessonRef.set({
+                const lessonsRef = database.ref("userLessons");
+                const newLessonRef = lessonsRef.push();
+                const lessonData = {
                     authorUid: user.uid,
                     authorName: user.displayName || localStorage.getItem("bioUsername") || "Анонім",
                     title: title,
@@ -266,24 +288,25 @@
                     files: fileUrls,
                     status: "pending",
                     likes: 0
-                });
-
+                };
+                await newLessonRef.set(lessonData);
                 xpPoints += 30;
                 localStorage.setItem("xpPoints", xpPoints);
                 await database.ref(`users/${user.uid}`).update({ xpPoints: xpPoints });
                 showNotification("Урок створено! Очікує на модерацію. Ви отримали 30 XP!");
+                console.log("Урок збережено:", lessonData);
                 document.getElementById("createLessonForm").reset();
                 document.getElementById("createLessonForm").style.display = "none";
             } catch (error) {
                 console.error("Помилка створення уроку:", error.message);
-                showNotification("Помилка: " + error.message);
+                showNotification("Помилка створення уроку: " + error.message, true);
             }
         });
 
         // Notification function
-        function showNotification(message) {
+        function showNotification(message, isError = false) {
             const notification = document.createElement("div");
-            notification.className = "notification";
+            notification.className = `notification ${isError ? "error" : ""}`;
             notification.textContent = message;
             document.body.appendChild(notification);
             notification.style.display = "block";
@@ -292,7 +315,7 @@
             }, 3000);
         }
 
-        // Load favorites on page load
+        // Load favorites and user lessons on page load
         document.addEventListener("DOMContentLoaded", () => {
             restoreFavorites();
             loadUserLessons();
@@ -304,7 +327,7 @@
     <input type="text" id="searchBox" onkeyup="searchLessons()" placeholder="🔍 Введіть тему для пошуку...">
     <button id="showFavorites" onclick="showFavorites()">⭐ Улюблені</button>
     <button id="showUserLessons" onclick="showUserLessons()">📚 Користувацькі уроки</button>
-    <button id="createLessonBtn" onclick="showCreateLessonForm()">➕ Створити урок</button>
+    <button id="createLessonBtn" class="hidden" onclick="showCreateLessonForm()">➕ Створити урок</button>
 
     <form id="createLessonForm">
         <h2>Створити новий урок</h2>

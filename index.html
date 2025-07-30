@@ -24,11 +24,45 @@
   <meta name="keywords" content="біологія, клітина, тварина, ігри, шкільна програма, BioWord, рослини, BIOWORLD">
   <meta name="author" content="BroPetro">
 
-  <!-- Скрипти -->
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js';
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+    import { getDatabase, ref, set, get, update } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js';
+
+    // Firebase конфігурація
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLJGPbMVGY-5b-aRbFlqgYSqn9c8azZ_E",
+      authDomain: "bioworld-1.firebaseapp.com",
+      databaseURL: "https://bioworld-1-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "bioworld-1",
+      storageBucket: "bioworld-1.firebasestorage.app",
+      messagingSenderId: "691211086040",
+      appId: "1:691211086040:web:3c7a15ca8abf2742788fad",
+      measurementId: "G-YPD46XPR20"
+    };
+
+    // Ініціалізація Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const database = getDatabase(app);
+
+    // Експорт для використання в глобальному скрипті
+    window.auth = auth;
+    window.database = database;
+    window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+    window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+    window.signOut = signOut;
+    window.onAuthStateChanged = onAuthStateChanged;
+    window.updateProfile = updateProfile;
+    window.ref = ref;
+    window.set = set;
+    window.get = get;
+    window.update = update;
+  </script>
+
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js"></script>
 
   <!-- Service Worker -->
   <script>
@@ -42,6 +76,7 @@
       });
     }
   </script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -662,6 +697,7 @@
         font-size: 0.6em;
       }
     }
+
     #update-loader {
       position: fixed;
       top: 0;
@@ -713,12 +749,6 @@
       </div>
       <button onclick="registerAccount()">Зареєструватися</button>
       <button onclick="loginAccount()">Увійти</button>
-      <div id="g_id_onload"
-           data-client_id="YOUR_GOOGLE_CLIENT_ID"
-           data-callback="handleGoogleSignIn"
-           data-auto_prompt="false">
-      </div>
-      <div class="g_id_signin" data-type="standard" data-size="large" data-theme="filled_blue" data-text="signin_with" data-shape="rectangular"></div>
     </div>
     <div id="accountInfo" style="display:none;">
       <img id="userAvatar" src="" alt="Аватарка">
@@ -829,23 +859,6 @@
   </div>
 
   <script>
-    // Firebase конфігурація
-    const firebaseConfig = {
-      apiKey: "AIzaSyDLJGPbMVGY-5b-aRbFlqgYSqn9c8azZ_E",
-      authDomain: "bioworld-1.firebaseapp.com",
-      databaseURL: "https://bioworld-1-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "bioworld-1",
-      storageBucket: "bioworld-1.firebasestorage.app",
-      messagingSenderId: "691211086040",
-      appId: "1:691211086040:web:3c7a15ca8abf2742788fad",
-      measurementId: "G-YPD46XPR20"
-    };
-
-    // Ініціалізація Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const database = firebase.database();
-
     let xpPoints = parseInt(localStorage.getItem('xpPoints') || 0);
     const maxXP = 200;
     let lastClaimDate = localStorage.getItem('lastClaimDate') || '';
@@ -915,7 +928,7 @@
         localStorage.setItem('xpPoints', xpPoints);
         const user = auth.currentUser;
         if (user) {
-          database.ref('users/' + user.uid).update({ xpPoints: xpPoints });
+          update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
         }
         alert('Вітаємо! Ви досягли максимального рівня! XP скинуто.');
       }
@@ -959,7 +972,7 @@
       localStorage.setItem('xpPoints', xpPoints);
       const user = auth.currentUser;
       if (user) {
-        database.ref('users/' + user.uid).update({ xpPoints: xpPoints });
+        update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
       }
       localStorage.setItem('lastClaimDate', today);
       alert('Ви отримали 50 XP за щоденний вхід!');
@@ -973,7 +986,7 @@
         localStorage.setItem('xpPoints', xpPoints);
         const user = auth.currentUser;
         if (user) {
-          database.ref('users/' + user.uid).update({ xpPoints: xpPoints });
+          update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
         }
         alert('Ви отримали бонус 20 XP!');
         updateXPProgress();
@@ -1025,7 +1038,7 @@
 
         const user = auth.currentUser;
         if (user) {
-          database.ref('users/' + user.uid).update({
+          update(ref(database, 'users/' + user.uid), {
             xpPoints: xpPoints,
             userBadges: JSON.parse(localStorage.getItem('userBadges') || '[]'),
             unlockedLessons: JSON.parse(localStorage.getItem('unlockedLessons') || '[]'),
@@ -1111,7 +1124,7 @@
       localStorage.setItem('xpPoints', xpPoints);
       const user = auth.currentUser;
       if (user) {
-        database.ref('users/' + user.uid).update({ xpPoints: xpPoints });
+        update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
       }
       alert(`Ви отримали ${reward} XP за запрошення друга!`);
       updateXPProgress();
@@ -1130,7 +1143,7 @@
       localStorage.setItem('xpPoints', xpPoints);
       const user = auth.currentUser;
       if (user) {
-        database.ref('users/' + user.uid).update({ xpPoints: xpPoints });
+        update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
       }
       alert('Ви отримали 10 XP за вибір випадкового тесту!');
       updateXPProgress();
@@ -1176,7 +1189,7 @@
 
       const user = auth.currentUser;
       if (user) {
-        database.ref('users/' + user.uid).update({
+        update(ref(database, 'users/' + user.uid), {
           theme: theme,
           customBg: customBg || '',
           animations: animations
@@ -1187,7 +1200,7 @@
       xpPoints += 5;
       localStorage.setItem('xpPoints', xpPoints);
       if (user) {
-        database.ref('users/' + user.uid).update({ xpPoints: xpPoints });
+        update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
       }
       alert('Ви отримали 5 XP за зміну налаштувань!');
       updateXPProgress();
@@ -1203,7 +1216,7 @@
             localStorage.setItem('xpPoints', xpPoints);
             const user = auth.currentUser;
             if (user) {
-              database.ref('users/' + user.uid).update({ xpPoints: xpPoints });
+              update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
             }
             alert('Ви отримали 30 XP за встановлення додатку!');
             updateXPProgress();
@@ -1248,7 +1261,7 @@
         document.getElementById('bgInput').value = savedBg;
       }
 
-      auth.onAuthStateChanged(user => {
+      onAuthStateChanged(auth, user => {
         if (user) {
           loadUserData(user.uid);
         } else {
@@ -1272,11 +1285,11 @@
     let evilMonstersClicked = 0;
     const requiredClicks = 3;
     const monsters = [
-      { src: 'Assets/verif/evil1.png', isEvil: true },
-      { src: 'Assets/verif/evil2.png', isEvil: true },
-      { src: 'Assets/verif/evil3.png', isEvil: true },
-      { src: 'Assets/verif/good1.png', isEvil: false },
-      { src: 'Assets/verif/good2.png', isEvil: false }
+      { src: './Assets/verif/evil1.png', isEvil: true },
+      { src: './Assets/verif/evil2.png', isEvil: true },
+      { src: './Assets/verif/evil3.png', isEvil: true },
+      { src: './Assets/verif/good1.png', isEvil: false },
+      { src: './Assets/verif/good2.png', isEvil: false }
     ];
 
     function generateCaptcha() {
@@ -1284,26 +1297,46 @@
       captchaImages.innerHTML = '';
       evilMonstersClicked = 0;
 
-      const shuffledMonsters = monsters.sort(() => Math.random() - 0.5);
-      shuffledMonsters.slice(0, 5).forEach(monster => {
+      const shuffledMonsters = [...monsters].sort(() => Math.random() - 0.5);
+      const selectedMonsters = shuffledMonsters.slice(0, 5);
+      const evilCount = selectedMonsters.filter(m => m.isEvil).length;
+
+      if (evilCount < requiredClicks) {
+        console.log('Недостатньо злих монстрів, перегенерація капчі...');
+        generateCaptcha();
+        return;
+      }
+
+      selectedMonsters.forEach(monster => {
         const img = document.createElement('img');
         img.src = monster.src;
         img.dataset.isEvil = monster.isEvil;
-        img.onclick = () => handleMonsterClick(monster.isEvil);
+        img.style.cursor = 'pointer';
+        img.alt = monster.isEvil ? 'Злий монстр' : 'Добрий монстр';
+        img.onerror = () => {
+          console.error(`Помилка завантаження зображення: ${monster.src}`);
+          captchaImages.innerHTML = '<p style="color: #ff0000;">Помилка: Не вдалося завантажити зображення капчі. Перевірте папку Assets/verif.</p>';
+        };
+        img.onload = () => {
+          console.log(`Зображення завантажено успішно: ${monster.src}`);
+        };
+        img.onclick = () => handleMonsterClick(monster.isEvil, img);
         captchaImages.appendChild(img);
       });
     }
 
-    function handleMonsterClick(isEvil) {
+    function handleMonsterClick(isEvil, imgElement) {
       if (isEvil) {
         evilMonstersClicked++;
+        imgElement.style.opacity = '0.3';
+        imgElement.style.pointerEvents = 'none';
         if (evilMonstersClicked >= requiredClicks) {
           document.getElementById('captchaGame').innerHTML = '<p style="color: #00ff00;">✅ Усіх монстрів знищено! Натисни "Зареєструватися"!</p>';
           xpPoints += 15;
           localStorage.setItem('xpPoints', xpPoints);
           const user = auth.currentUser;
           if (user) {
-            database.ref('users/' + user.uid).update({ xpPoints: xpPoints });
+            update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
           }
           alert('Ви отримали 15 XP за проходження капчі!');
           updateXPProgress();
@@ -1330,14 +1363,14 @@
         reader.onload = function(e) {
           const avatarUrl = e.target.result;
 
-          auth.createUserWithEmailAndPassword(email, password)
+          createUserWithEmailAndPassword(auth, email, password)
             .then(userCredential => {
               const user = userCredential.user;
-              user.updateProfile({
+              updateProfile(user, {
                 displayName: name,
                 photoURL: avatarUrl
               }).then(() => {
-                database.ref('users/' + user.uid).set({
+                set(ref(database, 'users/' + user.uid), {
                   username: name,
                   email: email,
                   avatar: avatarUrl,
@@ -1356,7 +1389,7 @@
                   showAccountInfo(name, avatarUrl, 1);
                   xpPoints += 20;
                   localStorage.setItem('xpPoints', xpPoints);
-                  database.ref('users/' + user.uid).update({ xpPoints: xpPoints });
+                  update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
                   alert('Ви отримали 20 XP за реєстрацію!');
                   updateXPProgress();
                 });
@@ -1378,7 +1411,7 @@
       const password = document.getElementById('passwordInput').value.trim();
 
       if (email && password) {
-        auth.signInWithEmailAndPassword(email, password)
+        signInWithEmailAndPassword(auth, email, password)
           .then(userCredential => {
             const user = userCredential.user;
             loadUserData(user.uid);
@@ -1386,12 +1419,12 @@
             const avatarUrl = user.photoURL || localStorage.getItem('bioAvatar');
             let visits = parseInt(localStorage.getItem('bioVisits') || 0) + 1;
             localStorage.setItem('bioVisits', visits);
-            database.ref('users/' + user.uid).update({ visits: visits });
+            update(ref(database, 'users/' + user.uid), { visits: visits });
             updateLoginHistory();
             showAccountInfo(name, avatarUrl, visits);
             xpPoints += 10;
             localStorage.setItem('xpPoints', xpPoints);
-            database.ref('users/' + user.uid).update({ xpPoints: xpPoints });
+            update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
             alert('Ви отримали 10 XP за вхід!');
             updateXPProgress();
           })
@@ -1405,7 +1438,7 @@
     }
 
     function loadUserData(uid) {
-      database.ref('users/' + uid).once('value').then(snapshot => {
+      get(ref(database, 'users/' + uid)).then(snapshot => {
         const userData = snapshot.val();
         if (userData) {
           localStorage.setItem('bioUsername', userData.username);
@@ -1425,44 +1458,6 @@
       });
     }
 
-    function handleGoogleSignIn(credentialResponse) {
-      const idToken = credentialResponse.credential;
-      const credential = firebase.auth.GoogleAuthProvider.credential(idToken);
-      auth.signInWithCredential(credential)
-        .then(userCredential => {
-          const user = userCredential.user;
-          const name = user.displayName || user.email.split('@')[0];
-          const avatarUrl = user.photoURL || 'https://via.placeholder.com/80';
-          database.ref('users/' + user.uid).set({
-            username: name,
-            email: user.email,
-            avatar: avatarUrl,
-            xpPoints: xpPoints,
-            visits: 1,
-            lastLogin: new Date().toISOString(),
-            achievements: JSON.parse(localStorage.getItem('userAchievements') || '[]'),
-            promoHistory: JSON.parse(localStorage.getItem('promoHistory') || '[]'),
-            usedPromoCodes: JSON.parse(localStorage.getItem('usedPromoCodes') || '[]'),
-            loginHistory: JSON.parse(localStorage.getItem('loginHistory') || '{}')
-          }).then(() => {
-            localStorage.setItem('bioUsername', name);
-            localStorage.setItem('bioAvatar', avatarUrl);
-            localStorage.setItem('bioVisits', 1);
-            updateLoginHistory();
-            showAccountInfo(name, avatarUrl, 1);
-            xpPoints += 20;
-            localStorage.setItem('xpPoints', xpPoints);
-            database.ref('users/' + user.uid).update({ xpPoints: xpPoints });
-            alert('Ви отримали 20 XP за вхід через Google!');
-            updateXPProgress();
-          });
-        })
-        .catch(error => {
-          console.error('Помилка входу через Google:', error.message);
-          alert('Помилка: ' + error.message);
-        });
-    }
-
     function showAccountInfo(name, avatarUrl, visits) {
       document.getElementById('accountForm').style.display = 'none';
       document.getElementById('accountInfo').style.display = 'block';
@@ -1478,7 +1473,7 @@
     }
 
     function logout() {
-      auth.signOut().then(() => {
+      signOut(auth).then(() => {
         localStorage.clear();
         location.reload();
       }).catch(error => {
@@ -1492,17 +1487,17 @@
       if (name) {
         const user = auth.currentUser;
         if (user) {
-          user.updateProfile({
+          updateProfile(user, {
             displayName: name
           }).then(() => {
             localStorage.setItem('bioUsername', name);
-            database.ref('users/' + user.uid).update({
+            update(ref(database, 'users/' + user.uid), {
               username: name
             });
             showAccountInfo(name, localStorage.getItem('bioAvatar'), localStorage.getItem('bioVisits'));
             xpPoints += 5;
             localStorage.setItem('xpPoints', xpPoints);
-            database.ref('users/' + user.uid).update({
+            update(ref(database, 'users/' + user.uid), {
               xpPoints: xpPoints
             });
             alert('Ви отримали 5 XP за редагування профілю!');
@@ -1524,17 +1519,17 @@
             const avatarUrl = e.target.result;
             const user = auth.currentUser;
             if (user) {
-              user.updateProfile({
+              updateProfile(user, {
                 photoURL: avatarUrl
               }).then(() => {
                 localStorage.setItem('bioAvatar', avatarUrl);
-                database.ref('users/' + user.uid).update({
+                update(ref(database, 'users/' + user.uid), {
                   avatar: avatarUrl
                 });
                 document.getElementById('userAvatar').src = avatarUrl;
                 xpPoints += 5;
                 localStorage.setItem('xpPoints', xpPoints);
-                database.ref('users/' + user.uid).update({
+                update(ref(database, 'users/' + user.uid), {
                   xpPoints: xpPoints
                 });
                 alert('Ви отримали 5 XP за зміну аватарки!');
@@ -1561,7 +1556,7 @@
         const today = new Date().toISOString().split('T')[0];
         loginHistory[today] = (loginHistory[today] || 0) + 1;
         localStorage.setItem('loginHistory', JSON.stringify(loginHistory));
-        database.ref('users/' + user.uid).update({
+        update(ref(database, 'users/' + user.uid), {
           loginHistory: loginHistory
         });
       }

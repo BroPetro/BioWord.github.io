@@ -418,17 +418,25 @@
       justify-content: center;
     }
 
-    #captchaImages img {
+    #captchaImages button {
       width: 60px;
       height: 60px;
-      cursor: pointer;
+      background-size: cover;
+      background-position: center;
       border: 2px solid #2e7d32;
-      transition: transform 0.2s;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
     }
 
-    #captchaImages img:hover {
+    #captchaImages button:hover {
       transform: scale(1.1);
       border-color: #1b5e20;
+    }
+
+    #captchaImages button:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
     }
 
     .xp-progress-container {
@@ -626,7 +634,7 @@
         padding: 8px;
       }
 
-      #captchaImages img {
+      #captchaImages button {
         width: 50px;
         height: 50px;
       }
@@ -744,7 +752,7 @@
       <input type="password" id="passwordInput" placeholder="Пароль">
       <input type="file" id="avatarInput" accept="image/*">
       <div id="captchaGame">
-        <p>🌿 Вибери живі організми! (Натисни на них)</p>
+        <p>👾 Вибери злих монстрів! (Натисни на них)</p>
         <div id="captchaImages"></div>
       </div>
       <button onclick="registerAccount()">Зареєструватися</button>
@@ -1270,58 +1278,57 @@
       window.deferredPrompt = e;
     });
 
-    // Нова капча
-    let livingOrganismsClicked = 0;
+    // Капча з кнопками
+    let evilMonstersClicked = 0;
     const requiredClicks = 3;
-    const organisms = [
-      { src: './Assets/verif/living1.png', isLiving: true },
-      { src: './Assets/verif/living2.png', isLiving: true },
-      { src: './Assets/verif/living3.png', isLiving: true },
-      { src: './Assets/verif/nonliving1.png', isLiving: false },
-      { src: './Assets/verif/nonliving2.png', isLiving: false }
+    const monsters = [
+      { src: './Assets/evil1.png', isEvil: true },
+      { src: './Assets/evil2.png', isEvil: true },
+      { src: './Assets/evil3.png', isEvil: true },
+      { src: './Assets/good1.png', isEvil: false },
+      { src: './Assets/good2.png', isEvil: false }
     ];
 
     function generateCaptcha() {
       const captchaImages = document.getElementById('captchaImages');
       captchaImages.innerHTML = '';
-      livingOrganismsClicked = 0;
+      evilMonstersClicked = 0;
       isCaptchaPassed = false;
 
-      const shuffledOrganisms = [...organisms].sort(() => Math.random() - 0.5);
-      const selectedOrganisms = shuffledOrganisms.slice(0, 5);
-      const livingCount = selectedOrganisms.filter(o => o.isLiving).length;
+      const shuffledMonsters = [...monsters].sort(() => Math.random() - 0.5);
+      const selectedMonsters = shuffledMonsters.slice(0, 5);
+      const evilCount = selectedMonsters.filter(m => m.isEvil).length;
 
-      if (livingCount < requiredClicks) {
-        console.log('Недостатньо живих організмів, перегенерація капчі...');
+      if (evilCount < requiredClicks) {
+        console.log('Недостатньо злих монстрів, перегенерація капчі...');
         generateCaptcha();
         return;
       }
 
-      selectedOrganisms.forEach(organism => {
-        const img = document.createElement('img');
-        img.src = organism.src;
-        img.dataset.isLiving = organism.isLiving;
-        img.style.cursor = 'pointer';
-        img.alt = organism.isLiving ? 'Живий організм' : 'Неживий об’єкт';
-        img.onerror = () => {
-          console.error(`Помилка завантаження зображення: ${organism.src}`);
-          captchaImages.innerHTML = '<p style="color: #ff0000;">Помилка: Не вдалося завантажити зображення капчі. Перевірте папку Assets/verif.</p>';
+      selectedMonsters.forEach(monster => {
+        const button = document.createElement('button');
+        button.style.backgroundImage = `url('${monster.src}')`;
+        button.dataset.isEvil = monster.isEvil;
+        button.alt = monster.isEvil ? 'Злий монстр' : 'Добрий персонаж';
+        button.onerror = () => {
+          console.error(`Помилка завантаження зображення: ${monster.src}`);
+          captchaImages.innerHTML = '<p style="color: #ff0000;">Помилка: Не вдалося завантажити зображення капчі. Перевірте папку Assets.</p>';
         };
-        img.onload = () => {
-          console.log(`Зображення завантажено успішно: ${organism.src}`);
+        button.onload = () => {
+          console.log(`Зображення завантажено успішно: ${monster.src}`);
         };
-        img.onclick = () => handleOrganismClick(organism.isLiving, img);
-        captchaImages.appendChild(img);
+        button.onclick = () => handleMonsterClick(monster.isEvil, button);
+        captchaImages.appendChild(button);
       });
     }
 
-    function handleOrganismClick(isLiving, imgElement) {
-      if (isLiving) {
-        livingOrganismsClicked++;
-        imgElement.style.opacity = '0.3';
-        imgElement.style.pointerEvents = 'none';
-        if (livingOrganismsClicked >= requiredClicks) {
-          document.getElementById('captchaGame').innerHTML = '<p style="color: #00ff00;">✅ Усі живі організми вибрано! Натисни "Зареєструватися"!</p>';
+    function handleMonsterClick(isEvil, buttonElement) {
+      if (isEvil) {
+        evilMonstersClicked++;
+        buttonElement.style.opacity = '0.3';
+        buttonElement.disabled = true;
+        if (evilMonstersClicked >= requiredClicks) {
+          document.getElementById('captchaGame').innerHTML = '<p style="color: #00ff00;">✅ Усі злі монстри вибрано! Натисни "Зареєструватися"!</p>';
           isCaptchaPassed = true;
           xpPoints += 15;
           localStorage.setItem('xpPoints', xpPoints);
@@ -1334,7 +1341,7 @@
           updateXPProgress();
         }
       } else {
-        alert('Ой! Це неживий об’єкт! Спробуй ще раз.');
+        alert('Ой! Це добрий персонаж! Спробуй ще раз.');
         generateCaptcha();
       }
     }
@@ -1397,7 +1404,7 @@
 
     function registerAccount() {
       if (!isCaptchaPassed) {
-        alert('Виберіть усі живі організми для проходження капчі!');
+        alert('Виберіть усі злі монстри для проходження капчі!');
         return;
       }
 

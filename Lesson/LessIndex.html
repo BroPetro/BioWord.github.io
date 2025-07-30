@@ -190,12 +190,12 @@
 
         function showFavorites() {
             let cards = document.getElementsByClassName("lesson-card");
-            
+            const communityLessonsContainer = document.getElementById("communityLessonsContainer");
             for (let card of cards) {
                 let link = card.querySelector(".lesson-link").textContent;
                 card.style.display = favoriteLessons.has(link) ? "flex" : "none";
             }
-            document.getElementById("communityLessonsContainer").style.display = "none";
+            communityLessonsContainer.style.display = "none";
         }
 
         function showNotification(message) {
@@ -204,7 +204,7 @@
             notification.style.display = "block";
             setTimeout(() => {
                 notification.style.display = "none";
-            }, 3000);
+            }, 5000); // Increased duration for better visibility
         }
 
         function openCreateLessonPopup() {
@@ -212,7 +212,7 @@
                 if (user) {
                     document.getElementById("createLessonPopup").style.display = "block";
                 } else {
-                    showNotification("Будь ласка, увійдіть в акаунт, щоб створювати уроки!");
+                    showNotification("Будь ласка, увійдіть в акаунт, щоб створювати уроки! Перейдіть до розділу 'Акаунт'.");
                 }
             });
         }
@@ -249,7 +249,11 @@
                         closeCreateLessonPopup();
                         loadCommunityLessons();
                     }).catch(error => {
-                        showNotification("Помилка при створенні уроку: " + error.message);
+                        if (error.code === "PERMISSION_DENIED") {
+                            showNotification("Помилка: Недостатньо прав для створення уроку. Перевірте налаштування Firebase.");
+                        } else {
+                            showNotification("Помилка при створенні уроку: " + error.message);
+                        }
                     });
                 } else {
                     showNotification("Будь ласка, увійдіть в акаунт!");
@@ -258,8 +262,10 @@
         }
 
         function loadCommunityLessons() {
+            const communityLessonsContainer = document.getElementById("communityLessonsContainer");
+            communityLessonsContainer.innerHTML = "<p>Завантаження уроків...</p>";
+            
             get(ref(database, 'communityLessons')).then(snapshot => {
-                const communityLessonsContainer = document.getElementById("communityLessonsContainer");
                 communityLessonsContainer.innerHTML = "";
                 if (snapshot.exists()) {
                     snapshot.forEach(childSnapshot => {
@@ -280,7 +286,12 @@
                     communityLessonsContainer.appendChild(noLessons);
                 }
             }).catch(error => {
-                showNotification("Помилка завантаження уроків: " + error.message);
+                if (error.code === "PERMISSION_DENIED") {
+                    showNotification("Помилка: Недостатньо прав для перегляду уроків. Перевірте налаштування Firebase.");
+                } else {
+                    showNotification("Помилка завантаження уроків: " + error.message);
+                }
+                communityLessonsContainer.innerHTML = "<p>Не вдалося завантажити уроки. Спробуйте пізніше.</p>";
             });
         }
 
@@ -314,9 +325,15 @@
                         <button style="background: linear-gradient(45deg, #2e7d32, #4caf50); color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;" onclick="this.parentElement.remove()">Закрити</button>
                     `;
                     document.body.appendChild(lessonContentDiv);
+                } else {
+                    showNotification("Урок не знайдено!");
                 }
             }).catch(error => {
-                showNotification("Помилка завантаження уроку: " + error.message);
+                if (error.code === "PERMISSION_DENIED") {
+                    showNotification("Помилка: Недостатньо прав для перегляду уроку. Перевірте налаштування Firebase.");
+                } else {
+                    showNotification("Помилка завантаження уроку: " + error.message);
+                }
             });
         }
 
@@ -333,7 +350,7 @@
         document.addEventListener("DOMContentLoaded", () => {
             restoreFavorites();
             document.getElementById("communityLessonsContainer").style.display = "none";
-            loadCommunityLessons(); // Load community lessons on page load to ensure they are available
+            loadCommunityLessons();
         });
     </script>
 </head>

@@ -511,6 +511,50 @@
       background: #2e7d32;
     }
 
+    /* Стилі для спливаючих вікон */
+    .notification-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      display: none;
+      text-align: center;
+      z-index: 1001;
+      width: 90%;
+      max-width: 400px;
+      animation: slideIn 0.3s ease-in-out;
+    }
+
+    .notification-popup p {
+      color: #2e7d32;
+      font-size: 1em;
+      margin-bottom: 15px;
+    }
+
+    .notification-popup button {
+      background: linear-gradient(45deg, #2e7d32, #4caf50);
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95em;
+      transition: background 0.3s ease;
+    }
+
+    .notification-popup button:hover {
+      background: linear-gradient(45deg, #4caf50, #2e7d32);
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translate(-50%, -60%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+
     /* Mobile Optimizations */
     @media (max-width: 768px) {
       body {
@@ -549,13 +593,13 @@
         margin: 5px;
       }
 
-      .settings-popup, .share-popup {
+      .settings-popup, .share-popup, .notification-popup {
         width: 95%;
         padding: 15px;
         max-height: 85vh;
       }
 
-      .settings-popup h2, .share-popup h3 {
+      .settings-popup h2, .share-popup h3, .notification-popup p {
         font-size: 1.3em;
       }
 
@@ -633,7 +677,7 @@
         min-height: 40px;
       }
 
-      .settings-popup, .share-popup {
+      .settings-popup, .share-popup, .notification-popup {
         padding: 10px;
       }
 
@@ -749,6 +793,11 @@
     <button onclick="shareViaWhatsApp()">Поділитися через WhatsApp</button>
     <button onclick="copyShareLink()">Скопіювати посилання</button>
     <div class="close-btn" onclick="closeSharePopup()">❌ Закрити</div>
+  </div>
+
+  <div class="notification-popup" id="notificationPopup">
+    <p id="notificationMessage"></p>
+    <button onclick="closeNotification()">OK</button>
   </div>
 
   <div class="container">
@@ -880,6 +929,57 @@
       }
     };
 
+    // Функція для відображення спливаючих вікон
+    function showNotification(message) {
+      const popup = document.getElementById('notificationPopup');
+      const messageElement = document.getElementById('notificationMessage');
+      messageElement.textContent = message;
+      popup.style.display = 'block';
+      setTimeout(() => {
+        popup.style.display = 'none';
+      }, 3000);
+    }
+
+    function closeNotification() {
+      document.getElementById('notificationPopup').style.display = 'none';
+    }
+
+    // Функція для стиснення зображення
+    function compressImage(file, callback) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const maxWidth = 100;
+          const maxHeight = 100;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedUrl = canvas.toDataURL('image/jpeg', 0.7);
+          callback(compressedUrl);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
     function updateXPProgress() {
       const progressPercent = (xpPoints / maxXP) * 100;
       document.getElementById('xp-progress').style.width = `${progressPercent}%`;
@@ -898,7 +998,7 @@
         if (user) {
           update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
         }
-        alert('Вітаємо! Ви досягли максимального рівня! XP скинуто.');
+        showNotification('Вітаємо! Ви досягли максимального рівня! XP скинуто.');
       }
     }
 
@@ -956,7 +1056,7 @@
         addAchievement('Щоденний вхід');
       }
       localStorage.setItem('lastClaimDate', today);
-      alert('Ви отримали 50 XP за щоденний вхід!');
+      showNotification('Ви отримали 50 XP за щоденний вхід!');
       updateXPProgress();
     }
 
@@ -971,10 +1071,10 @@
           update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
           addAchievement('Отримання бонусу');
         }
-        alert('Ви отримали бонус 20 XP!');
+        showNotification('Ви отримали бонус 20 XP!');
         updateXPProgress();
       } else {
-        alert('Недостатньо XP для отримання бонусу! Потрібно 100 XP.');
+        showNotification('Недостатньо XP для отримання бонусу! Потрібно 100 XP.');
       }
     }
 
@@ -984,7 +1084,7 @@
       const promoHistory = JSON.parse(localStorage.getItem('promoHistory') || '[]');
 
       if (usedPromoCodes.includes(promoCode)) {
-        alert('Цей промокод уже використано!');
+        showNotification('Цей промокод уже використано!');
         return;
       }
 
@@ -993,27 +1093,27 @@
         const currentDate = new Date().toISOString().split('T')[0];
 
         if (currentDate > expires) {
-          alert('Термін дії промокоду минув!');
+          showNotification('Термін дії промокоду минув!');
           return;
         }
 
         if (type === 'xp') {
           xpPoints += reward;
           localStorage.setItem('xpPoints', xpPoints);
-          alert(`Промокод активовано! Ви отримали ${reward} XP!`);
+          showNotification(`Промокод активовано! Ви отримали ${reward} XP!`);
           updateXPProgress();
           addAchievement('Активація промокоду');
         } else if (type === 'badge') {
           const userBadges = JSON.parse(localStorage.getItem('userBadges') || '[]');
           userBadges.push(reward);
           localStorage.setItem('userBadges', JSON.stringify(userBadges));
-          alert(`Промокод активовано! Ви отримали значок: ${reward}!`);
+          showNotification(`Промокод активовано! Ви отримали значок: ${reward}!`);
           addAchievement('Отримання значка');
         } else if (type === 'lesson') {
           const unlockedLessons = JSON.parse(localStorage.getItem('unlockedLessons') || '[]');
           unlockedLessons.push(reward);
           localStorage.setItem('unlockedLessons', JSON.stringify(unlockedLessons));
-          alert(`Промокод активовано! Ви розблокували: ${reward}!`);
+          showNotification(`Промокод активовано! Ви розблокували: ${reward}!`);
           addAchievement('Розблокування уроку');
         }
 
@@ -1036,7 +1136,7 @@
 
         updatePromoHistory();
       } else {
-        alert('Невірний промокод!');
+        showNotification('Невірний промокод!');
       }
       document.getElementById('promoCodeInput').value = '';
     }
@@ -1091,7 +1191,7 @@
       const promoCode = getRandomInviteCode();
       const shareText = `Приєднуйся до BioWorld та дізнайся більше про біологію! Використай промокод ${promoCode} для бонусу! 🌿🔬 ${window.location.href}?code=${promoCode}`;
       navigator.clipboard.writeText(shareText).then(() => {
-        alert('Посилання скопійовано до буфера обміну!');
+        showNotification('Посилання скопійовано до буфера обміну!');
         trackSharedCode(promoCode);
         closeSharePopup();
       });
@@ -1114,7 +1214,7 @@
         update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
         addAchievement('Запрошення друга');
       }
-      alert(`Ви отримали ${reward} XP за запрошення друга!`);
+      showNotification(`Ви отримали ${reward} XP за запрошення друга!`);
       updateXPProgress();
     }
 
@@ -1134,7 +1234,7 @@
         update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
         addAchievement('Випадковий тест');
       }
-      alert('Ви отримали 10 XP за вибір випадкового тесту!');
+      showNotification('Ви отримали 10 XP за вибір випадкового тесту!');
       updateXPProgress();
     }
 
@@ -1193,7 +1293,7 @@
       if (user) {
         update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
       }
-      alert('Ви отримали 5 XP за зміну налаштувань!');
+      showNotification('Ви отримали 5 XP за зміну налаштувань!');
       updateXPProgress();
     }
 
@@ -1210,13 +1310,13 @@
               update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
               addAchievement('Встановлення додатку');
             }
-            alert('Ви отримали 30 XP за встановлення додатку!');
+            showNotification('Ви отримали 30 XP за встановлення додатку!');
             updateXPProgress();
           }
           window.deferredPrompt = null;
         });
       } else {
-        alert('Встановлення додатку недоступне. Спробуйте відкрити сайт у браузері, який підтримує PWA (наприклад, Chrome або Safari).');
+        showNotification('Встановлення додатку недоступне. Спробуйте відкрити сайт у браузері, який підтримує PWA (наприклад, Chrome або Safari).');
       }
     }
 
@@ -1283,21 +1383,18 @@
       const avatarFile = document.getElementById('avatarInput').files[0];
 
       if (name && email && password && avatarFile) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const avatarUrl = e.target.result;
-
+        compressImage(avatarFile, function(compressedUrl) {
           createUserWithEmailAndPassword(auth, email, password)
             .then(userCredential => {
               const user = userCredential.user;
               updateProfile(user, {
                 displayName: name,
-                photoURL: avatarUrl
+                photoURL: compressedUrl
               }).then(() => {
                 set(ref(database, 'users/' + user.uid), {
                   username: name,
                   email: email,
-                  avatar: avatarUrl,
+                  avatar: compressedUrl,
                   xpPoints: xpPoints,
                   visits: 1,
                   lastLogin: new Date().toISOString(),
@@ -1307,28 +1404,35 @@
                   loginHistory: JSON.parse(localStorage.getItem('loginHistory') || '{}')
                 }).then(() => {
                   localStorage.setItem('bioUsername', name);
-                  localStorage.setItem('bioAvatar', avatarUrl);
+                  localStorage.setItem('bioAvatar', compressedUrl);
                   localStorage.setItem('bioVisits', 1);
                   localStorage.setItem('userId', user.uid);
                   updateLoginHistory();
-                  showAccountInfo(name, avatarUrl, 1);
-                  xpPoints += 20;
-                  localStorage.setItem('xpPoints', xpPoints);
-                  update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
-                  addAchievement('Реєстрація акаунту');
-                  alert('Ви отримали 20 XP за реєстрацію!');
-                  updateXPProgress();
+                  // Автоматичний вхід після реєстрації
+                  signInWithEmailAndPassword(auth, email, password)
+                    .then(() => {
+                      xpPoints += 20;
+                      localStorage.setItem('xpPoints', xpPoints);
+                      update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
+                      addAchievement('Реєстрація акаунту');
+                      showNotification('Ви отримали 20 XP за реєстрацію!');
+                      showAccountInfo(name, compressedUrl, 1);
+                      updateXPProgress();
+                    })
+                    .catch(error => {
+                      console.error('Помилка автоматичного входу:', error.message);
+                      showNotification('Помилка автоматичного входу: ' + error.message);
+                    });
                 });
               });
             })
             .catch(error => {
               console.error('Помилка реєстрації:', error.message);
-              alert('Помилка: ' + error.message);
+              showNotification('Помилка: ' + error.message);
             });
-        };
-        reader.readAsDataURL(avatarFile);
+        });
       } else {
-        alert('Будь ласка, заповніть ім’я, електронну пошту, пароль та виберіть аватарку!');
+        showNotification('Будь ласка, заповніть ім’я, електронну пошту, пароль та виберіть аватарку!');
       }
     }
 
@@ -1353,15 +1457,15 @@
             localStorage.setItem('xpPoints', xpPoints);
             update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
             addAchievement('Вхід до акаунту');
-            alert('Ви отримали 10 XP за вхід!');
+            showNotification('Ви отримали 10 XP за вхід!');
             updateXPProgress();
           })
           .catch(error => {
             console.error('Помилка входу:', error.message);
-            alert('Помилка: ' + error.message);
+            showNotification('Помилка: ' + error.message);
           });
       } else {
-        alert('Будь ласка, введіть електронну пошту та пароль!');
+        showNotification('Будь ласка, введіть електронну пошту та пароль!');
       }
     }
 
@@ -1385,7 +1489,7 @@
         }
       }).catch(error => {
         console.error('Помилка завантаження даних користувача:', error.message);
-        alert('Помилка завантаження даних: ' + error.message);
+        showNotification('Помилка завантаження даних: ' + error.message);
       });
     }
 
@@ -1414,7 +1518,7 @@
         document.getElementById('welcomeBanner').style.display = 'none';
       }).catch(error => {
         console.error('Помилка виходу:', error.message);
-        alert('Помилка: ' + error.message);
+        showNotification('Помилка: ' + error.message);
       });
     }
 
@@ -1438,7 +1542,7 @@
               xpPoints: xpPoints
             });
             addAchievement('Редагування профілю');
-            alert('Ви отримали 5 XP за редагування профілю!');
+            showNotification('Ви отримали 5 XP за редагування профілю!');
             updateXPProgress();
           });
         }
@@ -1452,32 +1556,29 @@
       avatarInput.onchange = function(e) {
         const file = e.target.files[0];
         if (file) {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            const avatarUrl = e.target.result;
+          compressImage(file, function(compressedUrl) {
             const user = auth.currentUser;
             if (user) {
               updateProfile(user, {
-                photoURL: avatarUrl
+                photoURL: compressedUrl
               }).then(() => {
-                localStorage.setItem('bioAvatar', avatarUrl);
+                localStorage.setItem('bioAvatar', compressedUrl);
                 update(ref(database, 'users/' + user.uid), {
-                  avatar: avatarUrl,
+                  avatar: compressedUrl,
                   achievements: JSON.parse(localStorage.getItem('userAchievements') || '[]')
                 });
-                document.getElementById('userAvatar').src = avatarUrl;
+                document.getElementById('userAvatar').src = compressedUrl;
                 xpPoints += 5;
                 localStorage.setItem('xpPoints', xpPoints);
                 update(ref(database, 'users/' + user.uid), {
                   xpPoints: xpPoints
                 });
                 addAchievement('Зміна аватарки');
-                alert('Ви отримали 5 XP за зміну аватарки!');
+                showNotification('Ви отримали 5 XP за зміну аватарки!');
                 updateXPProgress();
               });
             }
-          };
-          reader.readAsDataURL(file);
+          });
         }
       };
       avatarInput.click();

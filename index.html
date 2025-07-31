@@ -512,7 +512,6 @@
       background: #2e7d32;
     }
 
-    /* Стилі для спливаючих вікон */
     .notification-popup {
       position: fixed;
       top: 50%;
@@ -556,7 +555,6 @@
       to { opacity: 1; transform: translate(-50%, -50%); }
     }
 
-    /* Mobile Optimizations */
     @media (max-width: 768px) {
       body {
         padding-top: 60px;
@@ -1365,28 +1363,28 @@
       applyTheme(savedTheme || 'default', savedBg, animations);
 
       onAuthStateChanged(auth, user => {
+        console.log('Auth state changed:', user ? 'User logged in' : 'No user');
         if (user) {
           localStorage.setItem('userId', user.uid);
-          document.getElementById('accountForm').style.display = 'none';
-          document.getElementById('accountInfo').style.display = 'block';
-          document.getElementById('welcomeBanner').style.display = 'block';
-
           // Real-time listener for user data
           const userRef = ref(database, 'users/' + user.uid);
-          onValue(userRef, (snapshot) => {
+          window.userListener = onValue(userRef, (snapshot) => {
             const userData = snapshot.val();
             if (userData) {
+              console.log('User data synced:', userData);
               syncUserData(userData);
+            } else {
+              console.warn('No user data found in database');
             }
           }, (error) => {
             console.error('Помилка синхронізації даних:', error.message);
             showNotification('Помилка синхронізації даних: ' + error.message);
           });
         } else {
+          console.log('Showing login form');
           document.getElementById('accountForm').style.display = 'block';
           document.getElementById('accountInfo').style.display = 'none';
           document.getElementById('welcomeBanner').style.display = 'none';
-          // Clear real-time listener if user logs out
           if (window.userListener) {
             window.userListener();
             window.userListener = null;
@@ -1402,6 +1400,7 @@
     function togglePopup() {
       const popup = document.getElementById('accountPopup');
       popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+      console.log('Toggled account popup, display:', popup.style.display);
     }
 
     function registerAccount() {
@@ -1410,119 +1409,136 @@
       const password = document.getElementById('passwordInput').value.trim();
       const avatarFile = document.getElementById('avatarInput').files[0];
 
-      if (name && email && password && avatarFile) {
-        compressImage(avatarFile, function(compressedUrl) {
-          createUserWithEmailAndPassword(auth, email, password)
-            .then(userCredential => {
-              const user = userCredential.user;
-              updateProfile(user, {
-                displayName: name,
-                photoURL: compressedUrl
-              }).then(() => {
-                set(ref(database, 'users/' + user.uid), {
-                  username: name,
-                  email: email,
-                  avatar: compressedUrl,
-                  xpPoints: xpPoints,
-                  visits: 1,
-                  lastLogin: new Date().toISOString(),
-                  achievements: JSON.parse(localStorage.getItem('userAchievements') || '[]'),
-                  promoHistory: JSON.parse(localStorage.getItem('promoHistory') || '[]'),
-                  usedPromoCodes: JSON.parse(localStorage.getItem('usedPromoCodes') || '[]'),
-                  userBadges: JSON.parse(localStorage.getItem('userBadges') || '[]'),
-                  unlockedLessons: JSON.parse(localStorage.getItem('unlockedLessons') || '[]'),
-                  loginHistory: JSON.parse(localStorage.getItem('loginHistory') || '{}'),
-                  theme: localStorage.getItem('theme') || 'default',
-                  customBg: localStorage.getItem('customBg') || '',
-                  animations: localStorage.getItem('animations') !== 'false'
-                }).then(() => {
-                  localStorage.setItem('bioUsername', name);
-                  localStorage.setItem('bioAvatar', compressedUrl);
-                  localStorage.setItem('bioVisits', 1);
-                  localStorage.setItem('userId', user.uid);
-                  updateLoginHistory();
-                  // Автоматичний вхід після реєстрації
-                  signInWithEmailAndPassword(auth, email, password)
-                    .then(() => {
-                      xpPoints += 20;
-                      localStorage.setItem('xpPoints', xpPoints);
-                      update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
-                      addAchievement('Реєстрація акаунту');
-                      showNotification('Ви отримали 20 XP за реєстрацію!');
-                      syncUserData({
-                        username: name,
-                        avatar: compressedUrl,
-                        visits: 1,
-                        xpPoints: xpPoints,
-                        achievements: JSON.parse(localStorage.getItem('userAchievements') || '[]'),
-                        promoHistory: JSON.parse(localStorage.getItem('promoHistory') || '[]'),
-                        usedPromoCodes: JSON.parse(localStorage.getItem('usedPromoCodes') || '[]'),
-                        userBadges: JSON.parse(localStorage.getItem('userBadges') || '[]'),
-                        unlockedLessons: JSON.parse(localStorage.getItem('unlockedLessons') || '[]'),
-                        loginHistory: JSON.parse(localStorage.getItem('loginHistory') || '{}'),
-                        theme: localStorage.getItem('theme') || 'default',
-                        customBg: localStorage.getItem('customBg') || '',
-                        animations: localStorage.getItem('animations') !== 'false'
-                      });
-                    })
-                    .catch(error => {
-                      console.error('Помилка автоматичного входу:', error.message);
-                      showNotification('Помилка автоматичного входу: ' + error.message);
-                    });
-                });
-              });
-            })
-            .catch(error => {
-              console.error('Помилка реєстрації:', error.message);
-              showNotification('Помилка: ' + error.message);
-            });
-        });
-      } else {
+      if (!name || !email || !password || !avatarFile) {
         showNotification('Будь ласка, заповніть ім’я, електронну пошту, пароль та виберіть аватарку!');
+        console.warn('Registration failed: Missing required fields');
+        return;
       }
+
+      compressImage(avatarFile, function(compressedUrl) {
+        createUserWithEmailAndPassword(auth, email, password)
+          .then(userCredential => {
+            const user = userCredential.user;
+            console.log('User registered:', user.uid);
+            return updateProfile(user, {
+              displayName: name,
+              photoURL: compressedUrl
+            }).then(() => {
+              return set(ref(database, 'users/' + user.uid), {
+                username: name,
+                email: email,
+                avatar: compressedUrl,
+                xpPoints: xpPoints,
+                visits: 1,
+                lastLogin: new Date().toISOString(),
+                achievements: JSON.parse(localStorage.getItem('userAchievements') || '[]'),
+                promoHistory: JSON.parse(localStorage.getItem('promoHistory') || '[]'),
+                usedPromoCodes: JSON.parse(localStorage.getItem('usedPromoCodes') || '[]'),
+                userBadges: JSON.parse(localStorage.getItem('userBadges') || '[]'),
+                unlockedLessons: JSON.parse(localStorage.getItem('unlockedLessons') || '[]'),
+                loginHistory: JSON.parse(localStorage.getItem('loginHistory') || '{}'),
+                theme: localStorage.getItem('theme') || 'default',
+                customBg: localStorage.getItem('customBg') || '',
+                animations: localStorage.getItem('animations') !== 'false'
+              });
+            }).then(() => {
+              localStorage.setItem('bioUsername', name);
+              localStorage.setItem('bioAvatar', compressedUrl);
+              localStorage.setItem('bioVisits', 1);
+              localStorage.setItem('userId', user.uid);
+              updateLoginHistory();
+              // No automatic login after registration to avoid issues
+              xpPoints += 20;
+              localStorage.setItem('xpPoints', xpPoints);
+              update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
+              addAchievement('Реєстрація акаунту');
+              showNotification('Ви отримали 20 XP за реєстрацію!');
+              syncUserData({
+                username: name,
+                avatar: compressedUrl,
+                visits: 1,
+                xpPoints: xpPoints,
+                achievements: JSON.parse(localStorage.getItem('userAchievements') || '[]'),
+                promoHistory: JSON.parse(localStorage.getItem('promoHistory') || '[]'),
+                usedPromoCodes: JSON.parse(localStorage.getItem('usedPromoCodes') || '[]'),
+                userBadges: JSON.parse(localStorage.getItem('userBadges') || '[]'),
+                unlockedLessons: JSON.parse(localStorage.getItem('unlockedLessons') || '[]'),
+                loginHistory: JSON.parse(localStorage.getItem('loginHistory') || '{}'),
+                theme: localStorage.getItem('theme') || 'default',
+                customBg: localStorage.getItem('customBg') || '',
+                animations: localStorage.getItem('animations') !== 'false'
+              });
+              console.log('Registration successful, user data synced');
+            });
+          })
+          .catch(error => {
+            console.error('Помилка реєстрації:', error.message);
+            showNotification('Помилка реєстрації: ' + error.message);
+          });
+      });
     }
 
     function loginAccount() {
       const email = document.getElementById('emailInput').value.trim();
       const password = document.getElementById('passwordInput').value.trim();
 
-      if (email && password) {
-        signInWithEmailAndPassword(auth, email, password)
-          .then(userCredential => {
-            const user = userCredential.user;
-            localStorage.setItem('userId', user.uid);
-            const visits = parseInt(localStorage.getItem('bioVisits') || 0) + 1;
-            localStorage.setItem('bioVisits', visits);
-            update(ref(database, 'users/' + user.uid), { visits: visits });
-            updateLoginHistory();
-            xpPoints += 10;
-            localStorage.setItem('xpPoints', xpPoints);
-            update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
-            addAchievement('Вхід до акаунту');
-            showNotification('Ви отримали 10 XP за вхід!');
-          })
-          .catch(error => {
-            console.error('Помилка входу:', error.message);
-            showNotification('Помилка: ' + error.message);
-          });
-      } else {
+      if (!email || !password) {
         showNotification('Будь ласка, введіть електронну пошту та пароль!');
+        console.warn('Login failed: Missing email or password');
+        return;
       }
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then(userCredential => {
+          const user = userCredential.user;
+          console.log('User logged in:', user.uid);
+          localStorage.setItem('userId', user.uid);
+          const visits = parseInt(localStorage.getItem('bioVisits') || 0) + 1;
+          localStorage.setItem('bioVisits', visits);
+          update(ref(database, 'users/' + user.uid), { visits: visits });
+          updateLoginHistory();
+          xpPoints += 10;
+          localStorage.setItem('xpPoints', xpPoints);
+          update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
+          addAchievement('Вхід до акаунту');
+          showNotification('Ви отримали 10 XP за вхід!');
+          // The onAuthStateChanged listener will handle UI updates
+        })
+        .catch(error => {
+          console.error('Помилка входу:', error.message);
+          showNotification('Помилка входу: ' + error.message);
+        });
     }
 
     function showAccountInfo(name, avatarUrl, visits) {
-      document.getElementById('accountForm').style.display = 'none';
-      document.getElementById('accountInfo').style.display = 'block';
-      document.getElementById('displayName').textContent = name;
-      document.getElementById('userAvatar').src = avatarUrl;
-      document.getElementById('visitCount').textContent = visits;
-      document.getElementById('welcomeBanner').style.display = 'block';
+      console.log('Showing account info for:', name, 'Visits:', visits);
+      const accountForm = document.getElementById('accountForm');
+      const accountInfo = document.getElementById('accountInfo');
+      const welcomeBanner = document.getElementById('welcomeBanner');
+
+      if (accountForm && accountInfo && welcomeBanner) {
+        accountForm.style.display = 'none';
+        accountInfo.style.display = 'block';
+        welcomeBanner.style.display = 'block';
+      } else {
+        console.error('DOM elements not found:', { accountForm, accountInfo, welcomeBanner });
+        showNotification('Помилка: Не вдалося знайти елементи інтерфейсу');
+        return;
+      }
+
+      document.getElementById('displayName').textContent = name || 'Користувач';
+      document.getElementById('userAvatar').src = avatarUrl || '';
+      document.getElementById('visitCount').textContent = visits || 0;
       setTimeGreeting();
       drawLoginChart();
+      updateXPProgress();
+      updatePromoHistory();
+      updateAchievements();
     }
 
     function logout() {
       signOut(auth).then(() => {
+        console.log('User logged out');
         localStorage.removeItem('userId');
         localStorage.removeItem('bioUsername');
         localStorage.removeItem('bioAvatar');

@@ -27,7 +27,7 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js';
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, signInWithPopup, GoogleAuthProvider, signInWithPhoneNumber, RecaptchaVerifier } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
     import { getDatabase, ref, set, get, update } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js';
 
     // Firebase конфігурація
@@ -55,6 +55,10 @@
     window.signOut = signOut;
     window.onAuthStateChanged = onAuthStateChanged;
     window.updateProfile = updateProfile;
+    window.signInWithPopup = signInWithPopup;
+    window.GoogleAuthProvider = GoogleAuthProvider;
+    window.signInWithPhoneNumber = signInWithPhoneNumber;
+    window.RecaptchaVerifier = RecaptchaVerifier;
     window.ref = ref;
     window.set = set;
     window.get = get;
@@ -171,6 +175,52 @@
       background: linear-gradient(45deg, #4caf50, #2e7d32);
       transform: translateY(-3px);
       box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .auth-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #2e7d32, #66bb6a);
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1em;
+      font-weight: 600;
+      margin: 8px 0;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      min-height: 48px;
+      width: 100%;
+    }
+
+    .auth-button:hover {
+      background: linear-gradient(135deg, #4caf50, #81c784);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .auth-button:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .auth-button i {
+      margin-right: 8px;
+      font-size: 1.2em;
+    }
+
+    .google-button {
+      background: linear-gradient(135deg, #ffffff, #e0e0e0);
+      color: #333;
+      border: 1px solid #2e7d32;
+    }
+
+    .google-button:hover {
+      background: linear-gradient(135deg, #e0e0e0, #ffffff);
+      color: #2e7d32;
     }
 
     .settings-popup {
@@ -349,31 +399,14 @@
     .popup input[type="text"],
     .popup input[type="password"],
     .popup input[type="email"],
-    .popup input[type="file"] {
+    .popup input[type="file"],
+    .popup input[type="tel"] {
       width: 100%;
       padding: 8px;
       margin: 8px 0;
       border: 1px solid #ccc;
       border-radius: 5px;
       font-size: 0.9em;
-    }
-
-    .popup button {
-      width: 100%;
-      background: #2e7d32;
-      color: white;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin: 8px 0;
-      transition: background 0.3s ease;
-      font-size: 0.9em;
-      min-height: 44px;
-    }
-
-    .popup button:hover {
-      background: #1b5e20;
     }
 
     .popup img {
@@ -511,7 +544,6 @@
       background: #2e7d32;
     }
 
-    /* Стилі для спливаючих вікон */
     .notification-popup {
       position: fixed;
       top: 50%;
@@ -555,7 +587,6 @@
       to { opacity: 1; transform: translate(-50%, -50%); }
     }
 
-    /* Mobile Optimizations */
     @media (max-width: 768px) {
       body {
         padding-top: 60px;
@@ -586,7 +617,7 @@
         font-size: 0.9em;
       }
 
-      .button {
+      .button, .auth-button {
         padding: 10px 20px;
         font-size: 0.9em;
         min-height: 44px;
@@ -671,7 +702,7 @@
         font-size: 0.85em;
       }
 
-      .button {
+      .button, .auth-button {
         font-size: 0.85em;
         padding: 8px 15px;
         min-height: 40px;
@@ -733,6 +764,10 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+
+    #recaptcha-container {
+      margin: 10px 0;
+    }
   </style>
 </head>
 <body>
@@ -745,16 +780,19 @@
   <div class="popup" id="accountPopup">
     <div id="accountForm">
       <input type="text" id="usernameInput" placeholder="Ваше ім'я">
-      <input type="email" id="emailInput" placeholder="Електронна пошта">
+      <input type="text" id="authInput" placeholder="Електронна пошта або номер телефону">
       <input type="password" id="passwordInput" placeholder="Пароль">
+      <div id="recaptcha-container"></div>
       <input type="file" id="avatarInput" accept="image/*">
-      <button onclick="registerAccount()">Зареєструватися</button>
-      <button onclick="loginAccount()">Увійти</button>
+      <button class="auth-button" onclick="registerAccount()"><i>📝</i> Зареєструватися</button>
+      <button class="auth-button" onclick="loginAccount()"><i>🔑</i> Увійти</button>
+      <button class="auth-button google-button" onclick="loginWithGoogle()"><i>🌐</i> Увійти через Google</button>
     </div>
     <div id="accountInfo" style="display:none;">
       <img id="userAvatar" src="" alt="Аватарка">
       <p>👋 Привіт, <span id="displayName"></span>!</p>
       <p id="timeGreeting"></p>
+      <p>📅 Дата реєстрації: <span id="registrationDate"></span></p>
       <p>📊 Відвідувань: <span id="visitCount"></span></p>
       <div id="chartContainer">
         <canvas id="loginChart"></canvas>
@@ -767,9 +805,9 @@
         <p class="xp-level">Рівень: <span id="xp-level">1</span></p>
       </div>
       <input type="text" id="promoCodeInput" placeholder="Введіть промокод">
-      <button onclick="applyPromoCode()">Активувати промокод</button>
-      <button onclick="openSharePopup()">Поділитися запрошенням</button>
-      <button onclick="installApp()">Встановити додаток</button>
+      <button class="auth-button" onclick="applyPromoCode()"><i>🎁</i> Активувати промокод</button>
+      <button class="auth-button" onclick="openSharePopup()"><i>🤝</i> Поділитися запрошенням</button>
+      <button class="auth-button" onclick="installApp()"><i>📱</i> Встановити додаток</button>
       <div class="promo-history">
         <h3>Історія промокодів</h3>
         <ul id="promoHistoryList"></ul>
@@ -778,26 +816,26 @@
         <h3>🏆 Досягнення</h3>
         <ul id="achievementsList"></ul>
       </div>
-      <button onclick="logout()">Вийти</button>
-      <button onclick="editProfile()">Редагувати профіль</button>
-      <button onclick="changeAvatar()">Змінити аватарку</button>
-      <button onclick="claimBonus()">Отримати бонус</button>
+      <button class="auth-button" onclick="logout()"><i>🚪</i> Вийти</button>
+      <button class="auth-button" onclick="editProfile()"><i>✏️</i> Редагувати профіль</button>
+      <button class="auth-button" onclick="changeAvatar()"><i>🖼️</i> Змінити аватарку</button>
+      <button class="auth-button" onclick="claimBonus()"><i>💰</i> Отримати бонус</button>
     </div>
   </div>
 
   <div class="share-popup" id="sharePopup">
     <h3>Поділитися запрошенням</h3>
     <p>Запроси друга та отримай до 40 XP!</p>
-    <button onclick="shareViaTelegram()">Поділитися через Telegram</button>
-    <button onclick="shareViaViber()">Поділитися через Viber</button>
-    <button onclick="shareViaWhatsApp()">Поділитися через WhatsApp</button>
-    <button onclick="copyShareLink()">Скопіювати посилання</button>
+    <button class="auth-button" onclick="shareViaTelegram()"><i>📬</i> Поділитися через Telegram</button>
+    <button class="auth-button" onclick="shareViaViber()"><i>📱</i> Поділитися через Viber</button>
+    <button class="auth-button" onclick="shareViaWhatsApp()"><i>💬</i> Поділитися через WhatsApp</button>
+    <button class="auth-button" onclick="copyShareLink()"><i>🔗</i> Скопіювати посилання</button>
     <div class="close-btn" onclick="closeSharePopup()">❌ Закрити</div>
   </div>
 
   <div class="notification-popup" id="notificationPopup">
     <p id="notificationMessage"></p>
-    <button onclick="closeNotification()">OK</button>
+    <button class="auth-button" onclick="closeNotification()"><i>✅</i> OK</button>
   </div>
 
   <div class="container">
@@ -865,9 +903,9 @@
   </div>
 
   <script>
-    let xpPoints = parseInt(localStorage.getItem('xpPoints') || 0);
+    let xpPoints = 0;
     const maxXP = 200;
-    let lastClaimDate = localStorage.getItem('lastClaimDate') || '';
+    let lastClaimDate = '';
     const today = new Date().toISOString().split('T')[0];
 
     // Pre-defined promo codes for invites
@@ -928,6 +966,18 @@
         buttonHoverGradient: 'linear-gradient(45deg, #757575, #424242)'
       }
     };
+
+    // Функція для перевірки, чи є введення електронною поштою
+    function isEmail(input) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(input);
+    }
+
+    // Функція для перевірки, чи є введення номером телефону
+    function isPhoneNumber(input) {
+      const phoneRegex = /^\+380\d{9}$/;
+      return phoneRegex.test(input);
+    }
 
     // Функція для відображення спливаючих вікон
     function showNotification(message) {
@@ -993,7 +1043,6 @@
 
       if (xpPoints >= maxXP) {
         xpPoints = 0;
-        localStorage.setItem('xpPoints', xpPoints);
         const user = auth.currentUser;
         if (user) {
           update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
@@ -1003,69 +1052,73 @@
     }
 
     function updateAchievements() {
-      const achievements = JSON.parse(localStorage.getItem('userAchievements') || '[]');
-      const achievementsList = document.getElementById('achievementsList');
-      achievementsList.innerHTML = '';
+      get(ref(database, 'users/' + auth.currentUser?.uid + '/achievements')).then(snapshot => {
+        const achievements = snapshot.val() || [];
+        const achievementsList = document.getElementById('achievementsList');
+        achievementsList.innerHTML = '';
 
-      if (achievements.length === 0) {
-        const li = document.createElement('li');
-        li.textContent = 'Ще немає досягнень. Отримайте їх у розділі "Досягнення та Призи"!';
-        achievementsList.appendChild(li);
-        return;
-      }
-
-      const aggregated = {};
-      achievements.forEach(achievement => {
-        if (!aggregated[achievement.name]) {
-          aggregated[achievement.name] = { count: 0, date: achievement.date };
+        if (achievements.length === 0) {
+          const li = document.createElement('li');
+          li.textContent = 'Ще немає досягнень. Отримайте їх у розділі "Досягнення та Призи"!';
+          achievementsList.appendChild(li);
+          return;
         }
-        aggregated[achievement.name].count += 1;
-        if (new Date(achievement.date) > new Date(aggregated[achievement.name].date)) {
-          aggregated[achievement.name].date = achievement.date;
-        }
-      });
 
-      Object.keys(aggregated).forEach(name => {
-        const { count, date } = aggregated[name];
-        const emoji = achievementEmojis[name] || '🏅';
-        const li = document.createElement('li');
-        const multiplier = count > 1 ? `<sup>x${count}</sup>` : '';
-        li.innerHTML = `<span class="emoji">${emoji}</span>${name} <span class="achievement-details">(${date})${multiplier}</span>`;
-        achievementsList.appendChild(li);
+        const aggregated = {};
+        achievements.forEach(achievement => {
+          if (!aggregated[achievement.name]) {
+            aggregated[achievement.name] = { count: 0, date: achievement.date };
+          }
+          aggregated[achievement.name].count += 1;
+          if (new Date(achievement.date) > new Date(aggregated[achievement.name].date)) {
+            aggregated[achievement.name].date = achievement.date;
+          }
+        });
+
+        Object.keys(aggregated).forEach(name => {
+          const { count, date } = aggregated[name];
+          const emoji = achievementEmojis[name] || '🏅';
+          const li = document.createElement('li');
+          const multiplier = count > 1 ? `<sup>x${count}</sup>` : '';
+          li.innerHTML = `<span class="emoji">${emoji}</span>${name} <span class="achievement-details">(${date})${multiplier}</span>`;
+          achievementsList.appendChild(li);
+        });
       });
     }
 
     function addAchievement(name) {
-      const achievements = JSON.parse(localStorage.getItem('userAchievements') || '[]');
       const today = new Date().toISOString().split('T')[0];
-      achievements.push({ name: name, date: today });
-      localStorage.setItem('userAchievements', JSON.stringify(achievements));
       const user = auth.currentUser;
       if (user) {
-        update(ref(database, 'users/' + user.uid), { achievements: achievements });
+        get(ref(database, 'users/' + user.uid + '/achievements')).then(snapshot => {
+          const achievements = snapshot.val() || [];
+          achievements.push({ name: name, date: today });
+          update(ref(database, 'users/' + user.uid), { achievements: achievements });
+          updateAchievements();
+        });
       }
-      updateAchievements();
     }
 
-    if (lastClaimDate !== today) {
-      xpPoints += 50;
-      localStorage.setItem('xpPoints', xpPoints);
-      const user = auth.currentUser;
-      if (user) {
-        update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
-        addAchievement('Щоденний вхід');
-      }
-      localStorage.setItem('lastClaimDate', today);
-      showNotification('Ви отримали 50 XP за щоденний вхід!');
-      updateXPProgress();
+    function syncDailyBonus() {
+      get(ref(database, 'users/' + auth.currentUser?.uid)).then(snapshot => {
+        const userData = snapshot.val();
+        lastClaimDate = userData?.lastClaimDate || '';
+        if (lastClaimDate !== today) {
+          xpPoints += 50;
+          update(ref(database, 'users/' + auth.currentUser.uid), {
+            xpPoints: xpPoints,
+            lastClaimDate: today
+          });
+          addAchievement('Щоденний вхід');
+          showNotification('Ви отримали 50 XP за щоденний вхід!');
+          updateXPProgress();
+        }
+      });
     }
-
-    updateXPProgress();
 
     function claimBonus() {
       if (xpPoints >= 100) {
         xpPoints += 20;
-        localStorage.setItem('xpPoints', xpPoints);
         const user = auth.currentUser;
         if (user) {
           update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
@@ -1080,75 +1133,72 @@
 
     function applyPromoCode() {
       const promoCode = document.getElementById('promoCodeInput').value.trim().toLowerCase();
-      const usedPromoCodes = JSON.parse(localStorage.getItem('usedPromoCodes') || '[]');
-      const promoHistory = JSON.parse(localStorage.getItem('promoHistory') || '[]');
+      get(ref(database, 'users/' + auth.currentUser?.uid)).then(snapshot => {
+        const userData = snapshot.val();
+        const usedPromoCodes = userData?.usedPromoCodes || [];
+        const promoHistory = userData?.promoHistory || [];
 
-      if (usedPromoCodes.includes(promoCode)) {
-        showNotification('Цей промокод уже використано!');
-        return;
-      }
-
-      if (promoCodes[promoCode]) {
-        const { reward, type, expires, maxUses } = promoCodes[promoCode];
-        const currentDate = new Date().toISOString().split('T')[0];
-
-        if (currentDate > expires) {
-          showNotification('Термін дії промокоду минув!');
+        if (usedPromoCodes.includes(promoCode)) {
+          showNotification('Цей промокод уже використано!');
           return;
         }
 
-        if (type === 'xp') {
-          xpPoints += reward;
-          localStorage.setItem('xpPoints', xpPoints);
-          showNotification(`Промокод активовано! Ви отримали ${reward} XP!`);
-          updateXPProgress();
-          addAchievement('Активація промокоду');
-        } else if (type === 'badge') {
-          const userBadges = JSON.parse(localStorage.getItem('userBadges') || '[]');
-          userBadges.push(reward);
-          localStorage.setItem('userBadges', JSON.stringify(userBadges));
-          showNotification(`Промокод активовано! Ви отримали значок: ${reward}!`);
-          addAchievement('Отримання значка');
-        } else if (type === 'lesson') {
-          const unlockedLessons = JSON.parse(localStorage.getItem('unlockedLessons') || '[]');
-          unlockedLessons.push(reward);
-          localStorage.setItem('unlockedLessons', JSON.stringify(unlockedLessons));
-          showNotification(`Промокод активовано! Ви розблокували: ${reward}!`);
-          addAchievement('Розблокування уроку');
-        }
+        if (promoCodes[promoCode]) {
+          const { reward, type, expires, maxUses } = promoCodes[promoCode];
+          const currentDate = new Date().toISOString().split('T')[0];
 
-        usedPromoCodes.push(promoCode);
-        localStorage.setItem('usedPromoCodes', JSON.stringify(usedPromoCodes));
-        promoHistory.push({ code: promoCode, reward: reward, date: currentDate });
-        localStorage.setItem('promoHistory', JSON.stringify(promoHistory));
+          if (currentDate > expires) {
+            showNotification('Термін дії промокоду минув!');
+            return;
+          }
 
-        const user = auth.currentUser;
-        if (user) {
-          update(ref(database, 'users/' + user.uid), {
+          if (type === 'xp') {
+            xpPoints += reward;
+            showNotification(`Промокод активовано! Ви отримали ${reward} XP!`);
+            updateXPProgress();
+            addAchievement('Активація промокоду');
+          } else if (type === 'badge') {
+            const userBadges = userData?.userBadges || [];
+            userBadges.push(reward);
+            update(ref(database, 'users/' + auth.currentUser.uid), { userBadges: userBadges });
+            showNotification(`Промокод активовано! Ви отримали значок: ${reward}!`);
+            addAchievement('Отримання значка');
+          } else if (type === 'lesson') {
+            const unlockedLessons = userData?.unlockedLessons || [];
+            unlockedLessons.push(reward);
+            update(ref(database, 'users/' + auth.currentUser.uid), { unlockedLessons: unlockedLessons });
+            showNotification(`Промокод активовано! Ви розблокували: ${reward}!`);
+            addAchievement('Розблокування уроку');
+          }
+
+          usedPromoCodes.push(promoCode);
+          promoHistory.push({ code: promoCode, reward: reward, date: currentDate });
+          update(ref(database, 'users/' + auth.currentUser.uid), {
             xpPoints: xpPoints,
-            userBadges: JSON.parse(localStorage.getItem('userBadges') || '[]'),
-            unlockedLessons: JSON.parse(localStorage.getItem('unlockedLessons') || '[]'),
+            userBadges: userData?.userBadges || [],
+            unlockedLessons: userData?.unlockedLessons || [],
             usedPromoCodes: usedPromoCodes,
-            promoHistory: promoHistory,
-            achievements: JSON.parse(localStorage.getItem('userAchievements') || '[]')
+            promoHistory: promoHistory
           });
-        }
 
-        updatePromoHistory();
-      } else {
-        showNotification('Невірний промокод!');
-      }
-      document.getElementById('promoCodeInput').value = '';
+          updatePromoHistory();
+        } else {
+          showNotification('Невірний промокод!');
+        }
+        document.getElementById('promoCodeInput').value = '';
+      });
     }
 
     function updatePromoHistory() {
-      const promoHistory = JSON.parse(localStorage.getItem('promoHistory') || '[]');
-      const promoHistoryList = document.getElementById('promoHistoryList');
-      promoHistoryList.innerHTML = '';
-      promoHistory.forEach(entry => {
-        const li = document.createElement('li');
-        li.textContent = `${entry.date}: ${entry.code} - ${entry.reward}`;
-        promoHistoryList.appendChild(li);
+      get(ref(database, 'users/' + auth.currentUser?.uid + '/promoHistory')).then(snapshot => {
+        const promoHistory = snapshot.val() || [];
+        const promoHistoryList = document.getElementById('promoHistoryList');
+        promoHistoryList.innerHTML = '';
+        promoHistory.forEach(entry => {
+          const li = document.createElement('li');
+          li.textContent = `${entry.date}: ${entry.code} - ${entry.reward}`;
+          promoHistoryList.appendChild(li);
+        });
       });
     }
 
@@ -1203,19 +1253,20 @@
     }
 
     function trackSharedCode(code) {
-      const sharedCodes = JSON.parse(localStorage.getItem('sharedCodes') || '{}');
-      sharedCodes[code] = (sharedCodes[code] || 0) + 1;
-      localStorage.setItem('sharedCodes', JSON.stringify(sharedCodes));
-      const reward = promoCodes[code].reward;
-      xpPoints += reward;
-      localStorage.setItem('xpPoints', xpPoints);
-      const user = auth.currentUser;
-      if (user) {
-        update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
+      get(ref(database, 'users/' + auth.currentUser?.uid)).then(snapshot => {
+        const userData = snapshot.val();
+        const sharedCodes = userData?.sharedCodes || {};
+        sharedCodes[code] = (sharedCodes[code] || 0) + 1;
+        const reward = promoCodes[code].reward;
+        xpPoints += reward;
+        update(ref(database, 'users/' + auth.currentUser.uid), {
+          xpPoints: xpPoints,
+          sharedCodes: sharedCodes
+        });
         addAchievement('Запрошення друга');
-      }
-      showNotification(`Ви отримали ${reward} XP за запрошення друга!`);
-      updateXPProgress();
+        showNotification(`Ви отримали ${reward} XP за запрошення друга!`);
+        updateXPProgress();
+      });
     }
 
     function redirectToRandomTest() {
@@ -1228,7 +1279,6 @@
       const randomTest = tests[Math.floor(Math.random() * tests.length)];
       location.href = randomTest;
       xpPoints += 10;
-      localStorage.setItem('xpPoints', xpPoints);
       const user = auth.currentUser;
       if (user) {
         update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
@@ -1255,41 +1305,36 @@
         const selectedTheme = themes[theme];
         document.body.style.background = selectedTheme.background;
         document.body.style.color = selectedTheme.textColor;
-        document.querySelectorAll('.button, .settings-popup button, .close-btn:not(.close-btn), .account-btn').forEach(btn => {
-          btn.style.background = selectedTheme.buttonGradient;
-          btn.onmouseover = () => btn.style.background = selectedTheme.buttonHoverGradient;
-          btn.onmouseout = () => btn.style.background = selectedTheme.buttonGradient;
+        document.querySelectorAll('.button, .settings-popup button, .auth-button, .close-btn:not(.close-btn), .account-btn').forEach(btn => {
+          if (!btn.classList.contains('google-button')) {
+            btn.style.background = selectedTheme.buttonGradient;
+            btn.onmouseover = () => btn.style.background = selectedTheme.buttonHoverGradient;
+            btn.onmouseout = () => btn.style.background = selectedTheme.buttonGradient;
+          }
         });
         document.querySelectorAll('.xp-container').forEach(container => {
           container.style.background = selectedTheme.buttonGradient;
         });
-        localStorage.setItem('theme', theme);
       }
 
       if (customBg) {
         document.body.style.background = `url('${customBg}') no-repeat center center/cover`;
-        localStorage.setItem('customBg', customBg);
-      } else {
-        localStorage.removeItem('customBg');
       }
 
       document.body.style.transition = animations ? 'background 0.5s ease-in-out' : 'none';
-      localStorage.setItem('animations', animations);
 
       const user = auth.currentUser;
       if (user) {
         update(ref(database, 'users/' + user.uid), {
           theme: theme,
           customBg: customBg || '',
-          animations: animations,
-          achievements: JSON.parse(localStorage.getItem('userAchievements') || '[]')
+          animations: animations
         });
         addAchievement('Зміна налаштувань');
       }
 
       closeSettings();
       xpPoints += 5;
-      localStorage.setItem('xpPoints', xpPoints);
       if (user) {
         update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
       }
@@ -1304,7 +1349,6 @@
           if (choiceResult.outcome === 'accepted') {
             console.log('Користувач встановив додаток');
             xpPoints += 30;
-            localStorage.setItem('xpPoints', xpPoints);
             const user = auth.currentUser;
             if (user) {
               update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
@@ -1326,16 +1370,44 @@
     });
 
     window.onload = function() {
+      // Ініціалізація reCAPTCHA для реєстрації
+      window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
+        'size': 'normal',
+        'callback': (response) => {
+          console.log('reCAPTCHA verified');
+        },
+        'expired-callback': () => {
+          showNotification('reCAPTCHA закінчилася, спробуйте ще раз.');
+        }
+      }, auth);
+      recaptchaVerifier.render();
+
+      onAuthStateChanged(auth, user => {
+        if (user) {
+          loadUserData(user.uid);
+          document.getElementById('accountForm').style.display = 'none';
+          document.getElementById('accountInfo').style.display = 'block';
+          document.getElementById('welcomeBanner').style.display = 'block';
+          syncDailyBonus();
+        } else {
+          document.getElementById('accountForm').style.display = 'block';
+          document.getElementById('accountInfo').style.display = 'none';
+          document.getElementById('welcomeBanner').style.display = 'none';
+        }
+      });
+
       const savedTheme = localStorage.getItem('theme');
       if (savedTheme && themes[savedTheme]) {
         document.getElementById('themeSelect').value = savedTheme;
         const selectedTheme = themes[savedTheme];
         document.body.style.background = selectedTheme.background;
         document.body.style.color = selectedTheme.textColor;
-        document.querySelectorAll('.button, .settings-popup button, .close-btn:not(.close-btn), .account-btn').forEach(btn => {
-          btn.style.background = selectedTheme.buttonGradient;
-          btn.onmouseover = () => btn.style.background = selectedTheme.buttonHoverGradient;
-          btn.onmouseout = () => btn.style.background = selectedTheme.buttonGradient;
+        document.querySelectorAll('.button, .settings-popup button, .auth-button, .close-btn:not(.close-btn), .account-btn').forEach(btn => {
+          if (!btn.classList.contains('google-button')) {
+            btn.style.background = selectedTheme.buttonGradient;
+            btn.onmouseover = () => btn.style.background = selectedTheme.buttonHoverGradient;
+            btn.onmouseout = () => btn.style.background = selectedTheme.buttonGradient;
+          }
         });
         document.querySelectorAll('.xp-container').forEach(container => {
           container.style.background = selectedTheme.buttonGradient;
@@ -1352,23 +1424,6 @@
         document.body.style.background = `url('${savedBg}') no-repeat center center/cover`;
         document.getElementById('bgInput').value = savedBg;
       }
-
-      onAuthStateChanged(auth, user => {
-        if (user) {
-          loadUserData(user.uid);
-          document.getElementById('accountForm').style.display = 'none';
-          document.getElementById('accountInfo').style.display = 'block';
-          document.getElementById('welcomeBanner').style.display = 'block';
-        } else {
-          document.getElementById('accountForm').style.display = 'block';
-          document.getElementById('accountInfo').style.display = 'none';
-          document.getElementById('welcomeBanner').style.display = 'none';
-        }
-      });
-
-      updateXPProgress();
-      updatePromoHistory();
-      updateAchievements();
     };
 
     function togglePopup() {
@@ -1378,51 +1433,53 @@
 
     function registerAccount() {
       const name = document.getElementById('usernameInput').value.trim();
-      const email = document.getElementById('emailInput').value.trim();
+      const authInput = document.getElementById('authInput').value.trim();
       const password = document.getElementById('passwordInput').value.trim();
       const avatarFile = document.getElementById('avatarInput').files[0];
 
-      if (name && email && password && avatarFile) {
+      if (!name || !authInput || !password || !avatarFile) {
+        showNotification('Будь ласка, заповніть ім’я, електронну пошту або номер телефону, пароль та виберіть аватарку!');
+        return;
+      }
+
+      if (isEmail(authInput)) {
+        // Реєстрація через електронну пошту
         compressImage(avatarFile, function(compressedUrl) {
-          createUserWithEmailAndPassword(auth, email, password)
+          createUserWithEmailAndPassword(auth, authInput, password)
             .then(userCredential => {
               const user = userCredential.user;
+              const registrationDate = new Date().toISOString().split('T')[0];
               updateProfile(user, {
                 displayName: name,
                 photoURL: compressedUrl
               }).then(() => {
                 set(ref(database, 'users/' + user.uid), {
                   username: name,
-                  email: email,
+                  email: authInput,
+                  phone: '',
                   avatar: compressedUrl,
+                  registrationDate: registrationDate,
                   xpPoints: xpPoints,
                   visits: 1,
                   lastLogin: new Date().toISOString(),
-                  achievements: JSON.parse(localStorage.getItem('userAchievements') || '[]'),
-                  promoHistory: JSON.parse(localStorage.getItem('promoHistory') || '[]'),
-                  usedPromoCodes: JSON.parse(localStorage.getItem('usedPromoCodes') || '[]'),
-                  loginHistory: JSON.parse(localStorage.getItem('loginHistory') || '{}')
+                  achievements: [],
+                  promoHistory: [],
+                  usedPromoCodes: [],
+                  sharedCodes: {},
+                  loginHistory: {},
+                  lastClaimDate: '',
+                  userBadges: [],
+                  unlockedLessons: [],
+                  theme: 'default',
+                  customBg: '',
+                  animations: true
                 }).then(() => {
-                  localStorage.setItem('bioUsername', name);
-                  localStorage.setItem('bioAvatar', compressedUrl);
-                  localStorage.setItem('bioVisits', 1);
-                  localStorage.setItem('userId', user.uid);
-                  updateLoginHistory();
-                  // Автоматичний вхід після реєстрації
-                  signInWithEmailAndPassword(auth, email, password)
-                    .then(() => {
-                      xpPoints += 20;
-                      localStorage.setItem('xpPoints', xpPoints);
-                      update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
-                      addAchievement('Реєстрація акаунту');
-                      showNotification('Ви отримали 20 XP за реєстрацію!');
-                      showAccountInfo(name, compressedUrl, 1);
-                      updateXPProgress();
-                    })
-                    .catch(error => {
-                      console.error('Помилка автоматичного входу:', error.message);
-                      showNotification('Помилка автоматичного входу: ' + error.message);
-                    });
+                  xpPoints += 20;
+                  update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
+                  addAchievement('Реєстрація акаунту');
+                  showNotification('Ви отримали 20 XP за реєстрацію!');
+                  showAccountInfo(name, compressedUrl, 1, registrationDate);
+                  updateXPProgress();
                 });
               });
             })
@@ -1431,30 +1488,89 @@
               showNotification('Помилка: ' + error.message);
             });
         });
+      } else if (isPhoneNumber(authInput)) {
+        // Реєстрація через номер телефону
+        signInWithPhoneNumber(auth, authInput, window.recaptchaVerifier)
+          .then(confirmationResult => {
+            const verificationCode = prompt('Введіть код підтвердження, надісланий на ваш телефон:');
+            if (verificationCode) {
+              confirmationResult.confirm(verificationCode)
+                .then(result => {
+                  const user = result.user;
+                  compressImage(avatarFile, function(compressedUrl) {
+                    updateProfile(user, {
+                      displayName: name,
+                      photoURL: compressedUrl
+                    }).then(() => {
+                      const registrationDate = new Date().toISOString().split('T')[0];
+                      set(ref(database, 'users/' + user.uid), {
+                        username: name,
+                        email: '',
+                        phone: authInput,
+                        avatar: compressedUrl,
+                        registrationDate: registrationDate,
+                        xpPoints: xpPoints,
+                        visits: 1,
+                        lastLogin: new Date().toISOString(),
+                        achievements: [],
+                        promoHistory: [],
+                        usedPromoCodes: [],
+                        sharedCodes: {},
+                        loginHistory: {},
+                        lastClaimDate: '',
+                        userBadges: [],
+                        unlockedLessons: [],
+                        theme: 'default',
+                        customBg: '',
+                        animations: true
+                      }).then(() => {
+                        xpPoints += 20;
+                        update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
+                        addAchievement('Реєстрація акаунту');
+                        showNotification('Ви отримали 20 XP за реєстрацію!');
+                        showAccountInfo(name, compressedUrl, 1, registrationDate);
+                        updateXPProgress();
+                      });
+                    });
+                  });
+                })
+                .catch(error => {
+                  console.error('Помилка підтвердження коду:', error.message);
+                  showNotification('Помилка підтвердження коду: ' + error.message);
+                  window.recaptchaVerifier.render().then(widgetId => {
+                    grecaptcha.reset(widgetId);
+                  });
+                });
+            }
+          })
+          .catch(error => {
+            console.error('Помилка верифікації телефону:', error.message);
+            showNotification('Помилка: ' + error.message);
+            window.recaptchaVerifier.render().then(widgetId => {
+              grecaptcha.reset(widgetId);
+            });
+          });
       } else {
-        showNotification('Будь ласка, заповніть ім’я, електронну пошту, пароль та виберіть аватарку!');
+        showNotification('Будь ласка, введіть коректну електронну пошту або номер телефону (+380...)!');
       }
     }
 
     function loginAccount() {
-      const email = document.getElementById('emailInput').value.trim();
+      const authInput = document.getElementById('authInput').value.trim();
       const password = document.getElementById('passwordInput').value.trim();
 
-      if (email && password) {
-        signInWithEmailAndPassword(auth, email, password)
+      if (!authInput || !password) {
+        showNotification('Будь ласка, введіть електронну пошту або номер телефону та пароль!');
+        return;
+      }
+
+      if (isEmail(authInput)) {
+        // Вхід через електронну пошту
+        signInWithEmailAndPassword(auth, authInput, password)
           .then(userCredential => {
             const user = userCredential.user;
-            localStorage.setItem('userId', user.uid);
             loadUserData(user.uid);
-            const name = user.displayName || localStorage.getItem('bioUsername');
-            const avatarUrl = user.photoURL || localStorage.getItem('bioAvatar');
-            let visits = parseInt(localStorage.getItem('bioVisits') || 0) + 1;
-            localStorage.setItem('bioVisits', visits);
-            update(ref(database, 'users/' + user.uid), { visits: visits });
-            updateLoginHistory();
-            showAccountInfo(name, avatarUrl, visits);
             xpPoints += 10;
-            localStorage.setItem('xpPoints', xpPoints);
             update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
             addAchievement('Вхід до акаунту');
             showNotification('Ви отримали 10 XP за вхід!');
@@ -1464,28 +1580,128 @@
             console.error('Помилка входу:', error.message);
             showNotification('Помилка: ' + error.message);
           });
+      } else if (isPhoneNumber(authInput)) {
+        // Вхід через номер телефону
+        signInWithPhoneNumber(auth, authInput, window.recaptchaVerifier)
+          .then(confirmationResult => {
+            const verificationCode = prompt('Введіть код підтвердження, надісланий на ваш телефон:');
+            if (verificationCode) {
+              confirmationResult.confirm(verificationCode)
+                .then(result => {
+                  const user = result.user;
+                  loadUserData(user.uid);
+                  xpPoints += 10;
+                  update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
+                  addAchievement('Вхід до акаунту');
+                  showNotification('Ви отримали 10 XP за вхід!');
+                  updateXPProgress();
+                })
+                .catch(error => {
+                  console.error('Помилка підтвердження коду:', error.message);
+                  showNotification('Помилка підтвердження коду: ' + error.message);
+                  window.recaptchaVerifier.render().then(widgetId => {
+                    grecaptcha.reset(widgetId);
+                  });
+                });
+            }
+          })
+          .catch(error => {
+            console.error('Помилка верифікації телефону:', error.message);
+            showNotification('Помилка: ' + error.message);
+            window.recaptchaVerifier.render().then(widgetId => {
+              grecaptcha.reset(widgetId);
+            });
+          });
       } else {
-        showNotification('Будь ласка, введіть електронну пошту та пароль!');
+        showNotification('Будь ласка, введіть коректну електронну пошту або номер телефону (+380...)!');
       }
+    }
+
+    function loginWithGoogle() {
+      const provider = new GoogleAuthProvider();
+      signInWithPopup(auth, provider)
+        .then(result => {
+          const user = result.user;
+          get(ref(database, 'users/' + user.uid)).then(snapshot => {
+            if (!snapshot.exists()) {
+              const registrationDate = new Date().toISOString().split('T')[0];
+              set(ref(database, 'users/' + user.uid), {
+                username: user.displayName || 'Користувач',
+                email: user.email,
+                phone: '',
+                avatar: user.photoURL || 'https://via.placeholder.com/80',
+                registrationDate: registrationDate,
+                xpPoints: 0,
+                visits: 1,
+                lastLogin: new Date().toISOString(),
+                achievements: [],
+                promoHistory: [],
+                usedPromoCodes: [],
+                sharedCodes: {},
+                loginHistory: {},
+                lastClaimDate: '',
+                userBadges: [],
+                unlockedLessons: [],
+                theme: 'default',
+                customBg: '',
+                animations: true
+              });
+              xpPoints = 0;
+              showAccountInfo(user.displayName || 'Користувач', user.photoURL || 'https://via.placeholder.com/80', 1, registrationDate);
+            } else {
+              loadUserData(user.uid);
+            }
+            xpPoints += 10;
+            update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
+            addAchievement('Вхід до акаунту');
+            showNotification('Ви отримали 10 XP за вхід!');
+            updateXPProgress();
+          });
+        })
+        .catch(error => {
+          console.error('Помилка входу через Google:', error.message);
+          showNotification('Помилка: ' + error.message);
+        });
     }
 
     function loadUserData(uid) {
       get(ref(database, 'users/' + uid)).then(snapshot => {
         const userData = snapshot.val();
         if (userData) {
-          localStorage.setItem('bioUsername', userData.username);
-          localStorage.setItem('bioAvatar', userData.avatar);
-          localStorage.setItem('bioVisits', userData.visits || 1);
-          localStorage.setItem('xpPoints', userData.xpPoints || 0);
-          localStorage.setItem('userAchievements', JSON.stringify(userData.achievements || []));
-          localStorage.setItem('promoHistory', JSON.stringify(userData.promoHistory || []));
-          localStorage.setItem('usedPromoCodes', JSON.stringify(userData.usedPromoCodes || []));
-          localStorage.setItem('loginHistory', JSON.stringify(userData.loginHistory || {}));
           xpPoints = userData.xpPoints || 0;
-          showAccountInfo(userData.username, userData.avatar, userData.visits);
+          showAccountInfo(userData.username, userData.avatar, userData.visits || 1, userData.registrationDate);
+          update(ref(database, 'users/' + uid), {
+            visits: (userData.visits || 1) + 1,
+            lastLogin: new Date().toISOString()
+          });
+          if (userData.theme && themes[userData.theme]) {
+            document.getElementById('themeSelect').value = userData.theme;
+            const selectedTheme = themes[userData.theme];
+            document.body.style.background = selectedTheme.background;
+            document.body.style.color = selectedTheme.textColor;
+            document.querySelectorAll('.button, .settings-popup button, .auth-button, .close-btn:not(.close-btn), .account-btn').forEach(btn => {
+              if (!btn.classList.contains('google-button')) {
+                btn.style.background = selectedTheme.buttonGradient;
+                btn.onmouseover = () => btn.style.background = selectedTheme.buttonHoverGradient;
+                btn.onmouseout = () => btn.style.background = selectedTheme.buttonGradient;
+              }
+            });
+            document.querySelectorAll('.xp-container').forEach(container => {
+              container.style.background = selectedTheme.buttonGradient;
+            });
+          }
+          if (userData.customBg) {
+            document.body.style.background = `url('${userData.customBg}') no-repeat center center/cover`;
+            document.getElementById('bgInput').value = userData.customBg;
+          }
+          if (userData.animations === false) {
+            document.body.style.transition = 'none';
+            document.getElementById('animationToggle').checked = false;
+          }
           updateXPProgress();
           updatePromoHistory();
           updateAchievements();
+          updateLoginHistory();
         }
       }).catch(error => {
         console.error('Помилка завантаження даних користувача:', error.message);
@@ -1493,12 +1709,13 @@
       });
     }
 
-    function showAccountInfo(name, avatarUrl, visits) {
+    function showAccountInfo(name, avatarUrl, visits, registrationDate) {
       document.getElementById('accountForm').style.display = 'none';
       document.getElementById('accountInfo').style.display = 'block';
       document.getElementById('displayName').textContent = name;
       document.getElementById('userAvatar').src = avatarUrl;
       document.getElementById('visitCount').textContent = visits;
+      document.getElementById('registrationDate').textContent = registrationDate || 'Невідомо';
       document.getElementById('welcomeBanner').style.display = 'block';
       setTimeGreeting();
       drawLoginChart();
@@ -1509,10 +1726,6 @@
 
     function logout() {
       signOut(auth).then(() => {
-        localStorage.removeItem('userId');
-        localStorage.removeItem('bioUsername');
-        localStorage.removeItem('bioAvatar');
-        localStorage.removeItem('bioVisits');
         document.getElementById('accountForm').style.display = 'block';
         document.getElementById('accountInfo').style.display = 'none';
         document.getElementById('welcomeBanner').style.display = 'none';
@@ -1523,24 +1736,19 @@
     }
 
     function editProfile() {
-      const name = prompt("Введіть нове ім'я", localStorage.getItem('bioUsername'));
+      const name = prompt("Введіть нове ім'я", document.getElementById('displayName').textContent);
       if (name) {
         const user = auth.currentUser;
         if (user) {
           updateProfile(user, {
             displayName: name
           }).then(() => {
-            localStorage.setItem('bioUsername', name);
             update(ref(database, 'users/' + user.uid), {
-              username: name,
-              achievements: JSON.parse(localStorage.getItem('userAchievements') || '[]')
+              username: name
             });
-            showAccountInfo(name, localStorage.getItem('bioAvatar'), localStorage.getItem('bioVisits'));
+            showAccountInfo(name, document.getElementById('userAvatar').src, document.getElementById('visitCount').textContent, document.getElementById('registrationDate').textContent);
             xpPoints += 5;
-            localStorage.setItem('xpPoints', xpPoints);
-            update(ref(database, 'users/' + user.uid), {
-              xpPoints: xpPoints
-            });
+            update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
             addAchievement('Редагування профілю');
             showNotification('Ви отримали 5 XP за редагування профілю!');
             updateXPProgress();
@@ -1562,17 +1770,12 @@
               updateProfile(user, {
                 photoURL: compressedUrl
               }).then(() => {
-                localStorage.setItem('bioAvatar', compressedUrl);
                 update(ref(database, 'users/' + user.uid), {
-                  avatar: compressedUrl,
-                  achievements: JSON.parse(localStorage.getItem('userAchievements') || '[]')
+                  avatar: compressedUrl
                 });
                 document.getElementById('userAvatar').src = compressedUrl;
                 xpPoints += 5;
-                localStorage.setItem('xpPoints', xpPoints);
-                update(ref(database, 'users/' + user.uid), {
-                  xpPoints: xpPoints
-                });
+                update(ref(database, 'users/' + user.uid), { xpPoints: xpPoints });
                 addAchievement('Зміна аватарки');
                 showNotification('Ви отримали 5 XP за зміну аватарки!');
                 updateXPProgress();
@@ -1593,57 +1796,58 @@
     function updateLoginHistory() {
       const user = auth.currentUser;
       if (user) {
-        const loginHistory = JSON.parse(localStorage.getItem('loginHistory') || '{}');
-        const today = new Date().toISOString().split('T')[0];
-        loginHistory[today] = (loginHistory[today] || 0) + 1;
-        localStorage.setItem('loginHistory', JSON.stringify(loginHistory));
-        update(ref(database, 'users/' + user.uid), {
-          loginHistory: loginHistory,
-          achievements: JSON.parse(localStorage.getItem('userAchievements') || '[]')
+        get(ref(database, 'users/' + user.uid + '/loginHistory')).then(snapshot => {
+          const loginHistory = snapshot.val() || {};
+          const today = new Date().toISOString().split('T')[0];
+          loginHistory[today] = (loginHistory[today] || 0) + 1;
+          update(ref(database, 'users/' + user.uid), { loginHistory: loginHistory });
+          drawLoginChart();
         });
       }
     }
 
     function drawLoginChart() {
-      const loginHistory = JSON.parse(localStorage.getItem('loginHistory') || '{}');
-      const labels = Object.keys(loginHistory).slice(-7);
-      const data = labels.map(date => loginHistory[date] || 0);
+      get(ref(database, 'users/' + auth.currentUser?.uid + '/loginHistory')).then(snapshot => {
+        const loginHistory = snapshot.val() || {};
+        const labels = Object.keys(loginHistory).slice(-7);
+        const data = labels.map(date => loginHistory[date] || 0);
 
-      const ctx = document.getElementById('loginChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Відвідування за день',
-            data: data,
-            backgroundColor: 'rgba(46, 125, 50, 0.5)',
-            borderColor: 'rgba(46, 125, 50, 1)',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: 'Кількість входів'
+        const ctx = document.getElementById('loginChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Відвідування за день',
+              data: data,
+              backgroundColor: 'rgba(46, 125, 50, 0.5)',
+              borderColor: 'rgba(46, 125, 50, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Кількість входів'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Дата'
+                }
               }
             },
-            x: {
-              title: {
-                display: true,
-                text: 'Дата'
+            plugins: {
+              legend: {
+                display: false
               }
             }
-          },
-          plugins: {
-            legend: {
-              display: false
-            }
           }
-        }
+        });
       });
     }
 

@@ -65,6 +65,9 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- Confetti.js for celebration effect -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
   <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
@@ -953,6 +956,22 @@
       document.getElementById('notificationPopup').style.display = 'none';
     }
 
+    function triggerConfetti() {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#2e7d32', '#4caf50', '#ffca28']
+      });
+      setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          spread: 90,
+          origin: { y: 0.4 }
+        });
+      }, 500);
+    }
+
     function compressImage(file, callback) {
       const reader = new FileReader();
       reader.onload = function(e) {
@@ -1476,9 +1495,6 @@
           }, error => {
             showNotification('Помилка синхронізації даних: ' + error.message);
           });
-          document.getElementById('accountForm').style.display = 'none';
-          document.getElementById('accountInfo').style.display = 'block';
-          document.getElementById('welcomeBanner').style.display = 'block';
         } else {
           xpPoints = parseInt(localStorage.getItem('xpPoints') || 0);
           updateXPProgress();
@@ -1492,12 +1508,22 @@
           document.getElementById('accountForm').style.display = 'block';
           document.getElementById('accountInfo').style.display = 'none';
           document.getElementById('welcomeBanner').style.display = 'none';
+          document.getElementById('accountPopup').style.display = 'none';
         }
       });
     };
 
     function togglePopup() {
       const popup = document.getElementById('accountPopup');
+      const accountForm = document.getElementById('accountForm');
+      const accountInfo = document.getElementById('accountInfo');
+      if (auth.currentUser) {
+        accountForm.style.display = 'none';
+        accountInfo.style.display = 'block';
+      } else {
+        accountForm.style.display = 'block';
+        accountInfo.style.display = 'none';
+      }
       popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
     }
 
@@ -1539,7 +1565,9 @@
                 set(ref(database, 'users/' + user.uid), userData).then(() => {
                   syncUserData(userData);
                   showAccountInfo(name, compressedUrl, 1);
-                  showNotification('Ви отримали 20 XP за реєстрацію!');
+                  document.getElementById('accountPopup').style.display = 'block';
+                  triggerConfetti();
+                  showNotification('Вітаємо з реєстрацією! Ви отримали 20 XP!');
                 }).catch(error => {
                   showNotification('Помилка збереження даних: ' + error.message);
                 });
@@ -1548,7 +1576,21 @@
               });
             })
             .catch(error => {
-              showNotification('Помилка реєстрації: ' + error.message);
+              let errorMessage = 'Помилка реєстрації: ';
+              switch (error.code) {
+                case 'auth/email-already-in-use':
+                  errorMessage += 'Ця електронна пошта вже використовується.';
+                  break;
+                case 'auth/invalid-email':
+                  errorMessage += 'Невірний формат електронної пошти.';
+                  break;
+                case 'auth/weak-password':
+                  errorMessage += 'Пароль занадто слабкий (потрібно щонайменше 6 символів).';
+                  break;
+                default:
+                  errorMessage += error.message;
+              }
+              showNotification(errorMessage);
             });
         });
       } else {
@@ -1573,15 +1615,33 @@
                   xpPoints: (userData.xpPoints || 0) + 10,
                   achievements: [...(userData.achievements || []), { name: 'Вхід до акаунту', date: today }],
                   loginHistory: { ...(userData.loginHistory || {}), [today]: (userData.loginHistory?.[today] || 0) + 1 }
+                }).then(() => {
+                  syncUserData({ ...userData, visits: visits, xpPoints: userData.xpPoints + 10 });
+                  showAccountInfo(userData.username, userData.avatar, visits);
+                  document.getElementById('accountPopup').style.display = 'block';
+                  showNotification('Ви отримали 10 XP за вхід!');
+                }).catch(error => {
+                  showNotification('Помилка оновлення даних: ' + error.message);
                 });
-                showNotification('Ви отримали 10 XP за вхід!');
               }
-            }).catch(error => {
-              showNotification('Помилка оновлення даних: ' + error.message);
             });
           })
           .catch(error => {
-            showNotification('Помилка входу: ' + error.message);
+            let errorMessage = 'Помилка входу: ';
+            switch (error.code) {
+              case 'auth/user-not-found':
+                errorMessage += 'Користувача з такою поштою не знайдено.';
+                break;
+              case 'auth/wrong-password':
+                errorMessage += 'Невірний пароль.';
+                break;
+              case 'auth/invalid-email':
+                errorMessage += 'Невірний формат електронної пошти.';
+                break;
+              default:
+                errorMessage += error.message;
+            }
+            showNotification(errorMessage);
           });
       } else {
         showNotification('Будь ласка, введіть електронну пошту та пароль!');
@@ -1604,6 +1664,7 @@
         document.getElementById('accountForm').style.display = 'block';
         document.getElementById('accountInfo').style.display = 'none';
         document.getElementById('welcomeBanner').style.display = 'none';
+        document.getElementById('accountPopup').style.display = 'none';
       }).catch(error => {
         showNotification('Помилка виходу: ' + error.message);
       });
@@ -1622,6 +1683,7 @@
               achievements: [...JSON.parse(localStorage.getItem('userAchievements') || '[]'), { name: 'Редагування профілю', date: today }]
             });
             syncUserData({ ...JSON.parse(localStorage.getItem('userData') || '{}'), username: name, xpPoints: xpPoints });
+            showAccountInfo(name, localStorage.getItem('bioAvatar'), localStorage.getItem('bioVisits'));
             showNotification('Ви отримали 5 XP за редагування профілю!');
           }).catch(error => {
             showNotification('Помилка редагування профілю: ' + error.message);

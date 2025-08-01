@@ -1,1 +1,126 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Міні-блог</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .message-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .messages {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message {
+            background-color: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .message p {
+            margin: 0;
+        }
+        .message small {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Міні-блог</h1>
+    <div class="message-form">
+        <input type="text" id="messageInput" placeholder="Введіть ваше повідомлення" required>
+        <button onclick="postMessage()">Опублікувати</button>
+    </div>
+    <div class="messages" id="messages"></div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDLJGPbMVGY-5b-aRbFlqgYSqn9c8azZ_E",
+            authDomain: "bioworld-1.firebaseapp.com",
+            databaseURL: "https://bioworld-1-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "bioworld-1",
+            storageBucket: "bioworld-1.firebasestorage.app",
+            messagingSenderId: "691211086040",
+            appId: "1:691211086040:web:7fcbbfaca4916e8b788fad",
+            measurementId: "G-QE0SMWMVWE"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Function to post a message
+        function postMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const messageText = messageInput.value.trim();
+            if (messageText) {
+                const timestamp = new Date().toISOString();
+                database.ref('messages').push({
+                    text: messageText,
+                    timestamp: timestamp
+                });
+                messageInput.value = '';
+            }
+        }
+
+        // Function to display messages
+        database.ref('messages').on('value', (snapshot) => {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = '';
+            const messages = snapshot.val();
+            if (messages) {
+                Object.entries(messages).forEach(([key, message]) => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message';
+                    const date = new Date(message.timestamp).toLocaleString('uk-UA');
+                    messageDiv.innerHTML = `<p>${message.text}</p><small>${date}</small>`;
+                    messagesDiv.prepend(messageDiv);
+                });
+            }
+        });
+
+        // Allow posting messages by pressing Enter
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                postMessage();
+            }
+        });
+    </script>
+</body>
+</html>

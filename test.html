@@ -82,8 +82,8 @@
         };
 
         // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database(); // Ініціалізація database одразу після Firebase
 
         // Function to post a message
         function postMessage() {
@@ -94,8 +94,11 @@
                 database.ref('messages').push({
                     text: messageText,
                     timestamp: timestamp
+                }).then(() => {
+                    messageInput.value = ''; // Очищення поля після успішної відправки
+                }).catch((error) => {
+                    console.error('Помилка при відправці повідомлення:', error);
                 });
-                messageInput.value = '';
             }
         }
 
@@ -113,6 +116,8 @@
                     messagesDiv.prepend(messageDiv);
                 });
             }
+        }, (error) => {
+            console.error('Помилка при отриманні повідомлень:', error);
         });
 
         // Allow posting messages by pressing Enter

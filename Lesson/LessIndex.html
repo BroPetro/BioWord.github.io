@@ -12,10 +12,13 @@
             margin: 0;
             padding: 20px;
         }
+        h1 {
+            color: #333;
+        }
         .lesson-card {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            flex-direction: column;
+            align-items: flex-start;
             background: rgba(0, 0, 0, 0.8);
             color: white;
             padding: 20px;
@@ -40,7 +43,7 @@
             color: white;
             font-size: 20px;
             font-weight: bold;
-            flex-grow: 1;
+            cursor: pointer;
         }
         .favorite-btn {
             background: none;
@@ -52,6 +55,29 @@
         .favorite-btn.active {
             color: gold;
         }
+        .like-dislike-container {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .like-btn, .dislike-btn {
+            background: #333;
+            border: none;
+            padding: 5px 10px;
+            font-size: 16px;
+            cursor: pointer;
+            color: white;
+            border-radius: 5px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .like-btn.active {
+            background: green;
+        }
+        .dislike-btn.active {
+            background: red;
+        }
         #searchBox {
             width: 70%;
             max-width: 400px;
@@ -60,7 +86,7 @@
             border-radius: 5px;
             border: 1px solid #ccc;
         }
-        #showFavorites {
+        #showFavorites, #showCommunity, #createLesson {
             background: gold;
             border: none;
             padding: 10px;
@@ -69,11 +95,667 @@
             cursor: pointer;
             margin-left: 10px;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            text-align: left;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-content input, .modal-content textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .modal-content textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .modal-content button {
+            padding: 10px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .modal-content button[type="submit"] {
+            background: #007bff;
+            color: white;
+        }
+        .modal-content button[type="button"] {
+            background: #ccc;
+        }
+        #communityLessons {
+            margin-top: 20px;
+        }
+        #lessonDescriptionModal img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        .author, .created-date {
+            font-size: 14px;
+            color: #ccc;
+            margin-top: 5px;
+        }
+        .account-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+        }
+        .account-panel button {
+            background: #007bff;
+            border: none;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+        }
+        .lesson-header {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .comments-section {
+            margin-top: 20px;
+        }
+        .comment {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .comment-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ccc;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .comment-content {
+            flex-grow: 1;
+        }
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .comment-author {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .comment-date {
+            font-size: 12px;
+            color: #666;
+        }
+        .comment-text {
+            margin-top: 5px;
+            font-size: 14px;
+            color: #333;
+        }
+        .comment-input-container {
+            display: flex;
+            align-items: flex-end;
+            margin-top: 20px;
+        }
+        #commentInput {
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 10px;
+            font-size: 14px;
+        }
+        .comment-buttons {
+            display: flex;
+            gap: 10px;
+            margin-left: 10px;
+        }
+        #submitCommentButton, #cancelCommentButton {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        #submitCommentButton {
+            background: #007bff;
+            color: white;
+        }
+        #cancelCommentButton {
+            background: #ccc;
+            color: #333;
+        }
     </style>
-    <script>
+</head>
+<body>
+    <div class="account-panel" id="accountPanel">
+        <span id="userName">Гість</span>
+        <button id="authButton" onclick="openAuthModal()">Увійти</button>
+    </div>
+    <h1>📖 Уроки з біології</h1>
+    <input type="text" id="searchBox" onkeyup="searchLessons()" placeholder="🔍 Введіть тему для пошуку...">
+    <button id="showFavorites" onclick="showFavorites()">⭐ Улюблені</button>
+    <button id="showCommunity" onclick="showCommunity()">📚 Уроки спільноти</button>
+    <button id="createLesson" onclick="openCreateLessonModal()">➕</button>
+    <!-- Modal for Login/Register -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <h2 id="authTitle">Увійти або Зареєструватися</h2>
+            <input type="text" id="nicknameInput" placeholder="Нікнейм (лише для реєстрації)" style="display: none;">
+            <input type="email" id="emailInput" placeholder="Email" required>
+            <input type="password" id="passwordInput" placeholder="Пароль" required>
+            <button type="submit" id="signInButton" onclick="signIn()">Увійти</button>
+            <button type="submit" id="signUpButton" onclick="prepareSignUp()">Зареєструватися</button>
+            <button type="button" onclick="closeAuthModal()">Скасувати</button>
+        </div>
+    </div>
+    <!-- Modal for Creating Lesson -->
+    <div id="createLessonModal" class="modal">
+        <div class="modal-content">
+            <h2>Створити урок</h2>
+            <input type="text" id="lessonTitle" placeholder="Назва уроку" required>
+            <input type="text" id="lessonImage" placeholder="URL зображення" required>
+            <textarea id="lessonDescription" placeholder="Опис уроку"></textarea>
+            <button type="submit" onclick="createCommunityLesson()">Створити</button>
+            <button type="button" onclick="closeCreateLessonModal()">Скасувати</button>
+        </div>
+    </div>
+    <!-- Modal for Lesson Description -->
+    <div id="lessonDescriptionModal" class="modal">
+        <div class="modal-content">
+            <h2 id="lessonDescriptionTitle"></h2>
+            <img id="lessonDescriptionImage" src="" alt="Lesson Image">
+            <div id="lessonDescriptionContent"></div>
+            <p id="lessonAuthor" class="author"></p>
+            <p id="lessonCreatedDate" class="created-date"></p>
+            <div class="comments-section">
+                <h3>Коментарі</h3>
+                <div id="commentsList"></div>
+                <div class="comment-input-container" id="commentInputContainer" style="display: none;">
+                    <textarea id="commentInput" placeholder="Додати коментар..."></textarea>
+                    <div class="comment-buttons">
+                        <button id="cancelCommentButton" type="button" onclick="cancelComment()">Скасувати</button>
+                        <button id="submitCommentButton" type="submit" onclick="submitComment()">Коментувати</button>
+                    </div>
+                </div>
+            </div>
+            <button type="button" onclick="closeDescriptionModal()">Закрити</button>
+        </div>
+    </div>
+    <!-- Static Lessons -->
+    <div id="staticLessons">
+        <div class="lesson-card" data-description="Плоскі черви – це тип безхребетних тварин, які мають сплощене тіло. Вони включають паразитичних і вільноживучих представників, таких як планарії та стьожкові черви.">
+            <div class="lesson-header">
+                <img src="Assets/PlosCherv.jpg" class="lesson-img" alt="Плоскі черви">
+                <a href="Lessons/PlsCherv.html" class="lesson-link">Плоскі черви #lesson</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Плоскі черви #lesson')">⭐</button>
+            </div>
+        </div>
+        <div class="lesson-card" data-description="Членистоногі – це найбільший тип тварин, що включає комах, павуків, ракоподібних та багатоніжок. Вони мають сегментоване тіло, хітиновий покрив і суглобисті кінцівки.">
+            <div class="lesson-header">
+                <img src="Assets/Crab.jpg" class="lesson-img" alt="Членистоногі">
+                <a href="Lessons/Clenuston.html" class="lesson-link">Загальна характеристика членистоногих #lesson</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Загальна характеристика членистоногих #lesson')">⭐</button>
+            </div>
+        </div>
+        <div class="lesson-card" data-description="Морські свинки – популярні домашні тварини, відомі своєю дружелюбною поведінкою. Вони потребують спеціального догляду, включаючи правильне харчування та простору клітку.">
+            <div class="lesson-header">
+                <img src="Assets/GummiPig.jpg" class="lesson-img" alt="Морські свинки">
+                <a href="Project/Project1/Project.html" class="lesson-link">Морські свинки: поведінка, догляд та цікаві факти #project</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Морські свинки: поведінка, догляд та цікаві факти #project')">⭐</button>
+            </div>
+        </div>
+        <div class="lesson-card" data-description="Молюски відіграють важливу роль у природі як частина екосистем і джерело їжі для людини. Вони включають равликів, мідій, кальмарів тощо.">
+            <div class="lesson-header">
+                <img src="Assets/Molusk.jpg" class="lesson-img" alt="Молюски">
+                <a href="Lessons/Molusk.html" class="lesson-link">Значення молюсків у природі та житті людини #lesson</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Значення молюсків у природі та житті людини #lesson')">⭐</button>
+            </div>
+        </div>
+        <div class="lesson-card" data-description="Дізнайтесь про шість незвичайних тварин, які вражають своєю унікальністю, від аксолотлів до риб-клоунів.">
+            <div class="lesson-header">
+                <img src="Assets/OMG.jpg" class="lesson-img" alt="Top 6 незвичайних тварин">
+                <a href="Lessons/TOP6_Pet.html" class="lesson-link">Top 6 незвичайних тварин #pet</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Top 6 незвичайних тварин #pet')">⭐</button>
+            </div>
+        </div>
+        <div class="lesson-card" data-description="Ці тварини демонструють неймовірні когнітивні здібності, включаючи вирішення проблем і соціальну поведінку.">
+            <div class="lesson-header">
+                <img src="Assets/IQ.png" class="lesson-img" alt="Top 6 розумних тварин">
+                <a href="Lessons/TOP6_petiq.html" class="lesson-link">Top 6 розумних тварин #pet</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Top 6 розумних тварин #pet')">⭐</button>
+            </div>
+        </div>
+        <div class="lesson-card" data-description="Комахи є найчисельнішим класом тварин, що включає метеликів, бджіл, жуків та інших, з унікальними адаптаціями.">
+            <div class="lesson-header">
+                <img src="Lessons/Assets/InsestSun.JPG" class="lesson-img" alt="Комахи різноманітність комах">
+                <a href="Lessons/Insects.html" class="lesson-link">Комахи різноманітність комах #lesson</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Комахи різноманітність комах #lesson')">⭐</button>
+            </div>
+        </div>
+        <div class="lesson-card" data-description="Розвиток тварин включає складні процеси онтогенезу, а їхня поведінка залежить від генетики та середовища.">
+            <div class="lesson-header">
+                <img src="Assets/Rozvitok.png" class="lesson-img" alt="Розвиток і поведінка тварин">
+                <a href="Lessons/Animal_development.html" class="lesson-link">Розвиток і поведінка тварин #lesson</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Розвиток і поведінка тварин #lesson')">⭐</button>
+            </div>
+        </div>
+        <div class="lesson-card" data-description="Органи тварин формують системи, які забезпечують життєдіяльність, від дихання до травлення.">
+            <div class="lesson-header">
+                <img src="Lessons/Assets/Organ.png" class="lesson-img" alt="Органи та система огранів тварин">
+                <a href="Lessons/OrganAnimals.html" class="lesson-link">Органи та система огранів тварин #lesson</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Органи та система огранів тварин #lesson')">⭐</button>
+            </div>
+        </div>
+        <div class="lesson-card" data-description="Комахи відіграють ключову роль у запиленні рослин, розкладанні органічних речовин і як їжа для інших тварин.">
+            <div class="lesson-header">
+                <img src="Assets/praying-mantis-pix.jpg" class="lesson-img" alt="Роль комах у природі та житті людини">
+                <a href="Lessons/Insectwalk.html" class="lesson-link">Роль комах у природі та житті людини #lesson</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Роль комах у природі та житті людини #lesson')">⭐</button>
+            </div>
+        </div>
+        <div class="lesson-card" data-description="Павукоподібні включають павуків, кліщів і скорпіонів, які мають унікальні адаптації, такі як павутина чи отрута.">
+            <div class="lesson-header">
+                <img src="Assets/723c21c23946439ec29896a02ab9934f.jpeg" class="lesson-img" alt="Павукоподібні">
+                <a href="Lessons/Pavykopodibni.html" class="lesson-link">Павукоподібні #lesson</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Павукоподібні #lesson')">⭐</button>
+            </div>
+        </div>
+        <div class="lesson-card" data-description="Корисні поради для школярів, які допоможуть організувати навчання та зробити його цікавішим.">
+            <div class="lesson-header">
+                <img src="Assets/Лайфхаки.png" class="lesson-img" alt="Лайфхаки для ШКОЛИ">
+                <a href="Lessons/Layfaki1.html" class="lesson-link">Лайфхаки для ШКОЛИ #lifehacks</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Лайфхаки для ШКОЛИ #lifehacks')">⭐</button>
+            </div>
+        </div>
+        <div class="lesson-card" data-description="Дізнайтесь дивовижні факти про природу та тварин, які здивують навіть досвідчених біологів.">
+            <div class="lesson-header">
+                <img src="Assets/Лайфхаки (1).png" class="lesson-img" alt="Цікаві факти">
+                <a href="Lessons/InterestedFacts.html" class="lesson-link">Цікаві факти #Facts</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Цікаві факти #Facts')">⭐</button>
+            </div>
+        </div>
+        <div class="lesson-card" data-description="Інтерактивний інструмент для створення моделі ДНК та розуміння її структури.">
+            <div class="lesson-header">
+                <img src="Lessons/Assets/dna (2).png" class="lesson-img" alt="Генератор ДНК">
+                <a href="Lessons/GeneratorDNK.html" class="lesson-link">Генератор ДНК #DNK</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Генератор ДНК #DNK')">⭐</button>
+            </div>
+        </div>
+        <div class="lesson-card" data-description="Гриби – унікальні організми, які поєднують ознаки рослин і тварин, відіграючи важливу роль у природі.">
+            <div class="lesson-header">
+                <img src="Lessons/Assets/depositphotos_2901993-stock-photo-chanterelles-isolated.jpg" class="lesson-img" alt="Гриби">
+                <a href="Lessons/Mushrooms.html" class="lesson-link">Гриби #lesson</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Гриби #lesson')">⭐</button>
+            </div>
+        </div>
+        <div class="lesson-card" data-description="Фотосинтез – це процес, під час якого рослини перетворюють сонячну енергію на хімічну, створюючи поживні речовини.">
+            <div class="lesson-header">
+                <img src="https://lh6.googleusercontent.com/3uWKNM11XynLXimqSzjPKF7hquANi-F2l0JQKQXtd1JvZlvxRs0K7zxb_LKOymtOPfVzJ9vt7dYHAwRIDgOYFVLjXM1dMAl1YYkQF4MrHeK7UOdLymGsuAUgBmy0hZGR_HksbIg6" class="lesson-img" alt="Фотосинтез">
+                <a href="Lessons/Fotosintez.html" class="lesson-link">Фотосинтез #lesson</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Фотосинтез #lesson')">⭐</button>
+            </div>
+        </div>
+        <div class="lesson-card" data-description="Птахи – теплокровні хребетні, що мають пір’я, крила та унікальні адаптації для польоту та виживання.">
+            <div class="lesson-header">
+                <img src="https://encrypted-tbn1.gstatic.com/images?q=tbngi:ANd9GcQjaZqoKF8yK88wv0RQrglNCHojWUuSZQt17pddpwQVVyjIqZfonSl85849PK3Es0KLxpBNx11PACke7SujhbDJTA" class="lesson-img" alt="Птахи">
+                <a href="Lessons/Bird.html" class="lesson-link">Птахи 🐦🌄 #lesson</a>
+                <button class="favorite-btn" onclick="toggleFavorite(this, 'Птахи 🐦🌄 #lesson')">⭐</button>
+            </div>
+        </div>
+    </div>
+    <!-- Community Lessons -->
+    <div id="communityLessons" style="display: none;"></div>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, updateProfile, signOut } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+        import { getDatabase, ref, push, onValue, update, get, set } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDLJGPbMVGY-5b-aRbFlqgYSqn9c8azZ_E",
+            authDomain: "bioworld-1.firebaseapp.com",
+            databaseURL: "https://bioworld-1-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "bioworld-1",
+            storageBucket: "bioworld-1.firebasestorage.app",
+            messagingSenderId: "691211086040",
+            appId: "1:691211086040:web:7fcbbfaca4916e8b788fad",
+            measurementId: "G-QE0SMWMVWE"
+        };
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+        // Authentication functions
+        window.prepareSignUp = function() {
+            document.getElementById('authTitle').textContent = 'Реєстрація';
+            document.getElementById('nicknameInput').style.display = 'block';
+            document.getElementById('signInButton').style.display = 'none';
+            document.getElementById('signUpButton').onclick = signUp;
+        };
+        window.signIn = function() {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    closeAuthModal();
+                })
+                .catch((error) => {
+                    alert('Помилка входу: ' + error.message);
+                });
+        };
+        window.signUp = function() {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            const nickname = document.getElementById('nicknameInput').value.trim();
+            if (!nickname) {
+                alert('Введіть нікнейм для реєстрації');
+                return;
+            }
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    return Promise.all([
+                        updateProfile(user, { displayName: nickname }),
+                        set(ref(database, `users/${user.uid}`), {
+                            nickname: nickname,
+                            email: email,
+                            registrationDate: new Date().toISOString()
+                        })
+                    ]);
+                })
+                .then(() => {
+                    closeAuthModal();
+                })
+                .catch((error) => {
+                    alert('Помилка реєстрації: ' + error.message);
+                });
+        };
+        window.signOutUser = function() {
+            signOut(auth).then(() => {
+                updateAccountPanel(null);
+            }).catch((error) => {
+                alert('Помилка виходу: ' + error.message);
+            });
+        };
+        // Modal functions
+        window.openAuthModal = function() {
+            document.getElementById('authTitle').textContent = 'Увійти або Зареєструватися';
+            document.getElementById('nicknameInput').style.display = 'none';
+            document.getElementById('signInButton').style.display = 'inline-block';
+            document.getElementById('signUpButton').onclick = prepareSignUp;
+            document.getElementById('authModal').style.display = 'flex';
+        };
+        window.closeAuthModal = function() {
+            document.getElementById('authModal').style.display = 'none';
+            document.getElementById('emailInput').value = '';
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('nicknameInput').value = '';
+        };
+        window.openCreateLessonModal = function() {
+            if (!auth.currentUser) {
+                alert('Увійдіть, щоб створити урок');
+                openAuthModal();
+                return;
+            }
+            document.getElementById('createLessonModal').style.display = 'flex';
+        };
+        window.closeCreateLessonModal = function() {
+            document.getElementById('createLessonModal').style.display = 'none';
+            document.getElementById('lessonTitle').value = '';
+            document.getElementById('lessonImage').value = '';
+            document.getElementById('lessonDescription').value = '';
+        };
+        let currentLessonId = null;
+        window.openDescriptionModal = async function(title, image, description, author, timestamp, lessonId = null) {
+            document.getElementById('lessonDescriptionTitle').textContent = title;
+            document.getElementById('lessonDescriptionImage').src = image;
+            document.getElementById('lessonDescriptionContent').innerHTML = description.replace(/\n/g, '<br>');
+            document.getElementById('lessonAuthor').textContent = author ? `Автор: ${author}` : '';
+            document.getElementById('lessonCreatedDate').textContent = timestamp ? `Створено: ${new Date(timestamp).toLocaleString('uk-UA')}` : '';
+            currentLessonId = lessonId;
+            const commentInputContainer = document.getElementById('commentInputContainer');
+            if (auth.currentUser && lessonId) {
+                commentInputContainer.style.display = 'flex';
+            } else {
+                commentInputContainer.style.display = 'none';
+            }
+            await loadComments(lessonId);
+            document.getElementById('lessonDescriptionModal').style.display = 'flex';
+        };
+        window.closeDescriptionModal = function() {
+            document.getElementById('lessonDescriptionModal').style.display = 'none';
+            currentLessonId = null;
+        };
+        // Update account panel
+        function updateAccountPanel(user) {
+            const userName = document.getElementById('userName');
+            const authButton = document.getElementById('authButton');
+            if (user) {
+                userName.textContent = user.displayName || user.email;
+                authButton.textContent = 'Вийти';
+                authButton.onclick = signOutUser;
+            } else {
+                userName.textContent = 'Гість';
+                authButton.textContent = 'Увійти';
+                authButton.onclick = openAuthModal;
+            }
+        }
+        // Create community lesson
+        window.createCommunityLesson = async function() {
+            const user = auth.currentUser;
+            if (!user) {
+                alert('Будь ласка, увійдіть, щоб створити урок');
+                closeCreateLessonModal();
+                openAuthModal();
+                return;
+            }
+            const title = document.getElementById('lessonTitle').value.trim();
+            const image = document.getElementById('lessonImage').value.trim();
+            const description = document.getElementById('lessonDescription').value.trim();
+            if (title && image && description) {
+                try {
+                    await push(ref(database, 'communityLessons'), {
+                        title: title,
+                        image: image,
+                        description: description,
+                        author: user.displayName || user.email,
+                        userId: user.uid,
+                        timestamp: new Date().toISOString(),
+                        likes: 0,
+                        dislikes: 0,
+                        userVotes: {}
+                    });
+                    closeCreateLessonModal();
+                } catch (error) {
+                    alert('Помилка створення уроку: ' + error.message);
+                }
+            } else {
+                alert('Заповніть усі поля');
+            }
+        };
+        // Submit comment
+        window.submitComment = async function() {
+            const user = auth.currentUser;
+            if (!user || !currentLessonId) {
+                alert('Увійдіть, щоб залишити коментар');
+                openAuthModal();
+                return;
+            }
+            const commentText = document.getElementById('commentInput').value.trim();
+            if (!commentText) {
+                alert('Введіть текст коментаря');
+                return;
+            }
+            try {
+                await push(ref(database, `communityLessons/${currentLessonId}/comments`), {
+                    text: commentText,
+                    author: user.displayName || user.email,
+                    userId: user.uid,
+                    timestamp: new Date().toISOString()
+                });
+                document.getElementById('commentInput').value = '';
+                await loadComments(currentLessonId);
+            } catch (error) {
+                alert('Помилка додавання коментаря: ' + error.message);
+            }
+        };
+        window.cancelComment = function() {
+            document.getElementById('commentInput').value = '';
+        };
+        // Load comments
+        async function loadComments(lessonId) {
+            const commentsList = document.getElementById('commentsList');
+            commentsList.innerHTML = '';
+            if (!lessonId) return;
+            const snapshot = await get(ref(database, `communityLessons/${lessonId}/comments`));
+            const comments = snapshot.val();
+            if (comments) {
+                Object.values(comments).forEach(comment => {
+                    const commentDiv = document.createElement('div');
+                    commentDiv.className = 'comment';
+                    commentDiv.innerHTML = `
+                        <div class="comment-avatar"></div>
+                        <div class="comment-content">
+                            <div class="comment-header">
+                                <span class="comment-author">${comment.author}</span>
+                                <span class="comment-date">${new Date(comment.timestamp).toLocaleString('uk-UA')}</span>
+                            </div>
+                            <div class="comment-text">${comment.text.replace(/\n/g, '<br>')}</div>
+                        </div>
+                    `;
+                    commentsList.appendChild(commentDiv);
+                });
+            }
+        }
+        // Like/Dislike functions
+        window.toggleLike = async function(lessonId, currentUserId) {
+            if (!currentUserId) {
+                alert('Увійдіть, щоб поставити оцінку');
+                openAuthModal();
+                return;
+            }
+            const lessonRef = ref(database, `communityLessons/${lessonId}`);
+            const snapshot = await get(lessonRef);
+            const lesson = snapshot.val();
+            if (!lesson) return;
+            const userVotes = lesson.userVotes || {};
+            if (userVotes[currentUserId] === 'like') {
+                userVotes[currentUserId] = null;
+                lesson.likes -= 1;
+            } else if (userVotes[currentUserId] === 'dislike') {
+                userVotes[currentUserId] = 'like';
+                lesson.dislikes -= 1;
+                lesson.likes += 1;
+            } else {
+                userVotes[currentUserId] = 'like';
+                lesson.likes += 1;
+            }
+            await update(lessonRef, { likes: lesson.likes, dislikes: lesson.dislikes, userVotes });
+        };
+        window.toggleDislike = async function(lessonId, currentUserId) {
+            if (!currentUserId) {
+                alert('Увійдіть, щоб поставити оцінку');
+                openAuthModal();
+                return;
+            }
+            const lessonRef = ref(database, `communityLessons/${lessonId}`);
+            const snapshot = await get(lessonRef);
+            const lesson = snapshot.val();
+            if (!lesson) return;
+            const userVotes = lesson.userVotes || {};
+            if (userVotes[currentUserId] === 'dislike') {
+                userVotes[currentUserId] = null;
+                lesson.dislikes -= 1;
+            } else if (userVotes[currentUserId] === 'like') {
+                userVotes[currentUserId] = 'dislike';
+                lesson.likes -= 1;
+                lesson.dislikes += 1;
+            } else {
+                userVotes[currentUserId] = 'dislike';
+                lesson.dislikes += 1;
+            }
+            await update(lessonRef, { likes: lesson.likes, dislikes: lesson.dislikes, userVotes });
+        };
+        // Display community lessons (sorted by likes - dislikes)
+        onValue(ref(database, 'communityLessons'), (snapshot) => {
+            const communityLessonsDiv = document.getElementById('communityLessons');
+            communityLessonsDiv.innerHTML = '';
+            const lessons = snapshot.val();
+            if (lessons) {
+                const lessonArray = Object.entries(lessons).map(([key, lesson]) => ({
+                    id: key,
+                    ...lesson,
+                    score: (lesson.likes || 0) - (lesson.dislikes || 0)
+                }));
+                lessonArray.sort((a, b) => b.score - a.score);
+                lessonArray.forEach((lesson) => {
+                    const lessonCard = document.createElement('div');
+                    lessonCard.className = 'lesson-card';
+                    lessonCard.setAttribute('data-description', lesson.description);
+                    const user = auth.currentUser;
+                    const userId = user ? user.uid : null;
+                    const hasLiked = lesson.userVotes && lesson.userVotes[userId] === 'like';
+                    const hasDisliked = lesson.userVotes && lesson.userVotes[userId] === 'dislike';
+                    lessonCard.innerHTML = `
+                        <div class="lesson-header">
+                            <img src="${lesson.image}" class="lesson-img" alt="${lesson.title}">
+                            <a href="#" class="lesson-link" onclick="openDescriptionModal('${lesson.title} #community', '${lesson.image}', '${lesson.description.replace(/'/g, "\\'")}', '${lesson.author}', '${lesson.timestamp}', '${lesson.id}')">${lesson.title} #community</a>
+                            <button class="favorite-btn" onclick="toggleFavorite(this, '${lesson.title} #community')">⭐</button>
+                        </div>
+                        <span class="author">Автор: ${lesson.author}</span>
+                        <span class="created-date">Створено: ${new Date(lesson.timestamp).toLocaleString('uk-UA')}</span>
+                        <div class="like-dislike-container">
+                            <button class="like-btn ${hasLiked ? 'active' : ''}" onclick="toggleLike('${lesson.id}', '${userId}')">👍 ${lesson.likes || 0}</button>
+                            <button class="dislike-btn ${hasDisliked ? 'active' : ''}" onclick="toggleDislike('${lesson.id}', '${userId}')">👎 ${lesson.dislikes || 0}</button>
+                        </div>
+                    `;
+                    communityLessonsDiv.appendChild(lessonCard);
+                });
+            }
+        }, (error) => {
+            console.error('Помилка при отриманні уроків спільноти:', error);
+        });
+        // Show community lessons
+        window.showCommunity = function() {
+            document.getElementById('staticLessons').style.display = 'none';
+            document.getElementById('communityLessons').style.display = 'block';
+            document.getElementById('searchBox').value = '';
+        };
+        // Show all lessons
+        window.showAllLessons = function() {
+            document.getElementById('staticLessons').style.display = 'block';
+            document.getElementById('communityLessons').style.display = 'block';
+            const cards = document.getElementsByClassName('lesson-card');
+            for (let card of cards) {
+                card.style.display = 'flex';
+            }
+        };
+        // Original functions (favorites and search)
         let favoriteLessons = new Set(JSON.parse(localStorage.getItem("favorites")) || []);
-
-        function toggleFavorite(button, lesson) {
+        window.toggleFavorite = function(button, lesson) {
             if (favoriteLessons.has(lesson)) {
                 favoriteLessons.delete(lesson);
                 button.classList.remove("active");
@@ -84,8 +766,7 @@
                 button.textContent = "❌";
             }
             localStorage.setItem("favorites", JSON.stringify(Array.from(favoriteLessons)));
-        }
-
+        };
         function restoreFavorites() {
             document.querySelectorAll(".lesson-card").forEach(card => {
                 let lesson = card.querySelector(".lesson-link").textContent;
@@ -96,118 +777,33 @@
                 }
             });
         }
-
-        function searchLessons() {
+        window.searchLessons = function() {
             let input = document.getElementById("searchBox").value.toLowerCase();
-            let cards = document.getElementsByClassName("lesson-card");
-            
+            document.getElementById('staticLessons').style.display = 'block';
+            document.getElementById('communityLessons').style.display = 'block';
+            const cards = document.getElementsByClassName("lesson-card");
             for (let card of cards) {
                 let text = card.innerText.toLowerCase();
                 card.style.display = text.includes(input) ? "flex" : "none";
             }
-        }
-
-        function showFavorites() {
-            let cards = document.getElementsByClassName("lesson-card");
-            
+        };
+        window.showFavorites = function() {
+            document.getElementById('staticLessons').style.display = 'block';
+            document.getElementById('communityLessons').style.display = 'block';
+            const cards = document.getElementsByClassName("lesson-card");
             for (let card of cards) {
                 let link = card.querySelector(".lesson-link").textContent;
                 card.style.display = favoriteLessons.has(link) ? "flex" : "none";
             }
-        }
-
-        document.addEventListener("DOMContentLoaded", restoreFavorites);
+        };
+        document.addEventListener("DOMContentLoaded", () => {
+            restoreFavorites();
+            showAllLessons();
+        });
+        // Monitor auth state
+        onAuthStateChanged(auth, (user) => {
+            updateAccountPanel(user);
+        });
     </script>
-</head>
-<body>
-    <h1>📖 Уроки з біології</h1>
-    <input type="text" id="searchBox" onkeyup="searchLessons()" placeholder="🔍 Введіть тему для пошуку...">
-    <button id="showFavorites" onclick="showFavorites()">⭐ Улюблені</button>
-    
-    <div class="lesson-card">
-        <img src="Assets/PlosCherv.jpg" class="lesson-img" alt="Плоскі черви">
-        <a href="Lessons/PlsCherv.html" class="lesson-link">Плоскі черви #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Плоскі черви #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/Crab.jpg" class="lesson-img" alt="Членистоногі">
-        <a href="Lessons/Clenuston.html" class="lesson-link">Загальна характеристика членистоногих #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Загальна характеристика членистоногих #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/GummiPig.jpg" class="lesson-img" alt="Морські свинки">
-        <a href="Project/Project1/Project.html" class="lesson-link">Морські свинки: поведінка, догляд та цікаві факти #project</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Морські свинки: поведінка, догляд та цікаві факти #project')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/Molusk.jpg" class="lesson-img" alt="Молюски">
-        <a href="Lessons/Molusk.html" class="lesson-link">Значення молюсків у природі та житті людини #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Значення молюсків у природі та житті людини #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/OMG.jpg" class="lesson-img" alt="Top 6 незвичайних тварин">
-        <a href="Lessons/TOP6_Pet.html" class="lesson-link">Top 6 незвичайних тварин #pet</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Top 6 незвичайних тварин #pet')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/IQ.png" class="lesson-img" alt="Top 6 розумних тварин">
-        <a href="Lessons/TOP6_petiq.html" class="lesson-link">Top 6 розумних тварин #pet</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Top 6 розумних тварин #pet')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Lessons/Assets/InsestSun.JPG" class="lesson-img" alt="Комахи різноманітність комах">
-        <a href="Lessons/Insects.html" class="lesson-link">Комахи різноманітність комах #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Комахи різноманітність комах #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/Rozvitok.png" class="lesson-img" alt="Розвиток і поведінка тварин">
-        <a href="Lessons/Animal_development.html" class="lesson-link">Розвиток і поведінка тварин #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Розвиток і поведінка тварин #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Lessons/Assets/Organ.png" class="lesson-img" alt="Органи та система огранів тварин ">
-        <a href="Lessons/OrganAnimals.html" class="lesson-link">Органи та система огранів тварин #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Органи та система огранів тварин #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/praying-mantis-pix.jpg" class="lesson-img" alt="Роль комах у природі та житті людини">
-        <a href="Lessons/Insectwalk.html" class="lesson-link">Роль комах у природі та житті людини #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Роль комах у природі та житті людини #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/723c21c23946439ec29896a02ab9934f.jpeg" class="lesson-img" alt="Павукоподібні">
-        <a href="Lessons/Pavykopodibni.html" class="lesson-link">Павукоподібні #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Павукоподібні #lesson')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/Лайфхаки.png" class="lesson-img" alt="Лайфхаки для ШКОЛИ">
-        <a href="Lessons/Layfaki1.html" class="lesson-link">Лайфхаки для ШКОЛИ #lifehacks</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Лайфхаки для ШКОЛИ #lifehacks')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Assets/Лайфхаки (1).png" class="lesson-img" alt="Цікаві факти">
-        <a href="Lessons/InterestedFacts.html" class="lesson-link">Цікаві факти #Facts</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Цікаві факти #Facts')">⭐</button>
-    </div>
-    <div class="lesson-card">
-        <img src="Lessons/Assets/dna (2).png" class="lesson-img" alt="Генератор ДНК">
-        <a href="Lessons/GeneratorDNK.html" class="lesson-link">Генератор ДНК #DNK</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Генератор ДНК #DNK')">⭐</button>
-    </div>
-        <div class="lesson-card">
-        <img src="Lessons/Assets/depositphotos_2901993-stock-photo-chanterelles-isolated.jpg" class="lesson-img" alt="Гриби">
-        <a href="Lessons/Mushrooms.html" class="lesson-link">Гриби #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Гриби #lesson')">⭐</button>
-    </div>
-            <div class="lesson-card">
-        <img src="https://lh6.googleusercontent.com/3uWKNM11XynLXimqSzjPKF7hquANi-F2l0JQKQXtd1JvZlvxRs0K7zxb_LKOymtOPfVzJ9vt7dYHAwRIDgOYFVLjXM1dMAl1YYkQF4MrHeK7UOdLymGsuAUgBmy0hZGR_HksbIg6" class="lesson-img" alt="Фотосинтез">
-        <a href="Lessons/Fotosintez.html" class="lesson-link">Фотосинтез #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Фотосинтез #lesson')">⭐</button>
-    </div>
-     <div class="lesson-card">
-        <img src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQjaZqoKF8yK88wv0RQrglNCHojWUuSZQt17pddpwQVVyjIqZfonSl85849PK3Es0KLxpBNx11PACke7SujhbDJTA" class="lesson-img" alt="Фотосинтез">
-        <a href="Lessons/Bird.html" class="lesson-link">Птахи 🐦🌄 #lesson</a>
-        <button class="favorite-btn" onclick="toggleFavorite(this, 'Птахи 🐦🌄 #lesson')">⭐</button>
-    </div>
 </body>
 </html>

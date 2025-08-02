@@ -3,174 +3,279 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Чат BioWorld</title>
-    <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <title>Форум - BioWorld</title>
     <style>
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #2c2f33;
-            color: #dcddde;
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
             margin: 0;
-            height: 100vh;
-            overflow: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        body.dark-theme {
+            background-color: #121212;
+            color: #e0e0e0;
         }
         .container {
+            width: 100%;
+            padding: 16px;
+            flex-grow: 1;
+        }
+        h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        body.dark-theme h1 {
+            color: #e0e0e0;
+        }
+        .account-btn, .admin-btn {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            background-color: #2563eb;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+            z-index: 60;
+        }
+        .admin-btn {
+            right: 100px;
+            background-color: #d97706;
+        }
+        .account-btn:hover {
+            background-color: #1d4ed8;
+        }
+        .admin-btn:hover {
+            background-color: #b45309;
+        }
+        body.dark-theme .account-btn, body.dark-theme .admin-btn {
+            background-color: #424242;
+        }
+        body.dark-theme .account-btn:hover, body.dark-theme .admin-btn:hover {
+            background-color: #757575;
+        }
+        .messages-container {
+            max-height: 70vh;
+            overflow-y: auto;
+            background-color: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            scrollbar-width: thin;
+            scrollbar-color: #6b7280 #e5e7eb;
+        }
+        body.dark-theme .messages-container {
+            background-color: #1e1e1e;
+            box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+        }
+        .messages-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .messages-container::-webkit-scrollbar-track {
+            background: #e5e7eb;
+        }
+        body.dark-theme .messages-container::-webkit-scrollbar-track {
+            background: #2e2e2e;
+        }
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #6b7280;
+            border-radius: 4px;
+        }
+        body.dark-theme .messages-container::-webkit-scrollbar-thumb {
+            background: #757575;
+        }
+        .message {
+            background-color: #f9fafb;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .message.pinned {
+            background-color: #fef3c7;
+            border: 2px solid #d97706;
+        }
+        .message.broadcast {
+            background-color: #bfdbfe;
+            border: 2px solid #2563eb;
+        }
+        .message.reply {
+            margin-left: 20px;
+            border-left: 3px solid #2563eb;
+            padding-left: 10px;
+        }
+        body.dark-theme .message {
+            background-color: #2e2e2e;
+        }
+        body.dark-theme .message.pinned {
+            background-color: #5e4b2b;
+        }
+        body.dark-theme .message.broadcast {
+            background-color: #1e3a8a;
+        }
+        body.dark-theme .message.reply {
+            border-left-color: #42a5f5;
+        }
+        .message p {
+            margin: 0;
+            color: #1f2937;
+            word-break: break-word;
+        }
+        body.dark-theme .message p {
+            color: #e0e0e0;
+        }
+        .message small {
+            color: #6b7280;
+            display: block;
+            margin-top: 8px;
+        }
+        body.dark-theme .message small {
+            color: #a0a0a0;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 8px;
+            background-color: #22c55e;
+        }
+        .status-indicator.offline {
+            background-color: #ef4444;
+        }
+        .message-actions {
+            display: none;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .message:hover .message-actions {
             display: flex;
-            height: 100%;
+            gap: 8px;
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            color: #2563eb;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        body.dark-theme .action-btn {
+            color: #42a5f5;
+        }
+        .action-btn:hover {
+            text-decoration: underline;
+        }
+        .reactions {
+            display: none;
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: white;
+            border-radius: 20px;
+            padding: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+        body.dark-theme .reactions {
+            background-color: #2e2e2e;
+        }
+        .message:hover .reactions {
+            display: flex;
+            gap: 8px;
+        }
+        .reaction-btn {
+            font-size: 1.2rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .reaction-btn:hover {
+            transform: scale(1.2);
+        }
+        .selected-reactions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .selected-reaction {
+            font-size: 0.9rem;
+            color: #374151;
+        }
+        body.dark-theme .selected-reaction {
+            color: #e0e0e0;
+        }
+        .selected-reaction span {
+            margin-left: 4px;
+        }
+        .input-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border-top: 1px solid #d1d5db;
+            padding: 16px;
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+        }
+        body.dark-theme .input-container {
+            background-color: #1e1e1e;
+            border-top: 1px solid #424242;
+        }
+        .input-container .inner {
             width: 100%;
             max-width: 1200px;
             margin: 0 auto;
-        }
-        .sidebar {
-            width: 240px;
-            background: #23272a;
-            padding: 10px 0;
-            overflow-y: auto;
-            border-right: 1px solid #202225;
-        }
-        .sidebar h2 {
-            color: #7289da;
-            font-size: 1.2em;
-            padding: 10px 15px;
-            margin: 0;
-            font-weight: 600;
-        }
-        .user-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .user {
             display: flex;
-            align-items: center;
-            padding: 5px 15px;
-            cursor: pointer;
+            gap: 16px;
         }
-        .user:hover {
-            background: #2c2f33;
-        }
-        .user img {
-            width: 20px;
-            height: 20px;
-            margin-right: 10px;
-            border-radius: 50%;
-        }
-        .user span {
-            font-size: 0.9em;
-        }
-        .add-contact {
-            padding: 10px 15px;
-            color: #7289da;
-            cursor: pointer;
-            text-align: center;
-        }
-        .add-contact:hover {
-            background: #2c2f33;
-        }
-        .chat-area {
+        input {
             flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            background: #36393f;
-        }
-        .chat-header {
-            padding: 10px 15px;
-            border-bottom: 1px solid #202225;
-            display: flex;
-            align-items: center;
-        }
-        .chat-header h1 {
-            font-size: 1.5em;
-            margin: 0;
-            color: #ffffff;
-        }
-        .chat-box {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 15px;
-            background: #36393f;
-        }
-        .message {
-            max-width: 60%;
-            padding: 10px 15px;
-            margin: 5px 0;
-            border-radius: 8px;
-            font-size: 1em;
-            line-height: 1.3;
-            position: relative;
-        }
-        .my-message {
-            background: #40444b;
-            color: #dcddde;
-            align-self: flex-end;
-        }
-        .other-message {
-            background: #2c2f33;
-            color: #dcddde;
-            align-self: flex-start;
-        }
-        .message-time {
-            font-size: 0.7em;
-            color: #72767d;
-            margin-top: 5px;
-        }
-        .input-area {
             padding: 10px;
-            background: #40444b;
-            border-top: 1px solid #202225;
-            display: flex;
-            align-items: center;
+            font-size: 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
         }
-        .input-area input[type="text"] {
-            flex-grow: 1;
-            padding: 12px 15px;
-            font-size: 1em;
+        body.dark-theme input {
+            background-color: #2e2e2e;
+            border-color: #424242;
+            color: #e0e0e0;
+        }
+        button#postBtn {
+            padding: 10px 16px;
+            font-size: 1rem;
+            background-color: #2563eb;
+            color: white;
             border: none;
-            border-radius: 8px 0 0 8px;
-            background: #fff;
-            color: #1a1a1a;
-            height: 40px;
-            box-sizing: border-box;
-        }
-        .input-area input[type="file"] {
-            display: none;
-        }
-        .input-area button {
-            padding: 12px 20px;
-            font-size: 1em;
-            border: none;
-            border-radius: 0 8px 8px 0;
-            background: #7289da;
-            color: #fff;
+            border-radius: 6px;
             cursor: pointer;
-            height: 40px;
         }
-        .input-area button:hover {
-            background: #5e6cb2;
+        button#postBtn:hover {
+            background-color: #1d4ed8;
         }
-        .input-area .attach-btn {
-            padding: 12px 15px;
-            background: #5865f2;
-            border-radius: 8px 0 0 8px;
-            margin-right: 5px;
-            height: 40px;
+        body.dark-theme button#postBtn {
+            background-color: #424242;
         }
-        .input-area .attach-btn:hover {
-            background: #4752c4;
+        body.dark-theme button#postBtn:hover {
+            background-color: #757575;
         }
-        .status {
-            color: #7289da;
-            font-size: 0.9em;
-            text-align: center;
-            margin: 10px 0;
-        }
-        .image-preview {
-            max-width: 150px;
-            max-height: 150px;
-            cursor: pointer;
-            border-radius: 5px;
-            margin-top: 10px;
+        button#postBtn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
         }
         .modal {
             display: none;
@@ -179,228 +284,909 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            align-items: center;
+            background-color: rgba(0, 0, 0, 0.5);
             justify-content: center;
+            align-items: center;
+            z-index: 60;
         }
         .modal-content {
-            background: #36393f;
-            padding: 20px;
-            border-radius: 10px;
-            width: 300px;
-            text-align: center;
+            background-color: white;
+            border-radius: 8px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
-        .modal-content input {
-            width: 80%;
+        body.dark-theme .modal-content {
+            background-color: #1e1e1e;
+        }
+        .modal-content h2 {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin: 0;
+        }
+        body.dark-theme .modal-content h2 {
+            color: #e0e0e0;
+        }
+        .modal-content input, .modal-content textarea {
+            width: 100%;
             padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #202225;
-            border-radius: 5px;
-            background: #fff;
-            color: #1a1a1a;
+            font-size: 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+        }
+        body.dark-theme .modal-content input, body.dark-theme .modal-content textarea {
+            background-color: #2e2e2e;
+            border-color: #424242;
+            color: #e0e0e0;
         }
         .modal-content button {
-            padding: 10px 20px;
-            margin: 5px;
+            padding: 10px;
+            font-size: 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .modal-content button:first-of-type {
+            background-color: #2563eb;
+            color: white;
+        }
+        .modal-content button:first-of-type:hover {
+            background-color: #1d4ed8;
+        }
+        body.dark-theme .modal-content button:first-of-type {
+            background-color: #424242;
+        }
+        body.dark-theme .modal-content button:first-of-type:hover {
+            background-color: #757575;
+        }
+        .modal-content button:last-of-type {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+        .modal-content button:last-of-type:hover {
+            background-color: #d1d5db;
+        }
+        body.dark-theme .modal-content button:last-of-type {
+            background-color: #424242;
+            color: #e0e0e0;
+        }
+        body.dark-theme .modal-content button:last-of-type:hover {
+            background-color: #757575;
+        }
+        .error {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 8px;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 60px;
+            right: 16px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 350px;
+            z-index: 60;
+        }
+        body.dark-theme .popup {
+            background-color: #1e1e1e;
+        }
+        .popup input, .popup textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        body.dark-theme .popup input, body.dark-theme .popup textarea {
+            background-color: #2e2e2e;
+            border-color: #424242;
+            color: #e0e0e0;
+        }
+        .popup button {
+            width: 100%;
+            background-color: #2563eb;
+            color: white;
+            padding: 10px;
+            margin: 8px 0;
             border: none;
             border-radius: 5px;
-            background: #7289da;
-            color: #fff;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .popup button:hover {
+            background-color: #1d4ed8;
+        }
+        body.dark-theme .popup button {
+            background-color: #424242;
+        }
+        body.dark-theme .popup button:hover {
+            background-color: #757575;
+        }
+        .popup label {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #374151;
+            margin: 8px 0;
+        }
+        body.dark-theme .popup label {
+            color: #e0e0e0;
+        }
+        .popup input[type="checkbox"] {
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+        }
+        .admin-modal .modal-content {
+            max-width: 500px;
+        }
+        .admin-modal .modal-content select, .admin-modal .modal-content input, .admin-modal .modal-content textarea {
+            margin-bottom: 10px;
+        }
+        .admin-modal .modal-content button {
+            margin: 5px 0;
+        }
+        .typing-indicator {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        body.dark-theme .typing-indicator {
+            color: #a0a0a0;
+        }
+        .reply-to {
+            font-size: 0.85rem;
+            color: #2563eb;
+            margin-bottom: 4px;
             cursor: pointer;
         }
-        .modal-content button:hover {
-            background: #5e6cb2;
+        body.dark-theme .reply-to {
+            color: #42a5f5;
+        }
+        /* Reaction Animations */
+        .animate-thumbsup {
+            animation: thumbsup 0.5s ease;
+        }
+        @keyframes thumbsup {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .animate-heart {
+            animation: heart 0.8s ease;
+        }
+        @keyframes heart {
+            0% { box-shadow: 0 0 0 rgba(220, 38, 38, 0); }
+            50% { box-shadow: 0 0 10px rgba(220, 38, 38, 0.7); }
+            100% { box-shadow: 0 0 0 rgba(220, 38, 38, 0); }
+        }
+        .animate-laugh {
+            animation: laugh 0.5s ease;
+        }
+        @keyframes laugh {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        .animate-surprise {
+            animation: surprise 0.4s ease;
+        }
+        @keyframes surprise {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+        .animate-sad {
+            animation: sad 0.6s ease;
+        }
+        @keyframes sad {
+            0% { filter: brightness(1); transform: translateY(0); }
+            50% { filter: brightness(0.8) sepia(0.2) hue-rotate(180deg); transform: translateY(3px); }
+            100% { filter: brightness(1); transform: translateY(0); }
+        }
+        .animate-smile {
+            animation: smile 0.7s ease;
+        }
+        @keyframes smile {
+            0% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+            100% { filter: brightness(1); }
+        }
+        .animate-clap {
+            animation: clap 0.5s ease;
+        }
+        @keyframes clap {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0); }
+        }
+        .animate-fire {
+            animation: fire 1s ease;
+        }
+        @keyframes fire {
+            0% { background-color: #f9fafb; box-shadow: 0 0 0 rgba(255, 85, 0, 0); }
+            50% { background-color: #fef3c7; box-shadow: 0 0 15px rgba(255, 85, 0, 0.7); }
+            100% { background-color: #f9fafb; box-shadow: 0 0 0 rgba(255, 85, 0, 0); }
+        }
+        body.dark-theme .animate-fire {
+            0% { background-color: #2e2e2e; box-shadow: 0 0 0 rgba(255, 85, 0, 0); }
+            50% { background-color: #5e4b2b; box-shadow: 0 0 15px rgba(255, 85, 0, 0.7); }
+            100% { background-color: #2e2e2e; box-shadow: 0 0 0 rgba(255, 85, 0, 0); }
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            .account-btn, .admin-btn {
+                top: 10px;
+                right: 10px;
+                padding: 6px 12px;
+            }
+            .admin-btn {
+                right: 80px;
+            }
+            .popup {
+                top: 50px;
+                right: 10px;
+                width: 95%;
+            }
+        }
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5em;
+            }
+            .account-btn, .admin-btn {
+                padding: 6px 10px;
+                font-size: 0.8em;
+            }
+            .admin-btn {
+                right: 70px;
+            }
+            .popup {
+                padding: 10px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="sidebar">
-            <h2>Користувачі</h2>
-            <ul class="user-list" id="userList"></ul>
-            <div class="add-contact" onclick="showAddContactModal()">Додати контакт</div>
+        <button class="account-btn" id="accountBtn" onclick="togglePopup()">👤 Акаунт</button>
+        <button class="admin-btn" id="adminBtn" onclick="openAdminPanel()" style="display:none;">🛠 Адмін</button>
+        <h1>Форум</h1>
+        <div class="typing-indicator" id="typingIndicator"></div>
+        <div class="messages-container" id="messages"></div>
+    </div>
+
+    <div id="accountPopup" class="popup">
+        <div id="accountForm">
+            <input type="email" id="loginEmail" placeholder="Електронна пошта" required>
+            <input type="password" id="loginPassword" placeholder="Пароль" required>
+            <button onclick="login()">Увійти</button>
+            <input type="email" id="registerEmail" placeholder="Електронна пошта" required>
+            <input type="password" id="registerPassword" placeholder="Пароль" required>
+            <button onclick="register()">Зареєструватися</button>
+            <p id="accountError" class="error"></p>
         </div>
-        <div class="chat-area">
-            <div class="chat-header">
-                <h1>💬 Чат BioWorld</h1>
-                <p class="status" id="connectionStatus">Очікування підключення...</p>
-            </div>
-            <div class="chat-box" id="chatBox"></div>
-            <div class="input-area">
-                <button class="attach-btn" onclick="document.getElementById('imageInput').click()">+</button>
-                <input type="file" id="imageInput" accept="image/*">
-                <input type="text" id="messageInput" placeholder="Повідомлення...">
-                <button onclick="sendMessage()">Надіслати</button>
-            </div>
+        <div id="accountInfo" style="display:none;">
+            <p>👋 Привіт, <span id="displayName"></span>!</p>
+            <label>
+                <input type="checkbox" id="darkThemeToggle" onchange="toggleDarkTheme()"> Темна тема
+            </label>
+            <label>
+                <input type="checkbox" id="timestampToggle" onchange="toggleTimestamps()" checked> Показувати час повідомлень
+            </label>
+            <button onclick="logout()">Вийти</button>
         </div>
     </div>
-    <div class="modal" id="addContactModal">
+
+    <div id="nicknameModal" class="modal">
         <div class="modal-content">
-            <h3>Додати контакт</h3>
-            <input type="text" id="newContactId" placeholder="ID контакту...">
-            <input type="text" id="newContactName" placeholder="Ім'я контакту...">
-            <button onclick="addContact()">Додати</button>
-            <button onclick="hideAddContactModal()">Скасувати</button>
+            <h2>Введіть нікнейм</h2>
+            <input type="text" id="nicknameInput" placeholder="Ваш нікнейм" required>
+            <button onclick="saveNickname()">Зберегти</button>
+            <button onclick="closeModal('nicknameModal')">Закрити</button>
+            <p id="nicknameError" class="error"></p>
         </div>
     </div>
 
-    <script>
-        let peer;
-        let conn;
-        let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
-        let contacts = JSON.parse(localStorage.getItem('contacts')) || [];
-        let myId = localStorage.getItem('peerId');
+    <div id="adminModal" class="modal admin-modal">
+        <div class="modal-content">
+            <h2>Адмін-панель</h2>
+            <label>Бан/Розбан користувача:</label>
+            <input type="email" id="banEmail" placeholder="Електронна пошта користувача">
+            <button onclick="banUser()">Забанити</button>
+            <button onclick="unbanUser()">Розбанити</button>
+            <label>Закріпити/Відкріпити повідомлення:</label>
+            <select id="messageSelect">
+                <option value="">Виберіть повідомлення</option>
+            </select>
+            <button onclick="togglePinMessage()">Закріпити/Відкріпити</button>
+            <label>Видалити повідомлення:</label>
+            <select id="deleteMessageSelect">
+                <option value="">Виберіть повідомлення</option>
+            </select>
+            <button onclick="adminDeleteMessage()">Видалити</button>
+            <label>Очистити всі повідомлення:</label>
+            <button onclick="clearAllMessages()">Очистити чат</button>
+            <label>Оголосити повідомлення:</label>
+            <textarea id="broadcastMessage" placeholder="Текст оголошення"></textarea>
+            <button onclick="sendBroadcast()">Надіслати оголошення</button>
+            <label>Активність користувачів:</label>
+            <div id="userActivity"></div>
+            <button onclick="closeModal('adminModal')">Закрити</button>
+            <p id="adminError" class="error"></p>
+        </div>
+    </div>
 
-        if (!myId) {
-            peer = new Peer();
-        } else {
-            peer = new Peer(myId);
+    <div class="input-container">
+        <div class="inner">
+            <input type="text" id="messageInput" placeholder="Введіть ваше повідомлення" required>
+            <select id="replyToSelect" style="display:none;">
+                <option value="">Без відповіді</option>
+            </select>
+            <button id="postBtn" onclick="postMessage()" disabled>Опублікувати</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-analytics.js';
+        import { getDatabase, ref, push, onValue, update, remove, get, set } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js';
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDLJGPbMVGY-5b-aRbFlqgYSqn9c8azZ_E",
+            authDomain: "bioworld-1.firebaseapp.com",
+            databaseURL: "https://bioworld-1-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "bioworld-1",
+            storageBucket: "bioworld-1.firebasestorage.app",
+            messagingSenderId: "691211086040",
+            appId: "1:691211086040:web:3c7a15ca8abf2742788fad",
+            measurementId: "G-YPD46XPR20"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        getAnalytics(app);
+        const database = getDatabase(app);
+        const auth = getAuth(app);
+        const ADMIN_EMAIL = 'petro.hryhorenko@gmail.com';
+        let replyToMessageId = null;
+
+        window.postMessage = function() {
+            const messageInput = document.getElementById('messageInput');
+            const messageText = messageInput.value.trim();
+            const replyTo = document.getElementById('replyToSelect').value;
+            if (!auth.currentUser) {
+                alert('Будь ласка, увійдіть, щоб опублікувати повідомлення.');
+                return;
+            }
+            get(ref(database, `users/${auth.currentUser.uid}/banned`)).then(snapshot => {
+                if (snapshot.val()) {
+                    alert('Ваш акаунт забанено. Ви не можете публікувати повідомлення.');
+                    return;
+                }
+                if (messageText) {
+                    const timestamp = new Date().toISOString();
+                    push(ref(database, 'messages'), {
+                        text: messageText,
+                        timestamp: timestamp,
+                        userId: auth.currentUser.uid,
+                        userName: auth.currentUser.displayName || auth.currentUser.email,
+                        reactions: {},
+                        pinned: false,
+                        broadcast: false,
+                        replyTo: replyTo || null
+                    }).then(() => {
+                        messageInput.value = '';
+                        document.getElementById('replyToSelect').value = '';
+                        document.getElementById('replyToSelect').style.display = 'none';
+                        replyToMessageId = null;
+                    }).catch((error) => {
+                        console.error('Помилка при відправці повідомлення:', error);
+                    });
+                }
+            });
+        };
+
+        window.addReaction = function(messageId, emoji) {
+            if (!auth.currentUser) {
+                alert('Будь ласка, увійдіть, щоб додати реакцію.');
+                return;
+            }
+            get(ref(database, `users/${auth.currentUser.uid}/banned`)).then(snapshot => {
+                if (snapshot.val()) {
+                    alert('Ваш акаунт забанено. Ви не можете додавати реакції.');
+                    return;
+                }
+                const reactionPath = `messages/${messageId}/reactions/${emoji}/${auth.currentUser.uid}`;
+                update(ref(database), {
+                    [reactionPath]: true
+                }).then(() => {
+                    const messageDiv = document.querySelector(`[data-message-id="${messageId}"]`);
+                    if (messageDiv) {
+                        const animationClass = `animate-${emojiToClass(emoji)}`;
+                        messageDiv.classList.add(animationClass);
+                        setTimeout(() => messageDiv.classList.remove(animationClass), 1000);
+                    }
+                }).catch((error) => {
+                    console.error('Помилка при додаванні реакції:', error);
+                });
+            });
+        };
+
+        window.editMessage = function(messageId, userId, currentText) {
+            if (!auth.currentUser || auth.currentUser.uid !== userId) {
+                alert('Ви можете редагувати лише свої повідомлення.');
+                return;
+            }
+            get(ref(database, `users/${auth.currentUser.uid}/banned`)).then(snapshot => {
+                if (snapshot.val()) {
+                    alert('Ваш акаунт забанено. Ви не можете редагувати повідомлення.');
+                    return;
+                }
+                const newText = prompt('Редагувати повідомлення:', currentText);
+                if (newText && newText.trim()) {
+                    update(ref(database, `messages/${messageId}`), {
+                        text: newText.trim(),
+                        edited: true,
+                        editedTimestamp: new Date().toISOString()
+                    }).catch((error) => {
+                        console.error('Помилка при редагуванні повідомлення:', error);
+                    });
+                }
+            });
+        };
+
+        window.banUser = function() {
+            const email = document.getElementById('banEmail').value.trim();
+            if (!email) {
+                document.getElementById('adminError').textContent = 'Введіть електронну пошту';
+                return;
+            }
+            get(ref(database, 'users')).then(snapshot => {
+                const users = snapshot.val();
+                const userId = Object.keys(users).find(uid => users[uid].email === email);
+                if (userId) {
+                    set(ref(database, `users/${userId}/banned`), true)
+                        .then(() => {
+                            document.getElementById('adminError').textContent = `Користувача ${email} забанено`;
+                            document.getElementById('banEmail').value = '';
+                        })
+                        .catch(error => {
+                            document.getElementById('adminError').textContent = 'Помилка: ' + error.message;
+                        });
+                } else {
+                    document.getElementById('adminError').textContent = 'Користувача не знайдено';
+                }
+            });
+        };
+
+        window.unbanUser = function() {
+            const email = document.getElementById('banEmail').value.trim();
+            if (!email) {
+                document.getElementById('adminError').textContent = 'Введіть електронну пошту';
+                return;
+            }
+            get(ref(database, 'users')).then(snapshot => {
+                const users = snapshot.val();
+                const userId = Object.keys(users).find(uid => users[uid].email === email);
+                if (userId) {
+                    set(ref(database, `users/${userId}/banned`), false)
+                        .then(() => {
+                            document.getElementById('adminError').textContent = `Користувача ${email} розбанено`;
+                            document.getElementById('banEmail').value = '';
+                        })
+                        .catch(error => {
+                            document.getElementById('adminError').textContent = 'Помилка: ' + error.message;
+                        });
+                } else {
+                    document.getElementById('adminError').textContent = 'Користувача не знайдено';
+                }
+            });
+        };
+
+        window.togglePinMessage = function() {
+            const messageId = document.getElementById('messageSelect').value;
+            if (!messageId) {
+                document.getElementById('adminError').textContent = 'Виберіть повідомлення';
+                return;
+            }
+            get(ref(database, `messages/${messageId}`)).then(snapshot => {
+                const message = snapshot.val();
+                update(ref(database, `messages/${messageId}`), {
+                    pinned: !message.pinned
+                }).then(() => {
+                    document.getElementById('adminError').textContent = `Повідомлення ${message.pinned ? 'відкріплено' : 'закріплено'}`;
+                }).catch(error => {
+                    document.getElementById('adminError').textContent = 'Помилка: ' + error.message;
+                });
+            });
+        };
+
+        window.adminDeleteMessage = function() {
+            const messageId = document.getElementById('deleteMessageSelect').value;
+            if (!messageId) {
+                document.getElementById('adminError').textContent = 'Виберіть повідомлення';
+                return;
+            }
+            remove(ref(database, `messages/${messageId}`)).then(() => {
+                document.getElementById('adminError').textContent = 'Повідомлення видалено';
+                document.getElementById('deleteMessageSelect').value = '';
+            }).catch(error => {
+                document.getElementById('adminError').textContent = 'Помилка: ' + error.message;
+            });
+        };
+
+        window.clearAllMessages = function() {
+            if (confirm('Ви впевнені, що хочете видалити всі повідомлення?')) {
+                remove(ref(database, 'messages')).then(() => {
+                    document.getElementById('adminError').textContent = 'Чат очищено';
+                }).catch(error => {
+                    document.getElementById('adminError').textContent = 'Помилка: ' + error.message;
+                });
+            }
+        };
+
+        window.sendBroadcast = function() {
+            const broadcastText = document.getElementById('broadcastMessage').value.trim();
+            if (!broadcastText) {
+                document.getElementById('adminError').textContent = 'Введіть текст оголошення';
+                return;
+            }
+            const timestamp = new Date().toISOString();
+            push(ref(database, 'messages'), {
+                text: broadcastText,
+                timestamp: timestamp,
+                userId: auth.currentUser.uid,
+                userName: auth.currentUser.displayName || auth.currentUser.email,
+                reactions: {},
+                pinned: false,
+                broadcast: true
+            }).then(() => {
+                document.getElementById('broadcastMessage').value = '';
+                document.getElementById('adminError').textContent = 'Оголошення надіслано';
+            }).catch(error => {
+                document.getElementById('adminError').textContent = 'Помилка: ' + error.message;
+            });
+        };
+
+        window.showUserActivity = function() {
+            get(ref(database, 'users')).then(snapshot => {
+                const users = snapshot.val();
+                const activityDiv = document.getElementById('userActivity');
+                activityDiv.innerHTML = '';
+                Object.entries(users).forEach(([uid, user]) => {
+                    const lastActivity = user.lastActivity ? new Date(user.lastActivity).toLocaleString('uk-UA') : 'Немає даних';
+                    const status = user.banned ? ' (Забанено)' : '';
+                    const p = document.createElement('p');
+                    p.textContent = `${user.username || user.email}: ${lastActivity}${status}`;
+                    activityDiv.appendChild(p);
+                });
+            });
+        };
+
+        window.replyToMessage = function(messageId, userName) {
+            replyToMessageId = messageId;
+            const replySelect = document.getElementById('replyToSelect');
+            replySelect.style.display = 'block';
+            replySelect.innerHTML = `<option value="${messageId}">Відповідь на: ${userName}</option>`;
+        };
+
+        function emojiToClass(emoji) {
+            const map = {
+                '👍': 'thumbsup',
+                '❤️': 'heart',
+                '😂': 'laugh',
+                '😮': 'surprise',
+                '😢': 'sad',
+                '😊': 'smile',
+                '👏': 'clap',
+                '🔥': 'fire'
+            };
+            return map[emoji] || 'default';
         }
 
-        peer.on('open', id => {
-            myId = id;
-            localStorage.setItem('peerId', id);
-            document.getElementById("connectionStatus").innerText = `Твій ID: ${id} (Готово до підключення!)`;
-            document.getElementById("connectionStatus").style.color = "#7289da";
-            loadContacts();
-            loadChatHistory();
+        function updateMessageSelects(messages) {
+            const messageSelect = document.getElementById('messageSelect');
+            const deleteMessageSelect = document.getElementById('deleteMessageSelect');
+            messageSelect.innerHTML = '<option value="">Виберіть повідомлення</option>';
+            deleteMessageSelect.innerHTML = '<option value="">Виберіть повідомлення</option>';
+            Object.entries(messages).forEach(([key, message]) => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = `${message.userName}: ${message.text.substring(0, 50)}...`;
+                messageSelect.appendChild(option.cloneNode(true));
+                deleteMessageSelect.appendChild(option);
+            });
+        }
+
+        window.toggleTimestamps = function() {
+            const showTimestamps = document.getElementById('timestampToggle').checked;
+            document.querySelectorAll('.message small').forEach(el => {
+                el.style.display = showTimestamps ? 'block' : 'none';
+            });
+            localStorage.setItem('showTimestamps', showTimestamps);
+            const user = auth.currentUser;
+            if (user) {
+                update(ref(database, 'users/' + user.uid), { showTimestamps: showTimestamps });
+            }
+        };
+
+        onValue(ref(database, 'messages'), (snapshot) => {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = '';
+            const messages = snapshot.val();
+            if (messages) {
+                const pinnedMessages = Object.entries(messages).filter(([_, msg]) => msg.pinned);
+                const regularMessages = Object.entries(messages).filter(([_, msg]) => !msg.pinned);
+                const sortedMessages = [...pinnedMessages, ...regularMessages];
+                updateMessageSelects(messages);
+                sortedMessages.forEach(([key, message]) => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${message.pinned ? 'pinned' : ''} ${message.broadcast ? 'broadcast' : ''} ${message.replyTo ? 'reply' : ''}`;
+                    messageDiv.setAttribute('data-message-id', key);
+                    const date = new Date(message.timestamp).toLocaleString('uk-UA');
+                    const edited = message.edited ? ` (Редаговано ${new Date(message.editedTimestamp).toLocaleString('uk-UA')})` : '';
+                    const reactions = message.reactions || {};
+                    const reactionCounts = {};
+                    const emojis = ['👍', '❤️', '😂', '😮', '😢', '😊', '👏', '🔥'];
+                    emojis.forEach(emoji => {
+                        reactionCounts[emoji] = Object.keys(reactions[emoji] || {}).length;
+                    });
+                    const reactionButtons = emojis.map(emoji => {
+                        const isReacted = reactions[emoji]?.[auth.currentUser?.uid] || false;
+                        return `<button onclick="addReaction('${key}', '${emoji}')" class="reaction-btn ${isReacted ? 'text-blue-600' : ''}">${emoji}</button>`;
+                    }).join('');
+                    const selectedReactions = emojis
+                        .filter(emoji => reactionCounts[emoji] > 0)
+                        .map(emoji => `<span class="selected-reaction">${emoji}<span>${reactionCounts[emoji]}</span></span>`)
+                        .join('');
+                    const isOwnMessage = auth.currentUser && message.userId === auth.currentUser.uid;
+                    const actionButtons = isOwnMessage ? `
+                        <div class="message-actions">
+                            <button class="action-btn" onclick="editMessage('${key}', '${message.userId}', '${message.text.replace(/'/g, "\\'")}')">Редагувати</button>
+                            <button class="action-btn" onclick="replyToMessage('${key}', '${message.userName}')">Відповісти</button>
+                        </div>
+                    ` : `
+                        <div class="message-actions">
+                            <button class="action-btn" onclick="replyToMessage('${key}', '${message.userName}')">Відповісти</button>
+                        </div>
+                    `;
+                    let replyToHtml = '';
+                    if (message.replyTo) {
+                        get(ref(database, `messages/${message.replyTo}`)).then(snapshot => {
+                            const parentMessage = snapshot.val();
+                            if (parentMessage) {
+                                replyToHtml = `<div class="reply-to">Відповідь на: ${parentMessage.userName}: ${parentMessage.text.substring(0, 50)}...</div>`;
+                                messageDiv.innerHTML = `
+                                    ${replyToHtml}
+                                    <p><strong>${message.userName}</strong><span class="status-indicator ${message.status || 'offline'}"></span>: ${message.text}${edited}</p>
+                                    ${actionButtons}
+                                    <div class="reactions">${reactionButtons}</div>
+                                    <div class="selected-reactions">${selectedReactions}</div>
+                                    <small style="display:${localStorage.getItem('showTimestamps') === 'false' ? 'none' : 'block'}">${date}</small>
+                                `;
+                            }
+                        });
+                    }
+                    get(ref(database, `users/${message.userId}/status`)).then(snapshot => {
+                        const status = snapshot.val() === 'online' ? 'online' : 'offline';
+                        messageDiv.innerHTML = `
+                            ${replyToHtml}
+                            <p><strong>${message.userName}</strong><span class="status-indicator ${status}"></span>: ${message.text}${edited}</p>
+                            ${actionButtons}
+                            <div class="reactions">${reactionButtons}</div>
+                            <div class="selected-reactions">${selectedReactions}</div>
+                            <small style="display:${localStorage.getItem('showTimestamps') === 'false' ? 'none' : 'block'}">${date}</small>
+                        `;
+                        messagesDiv.appendChild(messageDiv);
+                    });
+                    messagesDiv.appendChild(messageDiv);
+                });
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+        }, (error) => {
+            console.error('Помилка при отриманні повідомлень:', error);
         });
 
-        peer.on('connection', connection => {
-            conn = connection;
-            const peerId = conn.peer;
-            if (!contacts.some(c => c.id === peerId)) {
-                const name = prompt("Введіть ім'я для контакту:", peerId);
-                contacts.push({ id: peerId, name: name || peerId });
-                localStorage.setItem('contacts', JSON.stringify(contacts));
-                loadContacts();
+        onValue(ref(database, 'typing'), (snapshot) => {
+            const typingData = snapshot.val();
+            const typingIndicator = document.getElementById('typingIndicator');
+            const typingUsers = [];
+            if (typingData) {
+                Object.entries(typingData).forEach(([uid, data]) => {
+                    if (uid !== auth.currentUser?.uid && data.isTyping) {
+                        typingUsers.push(data.username);
+                    }
+                });
             }
-            document.getElementById("connectionStatus").innerText = `Підключено до ${conn.peer}!`;
-            conn.on('data', data => {
-                displayMessage(data.text, false, data.image, data.messageId);
-                saveMessage(data.text, false, data.image, data.messageId);
-            });
+            typingIndicator.textContent = typingUsers.length > 0 ? `${typingUsers.join(', ')} друкує...` : '';
         });
 
-        function connectToPeer(peerId) {
-            if (peerId && peerId !== myId) {
-                if (conn) conn.close();
-                conn = peer.connect(peerId);
-                conn.on('open', () => {
-                    document.getElementById("connectionStatus").innerText = `Підключено до ${peerId}!`;
+        document.getElementById('messageInput').addEventListener('input', () => {
+            if (auth.currentUser) {
+                set(ref(database, `typing/${auth.currentUser.uid}`), {
+                    isTyping: true,
+                    username: auth.currentUser.displayName || auth.currentUser.email
                 });
-                conn.on('data', data => {
-                    displayMessage(data.text, false, data.image, data.messageId);
-                    saveMessage(data.text, false, data.image, data.messageId);
+                setTimeout(() => {
+                    set(ref(database, `typing/${auth.currentUser.uid}/isTyping`), false);
+                }, 3000);
+            }
+        });
+
+        window.login = function() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    document.getElementById('accountPopup').style.display = 'none';
+                    document.getElementById('accountError').textContent = '';
+                    set(ref(database, `users/${userCredential.user.uid}/status`), 'online');
+                    set(ref(database, `users/${userCredential.user.uid}/lastActivity`), new Date().toISOString());
+                })
+                .catch((error) => {
+                    document.getElementById('accountError').textContent = 'Помилка: ' + error.message;
                 });
+        };
+
+        window.register = function() {
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    document.getElementById('accountPopup').style.display = 'none';
+                    document.getElementById('accountError').textContent = '';
+                    set(ref(database, `users/${userCredential.user.uid}`), {
+                        email: email,
+                        banned: false,
+                        status: 'online',
+                        lastActivity: new Date().toISOString()
+                    });
+                    document.getElementById('nicknameModal').style.display = 'flex';
+                })
+                .catch((error) => {
+                    document.getElementById('accountError').textContent = 'Помилка: ' + error.message;
+                });
+        };
+
+        window.saveNickname = function() {
+            const nickname = document.getElementById('nicknameInput').value.trim();
+            if (nickname) {
+                updateProfile(auth.currentUser, { displayName: nickname })
+                    .then(() => {
+                        update(ref(database, 'users/' + auth.currentUser.uid), { username: nickname });
+                        closeModal('nicknameModal');
+                    })
+                    .catch((error) => {
+                        document.getElementById('nicknameError').textContent = 'Помилка: ' + error.message;
+                    });
             } else {
-                alert("Невірний ID або це ваш власний ID!");
+                document.getElementById('nicknameError').textContent = 'Введіть нікнейм';
             }
-        }
+        };
 
-        function sendMessage() {
-            const input = document.getElementById("messageInput");
-            const imageInput = document.getElementById("imageInput");
-            let imageData = null;
-            const messageId = Date.now() + Math.random();
-
-            if (imageInput.files.length > 0) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    imageData = event.target.result;
-                    sendData(input.value, imageData, messageId);
-                };
-                reader.readAsDataURL(imageInput.files[0]);
-            } else {
-                sendData(input.value, null, messageId);
-            }
-            input.value = "";
-            imageInput.value = "";
-        }
-
-        function sendData(text, image, messageId) {
-            if (conn && (text.trim() || image)) {
-                const message = { text: text, image: image, messageId: messageId };
-                conn.send(message);
-                displayMessage(text, true, image, messageId);
-                saveMessage(text, true, image, messageId);
-            }
-        }
-
-        function displayMessage(text, isMine, image, messageId) {
-            const chatBox = document.getElementById("chatBox");
-            const messageDiv = document.createElement("div");
-            messageDiv.classList.add("message", isMine ? "my-message" : "other-message");
-            messageDiv.dataset.messageId = messageId;
-
-            if (text) messageDiv.innerHTML = text.replace(/(https?:\/\/\S+)/g, '<a href="$1" target="_blank">$1</a>');
-            if (image) {
-                const img = document.createElement("img");
-                img.src = image;
-                img.classList.add("image-preview");
-                messageDiv.appendChild(img);
-            }
-
-            const timeDiv = document.createElement("div");
-            timeDiv.classList.add("message-time");
-            timeDiv.innerText = new Date().toLocaleTimeString('uk-UA');
-            messageDiv.appendChild(timeDiv);
-
-            chatBox.appendChild(messageDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function saveMessage(text, isMine, image, messageId) {
-            chatHistory.push({ text, isMine, image, messageId, timestamp: new Date().toLocaleString('uk-UA') });
-            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-        }
-
-        function loadChatHistory() {
-            chatHistory.forEach(msg => {
-                displayMessage(msg.text, msg.isMine, msg.image, msg.messageId);
+        window.logout = function() {
+            set(ref(database, `users/${auth.currentUser.uid}/status`), 'offline').then(() => {
+                set(ref(database, `typing/${auth.currentUser.uid}/isTyping`), false);
+                signOut(auth).catch((error) => {
+                    console.error('Помилка при виході:', error);
+                });
             });
-        }
+        };
 
-        function loadContacts() {
-            const userList = document.getElementById("userList");
-            userList.innerHTML = "";
-            contacts.forEach(contact => {
-                const li = document.createElement("li");
-                li.classList.add("user");
-                li.innerHTML = `<img src="https://via.placeholder.com/20" alt="icon"><span>${contact.name}</span>`;
-                li.onclick = () => {
-                    connectToPeer(contact.id);
-                };
-                userList.appendChild(li);
-            });
-        }
+        window.togglePopup = function() {
+            const popup = document.getElementById('accountPopup');
+            popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+        };
 
-        function showAddContactModal() {
-            document.getElementById('addContactModal').style.display = 'flex';
-        }
+        window.closeModal = function(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            document.getElementById(`${modalId.replace('Modal', 'Error')}`).textContent = '';
+        };
 
-        function hideAddContactModal() {
-            document.getElementById('addContactModal').style.display = 'none';
-        }
+        window.openAdminPanel = function() {
+            document.getElementById('adminModal').style.display = 'flex';
+            showUserActivity();
+        };
 
-        function addContact() {
-            const peerId = document.getElementById("newContactId").value;
-            const name = document.getElementById("newContactName").value || peerId;
-            if (peerId && !contacts.some(c => c.id === peerId)) {
-                contacts.push({ id: peerId, name });
-                localStorage.setItem('contacts', JSON.stringify(contacts));
-                loadContacts();
-                connectToPeer(peerId);
-            } else {
-                alert("Цей контакт вже існує або ID порожній!");
+        window.toggleDarkTheme = function() {
+            const isDark = document.getElementById('darkThemeToggle').checked;
+            document.body.classList.toggle('dark-theme', isDark);
+            localStorage.setItem('darkTheme', isDark);
+            const user = auth.currentUser;
+            if (user) {
+                update(ref(database, 'users/' + user.uid), { darkTheme: isDark });
             }
-            document.getElementById("newContactId").value = "";
-            document.getElementById("newContactName").value = "";
-            hideAddContactModal();
-        }
+        };
 
-        // Initial load
-        loadChatHistory();
+        onAuthStateChanged(auth, (user) => {
+            const accountBtn = document.getElementById('accountBtn');
+            const adminBtn = document.getElementById('adminBtn');
+            const postBtn = document.getElementById('postBtn');
+            const accountForm = document.getElementById('accountForm');
+            const accountInfo = document.getElementById('accountInfo');
+            if (user) {
+                if (!user.displayName) {
+                    document.getElementById('nicknameModal').style.display = 'flex';
+                }
+                accountBtn.textContent = '👤 Акаунт';
+                accountBtn.style.backgroundColor = '#dc2626';
+                accountBtn.onclick = togglePopup;
+                accountForm.style.display = 'none';
+                accountInfo.style.display = 'block';
+                document.getElementById('displayName').textContent = user.displayName || user.email;
+                postBtn.disabled = false;
+                get(ref(database, `users/${user.uid}`)).then(snapshot => {
+                    const userData = snapshot.val();
+                    if (userData) {
+                        if (userData.darkTheme !== undefined) {
+                            document.body.classList.toggle('dark-theme', userData.darkTheme);
+                            document.getElementById('darkThemeToggle').checked = userData.darkTheme;
+                        }
+                        if (userData.showTimestamps !== undefined) {
+                            document.getElementById('timestampToggle').checked = userData.showTimestamps;
+                            toggleTimestamps();
+                        }
+                        if (userData.banned) {
+                            postBtn.disabled = true;
+                            alert('Ваш акаунт забанено. Ви не можете публікувати повідомлення.');
+                        }
+                        adminBtn.style.display = user.email === ADMIN_EMAIL ? 'block' : 'none';
+                    }
+                });
+                set(ref(database, `users/${user.uid}/status`), 'online');
+                set(ref(database, `users/${user.uid}/lastActivity`), new Date().toISOString());
+            } else {
+                accountBtn.textContent = '👤 Акаунт';
+                accountBtn.style.backgroundColor = '#2563eb';
+                accountBtn.onclick = togglePopup;
+                accountForm.style.display = 'block';
+                accountInfo.style.display = 'none';
+                postBtn.disabled = true;
+                adminBtn.style.display = 'none';
+            }
+        });
+
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                postMessage();
+            }
+        });
+
+        window.onbeforeunload = function() {
+            if (auth.currentUser) {
+                set(ref(database, `users/${auth.currentUser.uid}/status`), 'offline');
+                set(ref(database, `users/${auth.currentUser.uid}/lastActivity`), new Date().toISOString());
+                set(ref(database, `typing/${auth.currentUser.uid}/isTyping`), false);
+            }
+        };
+
+        window.onload = function() {
+            const isDark = localStorage.getItem('darkTheme') === 'true';
+            document.body.classList.toggle('dark-theme', isDark);
+            document.getElementById('darkThemeToggle').checked = isDark;
+            const showTimestamps = localStorage.getItem('showTimestamps') !== 'false';
+            document.getElementById('timestampToggle').checked = showTimestamps;
+            toggleTimestamps();
+        };
     </script>
 </body>
 </html>

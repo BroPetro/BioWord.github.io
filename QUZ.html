@@ -16,6 +16,8 @@
         .quiz-img{width:100px;border-radius:10px;margin-right:15px}
         .quiz-link{color:#1a1a1a;font-size:18px;font-weight:600;text-decoration:none;flex-grow:1}
         body.dark-theme .quiz-link{color:#e0e0e0}
+        .quiz-description{font-size:14px;color:#555;margin-top:5px}
+        body.dark-theme .quiz-description{color:#aaa}
         .button{background:#FFC107;color:#1a1a1a;padding:12px 20px;border-radius:25px;border:none;cursor:pointer;margin:8px;font-size:1.1em;transition:all .3s}
         body.dark-theme .button{background:#FFB300}
         .button:hover{background:#FFCA28}
@@ -155,6 +157,7 @@
             <h2 id="createQuizTitle">Створити квіз</h2>
             <input type="text" id="quizTitle" placeholder="Назва квіза" required>
             <input type="text" id="quizImage" placeholder="URL зображення" required>
+            <textarea id="quizDescription" placeholder="Опис квіза (необов’язково)" rows="4"></textarea>
             <select id="quizDifficulty" required>
                 <option value="">Рівень складності</option>
                 <option value="Легкий">Легкий</option>
@@ -372,7 +375,7 @@
             const fields = {
                 authModal: ['emailInput', 'passwordInput', 'nicknameInput', 'authError'],
                 nicknameModal: ['nicknameInputModal', 'nicknameError'],
-                createQuizModal: ['quizTitle', 'quizImage', 'quizDifficulty', 'quizTimer', 'questionsContainer', 'quizError'],
+                createQuizModal: ['quizTitle', 'quizImage', 'quizDescription', 'quizDifficulty', 'quizTimer', 'questionsContainer', 'quizError'],
                 singlePlayerModal: ['score', 'timer', 'feedback', 'progress'],
                 reportModal: ['reportReason', 'reportDetails', 'reportError'],
                 adminModal: ['banEmail', 'manageScoreEmail', 'newScore', 'adminError']
@@ -399,6 +402,10 @@
             questionCount = 0;
             document.getElementById('createQuizTitle').textContent = 'Створити квіз';
             document.getElementById('submitQuizButton').onclick = createQuiz;
+            document.getElementById('quizTitle').value = '';
+            document.getElementById('quizImage').value = '';
+            document.getElementById('quizDescription').value = '';
+            document.getElementById('quizDifficulty').value = '';
             document.getElementById('quizTimer').value = '30';
             document.getElementById('questionsContainer').innerHTML = '';
             addQuestion();
@@ -439,6 +446,7 @@
             if (docSnap.exists() && docSnap.data().banned) return alert('Ваш акаунт забанено.');
             const title = document.getElementById('quizTitle').value.trim();
             const image = document.getElementById('quizImage').value.trim();
+            const description = document.getElementById('quizDescription').value.trim();
             const difficulty = document.getElementById('quizDifficulty').value;
             const timer = parseInt(document.getElementById('quizTimer').value);
             if (!title || !image || !difficulty || isNaN(timer) || timer < 10 || timer > 60) {
@@ -463,7 +471,7 @@
             }
             if (!questions.length) return document.getElementById('quizError').textContent = 'Додайте принаймні одне питання';
             const quizData = {
-                title, image, difficulty, timer, questions,
+                title, image, description, difficulty, timer, questions,
                 author: auth.currentUser.displayName || auth.currentUser.email,
                 userId: auth.currentUser.uid,
                 timestamp: new Date().toISOString(),
@@ -757,6 +765,7 @@
             document.getElementById('submitQuizButton').onclick = createQuiz;
             document.getElementById('quizTitle').value = quiz.title;
             document.getElementById('quizImage').value = quiz.image;
+            document.getElementById('quizDescription').value = quiz.description || '';
             document.getElementById('quizDifficulty').value = quiz.difficulty;
             document.getElementById('quizTimer').value = quiz.timer || 30;
             document.getElementById('questionsContainer').innerHTML = '';
@@ -822,6 +831,7 @@
             const accuracy = totalPlays > 0 ? ((totalCorrect / (totalPlays * questions.length)) * 100).toFixed(2) : 0;
             statsDiv.innerHTML = `
                 <p>Назва: ${quiz.title}</p>
+                <p>Опис: ${quiz.description || 'Немає'}</p>
                 <p>Автор: ${quiz.author}</p>
                 <p>Складність: ${quiz.difficulty}</p>
                 <p>Час: ${quiz.timer} сек</p>
@@ -938,7 +948,10 @@
                 quizCard.dataset.isCommunity = 'true';
                 quizCard.innerHTML = `
                     <img src="${quiz.image}" class="quiz-img" alt="${quiz.title}">
-                    <a href="#" class="quiz-link" onclick="startSinglePlayer('Квіз: ${quiz.title}', ${JSON.stringify(quiz.questions).replace(/"/g, '&quot;')}, '${doc.id}', ${quiz.timer})">Квіз: ${quiz.title} (${quiz.difficulty})${quiz.verified ? '<span class="verified-checkmark">✅</span>' : ''}</a>
+                    <div>
+                        <a href="#" class="quiz-link" onclick="startSinglePlayer('Квіз: ${quiz.title}', ${JSON.stringify(quiz.questions).replace(/"/g, '&quot;')}, '${doc.id}', ${quiz.timer})">Квіз: ${quiz.title} (${quiz.difficulty})${quiz.verified ? '<span class="verified-checkmark">✅</span>' : ''}</a>
+                        ${quiz.description ? `<p class="quiz-description">${quiz.description}</p>` : ''}
+                    </div>
                     <div class="like-dislike-container">
                         <button class="like-button" id="like-${doc.id}" onclick="likeQuizFromCard('${doc.id}')">👍 <span class="like-count" id="like-count-${doc.id}">${quiz.likes || 0}</span></button>
                         <button class="dislike-button" id="dislike-${doc.id}" onclick="dislikeQuizFromCard('${doc.id}')">👎 <span class="dislike-count" id="dislike-count-${doc.id}">${quiz.dislikes || 0}</span></button>

@@ -82,6 +82,7 @@
         .like-button.active{color:#2a9d8f}
         .dislike-button.active{color:#e63946}
         .like-count,.dislike-count{font-size:1em;margin-left:5px}
+        .verified-checkmark{font-size:1em;margin-left:5px;color:#2a9d8f}
         @media (max-width:768px){
             .quiz-card{flex-direction:column;align-items:flex-start}
             .quiz-img{margin-right:0;margin-bottom:10px}
@@ -109,23 +110,23 @@
     <div id="quizList">
         <div class="quiz-card" data-title="Плоскі черви" data-is-community="false">
             <img src="Assets/PlosCherv.jpg" class="quiz-img" alt="Плоскі черви">
-            <a href="Quz/QPlosCherv.html" class="quiz-link">Плоскі черви</a>
+            <a href="#" class="quiz-link" onclick="startSinglePlayer('Плоскі черви', [{question:'Яка основна характеристика плоских червів?',hint:'Подумай про їхню форму.',answers:[{text:'Трьохшарова будова',isCorrect:true},{text:'Сегментоване тіло',isCorrect:false},{text:'Наявність крил',isCorrect:false},{text:'Складна нервова система',isCorrect:false}]},{question:'Який паразит відноситься до плоских червів?',hint:'Він живе в печінці.',answers:[{text:'Печінковий сисун',isCorrect:true},{text:'Дощовий черв’як',isCorrect:false},{text:'Круглий черв’як',isCorrect:false},{text:'Морська зірка',isCorrect:false}]}])">Плоскі черви</a>
         </div>
         <div class="quiz-card" data-title="Розвиток і поведінка тварин" data-is-community="false">
             <img src="Assets/Pets.jpg" class="quiz-img" alt="Розвиток і поведінка тварин">
-            <a href="Quz/QPetInst.html" class="quiz-link">Розвиток і поведінка тварин</a>
+            <a href="#" class="quiz-link" onclick="startSinglePlayer('Розвиток і поведінка тварин', [{question:'Що таке інстинкт?',hint:'Це вроджена поведінка.',answers:[{text:'Вроджена реакція',isCorrect:true},{text:'Навчена поведінка',isCorrect:false},{text:'Соціальна взаємодія',isCorrect:false},{text:'Умовний рефлекс',isCorrect:false}]},{question:'Який тип розвитку характерний для птахів?',hint:'Подумай про яйця.',answers:[{text:'Прямий розвиток',isCorrect:true},{text:'Непрямий розвиток',isCorrect:false},{text:'Метаморфоз',isCorrect:false},{text:'Партеногенез',isCorrect:false}]}])">Розвиток і поведінка тварин</a>
         </div>
         <div class="quiz-card" data-title="Органи та система органів тварин" data-is-community="false">
             <img src="Assets/Pet2.png" class="quiz-img" alt="Органи та система органів тварин">
-            <a href="Quz/QPetOrg.html" class="quiz-link">Органи та система органів тварин</a>
+            <a href="#" class="quiz-link" onclick="startSinglePlayer('Органи та система органів тварин', [{question:'Який орган у риб відповідає за плавучість?',hint:'Він наповнений газом.',answers:[{text:'Плавальний міхур',isCorrect:true},{text:'Зябра',isCorrect:false},{text:'Плавці',isCorrect:false},{text:'Хвіст',isCorrect:false}]},{question:'Яка система відповідає за кровообіг?',hint:'Вона включає серце.',answers:[{text:'Кровоносна',isCorrect:true},{text:'Дихальна',isCorrect:false},{text:'Нервова',isCorrect:false},{text:'Травна',isCorrect:false}]}])">Органи та система органів тварин</a>
         </div>
         <div class="quiz-card" data-title="Комахи різноманітність комах" data-is-community="false">
             <img src="Lesson/Lessons/Assets/InsestSun.JPG" class="quiz-img" alt="Комахи різноманітність комах">
-            <a href="Quz/QPetIn.html" class="quiz-link">Комахи різноманітність комах</a>
+            <a href="#" class="quiz-link" onclick="startSinglePlayer('Комахи різноманітність комах', [{question:'Яка ознака характерна для комах?',hint:'Подумай про їхні ноги.',answers:[{text:'Шість ніг',isCorrect:true},{text:'Вісім ніг',isCorrect:false},{text:'Чотири ноги',isCorrect:false},{text:'Без ніг',isCorrect:false}]},{question:'Який тип розвитку мають метелики?',hint:'Вони проходять через лялечку.',answers:[{text:'Повний метаморфоз',isCorrect:true},{text:'Неповний метаморфоз',isCorrect:false},{text:'Прямий розвиток',isCorrect:false},{text:'Без розвитку',isCorrect:false}]}])">Комахи різноманітність комах</a>
         </div>
         <div class="quiz-card" data-title="Гриби" data-is-community="false">
             <img src="https://city-adm.lviv.ua/images/_news/2017/09/12/GRYBY.jpg" class="quiz-img" alt="Гриби">
-            <a href="Lesson/Lessons/QUZ/MishroomQuz.html" class="quiz-link">Гриби</a>
+            <a href="#" class="quiz-link" onclick="startSinglePlayer('Гриби', [{question:'Яка основна роль грибів у природі?',hint:'Вони розкладають органічні речовини.',answers:[{text:'Декомпозиція',isCorrect:true},{text:'Фотосинтез',isCorrect:false},{text:'Запилення',isCorrect:false},{text:'Симбіоз із тваринами',isCorrect:false}]},{question:'Який гриб є їстівним?',hint:'Його часто додають у страви.',answers:[{text:'Білий гриб',isCorrect:true},{text:'Мухомор',isCorrect:false},{text:'Бліда поганка',isCorrect:false},{text:'Опеньок несправжній',isCorrect:false}]}])">Гриби</a>
         </div>
     </div>
     <div id="authModal" class="modal">
@@ -223,6 +224,9 @@
             <label>Видалити квіз:</label>
             <select id="deleteQuizSelect"><option value="">Виберіть квіз</option></select>
             <button onclick="deleteQuiz()">Видалити</button>
+            <label>Верифікувати квіз:</label>
+            <select id="verifyQuizSelect"><option value="">Виберіть квіз</option></select>
+            <button onclick="toggleVerifyQuiz()">Перемкнути верифікацію</button>
             <label>Статистика:</label>
             <select id="statsQuizSelect"><option value="">Виберіть квіз</option></select>
             <button onclick="showQuizStats()">Показати</button>
@@ -245,7 +249,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, updateProfile, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, addDoc, updateDoc, onSnapshot, query, where, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, addDoc, updateDoc, onSnapshot, query, where, writeBatch, increment } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyDLJGPbMVGY-5b-aRbFlqgYSqn9c8azZ_E",
@@ -371,7 +375,7 @@
                 createQuizModal: ['quizTitle', 'quizImage', 'quizDifficulty', 'quizTimer', 'questionsContainer', 'quizError'],
                 singlePlayerModal: ['score', 'timer', 'feedback', 'progress'],
                 reportModal: ['reportReason', 'reportDetails', 'reportError'],
-                adminModal: ['adminError']
+                adminModal: ['banEmail', 'manageScoreEmail', 'newScore', 'adminError']
             }[id];
             if (fields) fields.forEach(f => {
                 const el = document.getElementById(f);
@@ -466,7 +470,8 @@
                 totalPlays: editingQuizId ? undefined : 0,
                 totalCorrect: editingQuizId ? undefined : 0,
                 likes: editingQuizId ? undefined : 0,
-                dislikes: editingQuizId ? undefined : 0
+                dislikes: editingQuizId ? undefined : 0,
+                verified: editingQuizId ? undefined : false
             };
             try {
                 editingQuizId
@@ -551,7 +556,8 @@
             if (!auth.currentUser) return alert('Увійдіть, щоб грати'), openAuthModal();
             const docSnap = await getDoc(doc(db, 'users', auth.currentUser.uid));
             if (docSnap.exists() && docSnap.data().banned) return alert('Ваш акаунт забанено.');
-            currentQuizQuestions = [...questions].sort(() => Math.random() - 0.5);
+            currentQuizQuestions = Array.isArray(questions) ? [...questions].sort(() => Math.random() - 0.5) : [];
+            if (!currentQuizQuestions.length) return alert('Квіз не містить питань');
             currentQuestionIndex = score = hintsUsed = 0;
             timeLeft = timer || 30;
             currentQuizId = quizId;
@@ -790,6 +796,21 @@
             }
         };
 
+        window.toggleVerifyQuiz = async () => {
+            const quizId = document.getElementById('verifyQuizSelect').value;
+            if (!quizId) return document.getElementById('adminError').textContent = 'Виберіть квіз';
+            const docSnap = await getDoc(doc(db, 'communityQuizzes', quizId));
+            if (!docSnap.exists()) return document.getElementById('adminError').textContent = 'Квіз не знайдено';
+            const quiz = docSnap.data();
+            try {
+                await updateDoc(doc(db, 'communityQuizzes', quizId), { verified: !quiz.verified });
+                document.getElementById('adminError').textContent = `Квіз "${quiz.title}" ${quiz.verified ? 'знято з верифікації' : 'верифіковано'}`;
+                updateQuizSelect();
+            } catch (error) {
+                document.getElementById('adminError').textContent = `Помилка: ${error.message}`;
+            }
+        };
+
         window.showQuizStats = async () => {
             const quizId = document.getElementById('statsQuizSelect').value;
             if (!quizId) return document.getElementById('adminError').textContent = 'Виберіть квіз';
@@ -797,7 +818,7 @@
             if (!docSnap.exists()) return;
             const quiz = docSnap.data();
             const statsDiv = document.getElementById('quizStats');
-            const { totalPlays = 0, totalCorrect = 0, questions } = quiz;
+            const { totalPlays = 0, totalCorrect = 0, questions, verified = false } = quiz;
             const accuracy = totalPlays > 0 ? ((totalCorrect / (totalPlays * questions.length)) * 100).toFixed(2) : 0;
             statsDiv.innerHTML = `
                 <p>Назва: ${quiz.title}</p>
@@ -809,6 +830,7 @@
                 <p>Точність: ${accuracy}%</p>
                 <p>Лайки: ${quiz.likes || 0}</p>
                 <p>Дизлайки: ${quiz.dislikes || 0}</p>
+                <p>Верифіковано: ${verified ? 'Так' : 'Ні'}</p>
             `;
             const snap = await getDocs(collection(db, 'leaderboard', quizId, 'scores'));
             if (snap.docs.length) {
@@ -842,12 +864,12 @@
 
         function updateQuizSelect() {
             getDocs(collection(db, 'communityQuizzes')).then(snap => {
-                ['editQuizSelect', 'deleteQuizSelect', 'statsQuizSelect', 'manageScoreQuizSelect'].forEach(id => {
+                ['editQuizSelect', 'deleteQuizSelect', 'statsQuizSelect', 'manageScoreQuizSelect', 'verifyQuizSelect'].forEach(id => {
                     const select = document.getElementById(id);
                     if (select) {
                         select.innerHTML = '<option value="">Виберіть квіз</option>' + snap.docs.map(doc => {
                             const quiz = doc.data();
-                            return `<option value="${doc.id}">${quiz.title} (Автор: ${quiz.author})</option>`;
+                            return `<option value="${doc.id}">${quiz.title} (Автор: ${quiz.author}${quiz.verified ? ', Верифіковано' : ''})</option>`;
                         }).join('');
                     }
                 });
@@ -860,7 +882,7 @@
                 if (select) {
                     select.innerHTML = '<option value="">Виберіть квіз</option>' + snap.docs.map(doc => {
                         const quiz = doc.data();
-                        return `<option value="${doc.id}">${quiz.title} (Автор: ${quiz.author})</option>`;
+                        return `<option value="${doc.id}">${quiz.title} (Автор: ${quiz.author}${quiz.verified ? ', Верифіковано' : ''})</option>`;
                     }).join('');
                 }
             });
@@ -916,7 +938,7 @@
                 quizCard.dataset.isCommunity = 'true';
                 quizCard.innerHTML = `
                     <img src="${quiz.image}" class="quiz-img" alt="${quiz.title}">
-                    <a href="#" class="quiz-link" onclick="startSinglePlayer('Квіз: ${quiz.title}', ${JSON.stringify(quiz.questions).replace(/"/g, '&quot;')}, '${doc.id}', ${quiz.timer})">Квіз: ${quiz.title} (${quiz.difficulty})</a>
+                    <a href="#" class="quiz-link" onclick="startSinglePlayer('Квіз: ${quiz.title}', ${JSON.stringify(quiz.questions).replace(/"/g, '&quot;')}, '${doc.id}', ${quiz.timer})">Квіз: ${quiz.title} (${quiz.difficulty})${quiz.verified ? '<span class="verified-checkmark">✅</span>' : ''}</a>
                     <div class="like-dislike-container">
                         <button class="like-button" id="like-${doc.id}" onclick="likeQuizFromCard('${doc.id}')">👍 <span class="like-count" id="like-count-${doc.id}">${quiz.likes || 0}</span></button>
                         <button class="dislike-button" id="dislike-${doc.id}" onclick="dislikeQuizFromCard('${doc.id}')">👎 <span class="dislike-count" id="dislike-count-${doc.id}">${quiz.dislikes || 0}</span></button>

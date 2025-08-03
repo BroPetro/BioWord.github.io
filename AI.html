@@ -1,1 +1,283 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Чат</title>
+    <!-- Fallback Tailwind CDN для розробки; у продакшені замініть на <link href="/css/tailwind.css" rel="stylesheet"> -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; margin: 0; height: 100vh; overflow: hidden; }
+        #auth-container { max-width: 400px; margin: 10% auto; padding: 20px; }
+        #chat-container { height: 100vh; display: flex; flex-direction: column; }
+        #chat-messages { flex-grow: 1; overflow-y: auto; padding: 20px; }
+        .message { margin: 15px 10%; padding: 15px; border-radius: 8px; animation: fadeIn 0.3s ease-in; }
+        .user-message { background-color: #3b82f6; color: white; margin-left: 20%; }
+        .ai-message { background-color: #4b5563; color: white; margin-right: 20%; }
+        .typing-indicator { color: #9ca3af; font-style: italic; margin-right: 20%; }
+        .dark .user-message { background-color: #60a5fa; }
+        .dark .ai-message { background-color: #6b7280; }
+        .dark #chat-messages { background-color: #111827; }
+        .dark body { background-color: #111827; color: #f9fafb; }
+        .dark .bg-white { background-color: #1f2937; }
+        .dark .border { border-color: #374151; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 768px) {
+            .message { margin: 15px 5%; }
+            #auth-container { margin: 20% auto; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 transition-colors duration-300">
+    <div id="auth-container" class="bg-white rounded-lg shadow-lg">
+        <h2 class="text-2xl font-bold mb-4 text-center">Увійти або Зареєструватися</h2>
+        <div id="error-message" class="text-red-500 mb-4 hidden text-center"></div>
+        <input id="email" type="email" placeholder="Електронна пошта" class="w-full p-2 mb-4 border rounded">
+        <input id="password" type="password" placeholder="Пароль" class="w-full p-2 mb-4 border rounded">
+        <button id="login-btn" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Увійти</button>
+        <button id="register-btn" class="w-full bg-green-500 text-white p-2 rounded mt-2 hover:bg-green-600">Зареєструватися</button>
+        <button id="logout-btn" class="w-full bg-red-500 text-white p-2 rounded mt-2 hidden hover:bg-red-600">Вийти</button>
+    </div>
 
+    <div id="chat-container" class="hidden">
+        <div class="flex justify-end p-4 bg-white dark:bg-gray-800 border-b dark:border-gray-700">
+            <button id="theme-toggle" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 mr-2">Темна тема</button>
+            <button id="clear-chat" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Очистити чат</button>
+        </div>
+        <div id="chat-messages" class="bg-white"></div>
+        <div class="p-4 bg-white dark:bg-gray-800 border-t dark:border-gray-700">
+            <div class="flex max-w-4xl mx-auto">
+                <input id="user-input" type="text" placeholder="Введіть ваше повідомлення..." class="flex-grow p-3 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button id="send-btn" class="bg-blue-500 text-white p-3 rounded-r-lg hover:bg-blue-600">Надіслати</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase SDKs
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDLJGPbMVGY-5b-aRbFlqgYSqn9c8azZ_E",
+            authDomain: "bioworld-1.firebaseapp.com",
+            projectId: "bioworld-1",
+            storageBucket: "bioworld-1.firebasestorage.app",
+            messagingSenderId: "691211086040",
+            appId: "1:691211086040:web:223d95ed60aea986788fad",
+            measurementId: "G-DLB6CX8QT6"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // DOM elements
+        const authContainer = document.getElementById('auth-container');
+        const chatContainer = document.getElementById('chat-container');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const errorMessage = document.getElementById('error-message');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const chatMessages = document.getElementById('chat-messages');
+        const themeToggle = document.getElementById('theme-toggle');
+        const clearChatBtn = document.getElementById('clear-chat');
+
+        // Gemini AI API configuration
+        const GEMINI_API_KEY = 'AIzaSyCrufk6-RPIffc4-g9LJVrYWsNvtxpo48M';
+        const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+
+        // Theme toggle
+        let isDarkTheme = false;
+        themeToggle.addEventListener('click', () => {
+            isDarkTheme = !isDarkTheme;
+            document.body.classList.toggle('dark');
+            themeToggle.textContent = isDarkTheme ? 'Світла тема' : 'Темна тема';
+        });
+
+        // Authentication state listener
+        let unsubscribeChatHistory = null;
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                authContainer.classList.add('hidden');
+                chatContainer.classList.remove('hidden');
+                logoutBtn.classList.remove('hidden');
+                loadChatHistory(user.uid);
+            } else {
+                authContainer.classList.remove('hidden');
+                chatContainer.classList.add('hidden');
+                logoutBtn.classList.add('hidden');
+                chatMessages.innerHTML = '';
+                if (unsubscribeChatHistory) {
+                    unsubscribeChatHistory();
+                    unsubscribeChatHistory = null;
+                }
+            }
+        });
+
+        // Login
+        loginBtn.addEventListener('click', () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            signInWithEmailAndPassword(auth, email, password)
+                .catch((error) => {
+                    errorMessage.textContent = error.message;
+                    errorMessage.classList.remove('hidden');
+                });
+        });
+
+        // Register
+        registerBtn.addEventListener('click', () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            createUserWithEmailAndPassword(auth, email, password)
+                .catch((error) => {
+                    errorMessage.textContent = error.message;
+                    errorMessage.classList.remove('hidden');
+                });
+        });
+
+        // Logout
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth);
+        });
+
+        // Clear chat history
+        clearChatBtn.addEventListener('click', async () => {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const chatRef = collection(db, `chatHistory/${user.uid}/messages`);
+            const snapshot = await getDocs(chatRef);
+            const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+            await Promise.all(deletePromises);
+            chatMessages.innerHTML = '';
+        });
+
+        // Debounce function to prevent multiple rapid clicks
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Send message with debounce
+        const sendMessage = debounce(async () => {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            const user = auth.currentUser;
+            if (!user) return;
+
+            // Disable send button and show typing indicator
+            sendBtn.disabled = true;
+            displayMessage('AI набирає...', 'typing-indicator');
+
+            // Display user message
+            displayMessage(message, 'user-message');
+
+            // Save user message to Firestore
+            await saveMessage(user.uid, message, 'user');
+
+            // Call Gemini AI API
+            try {
+                const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: message }] }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const aiResponse = data.candidates[0].content.parts[0].text;
+
+                // Remove typing indicator
+                const typingIndicator = chatMessages.querySelector('.typing-indicator');
+                if (typingIndicator) typingIndicator.remove();
+
+                // Display AI response
+                displayMessage(aiResponse, 'ai-message');
+
+                // Save AI response to Firestore
+                await saveMessage(user.uid, aiResponse, 'ai');
+            } catch (error) {
+                // Remove typing indicator
+                const typingIndicator = chatMessages.querySelector('.typing-indicator');
+                if (typingIndicator) typingIndicator.remove();
+
+                displayMessage('Помилка зв’язку з AI: ' + error.message, 'ai-message');
+            }
+
+            userInput.value = '';
+            sendBtn.disabled = false;
+        }, 2000);
+
+        // Attach send message handler
+        sendBtn.removeEventListener('click', sendMessage);
+        sendBtn.addEventListener('click', sendMessage);
+
+        // Allow sending message with Enter key
+        userInput.removeEventListener('keypress', handleKeyPress);
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        userInput.addEventListener('keypress', handleKeyPress);
+
+        // Display message in chat
+        function displayMessage(text, className) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${className}`;
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Save message to Firestore
+        async function saveMessage(userId, text, sender) {
+            const chatRef = collection(db, `chatHistory/${userId}/messages`);
+            await addDoc(chatRef, {
+                text: text,
+                sender: sender,
+                timestamp: new Date()
+            });
+        }
+
+        // Load chat history
+        function loadChatHistory(userId) {
+            if (unsubscribeChatHistory) {
+                unsubscribeChatHistory();
+            }
+            const chatRef = collection(db, `chatHistory/${userId}/messages`);
+            const q = query(chatRef, orderBy('timestamp', 'asc'));
+            unsubscribeChatHistory = onSnapshot(q, (snapshot) => {
+                chatMessages.innerHTML = ''; // Clear existing messages to prevent duplication
+                snapshot.forEach((doc) => {
+                    const message = doc.data();
+                    const className = message.sender === 'user' ? 'user-message' : 'ai-message';
+                    displayMessage(message.text, className);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

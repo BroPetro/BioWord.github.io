@@ -587,14 +587,13 @@
     <div id="communityLessons" style="display: none;"></div>
     <!-- Firebase SDK -->
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, updateProfile, signOut } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
-        import { getDatabase, ref, push, onValue, update, get, set, remove } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, updateProfile, signOut } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, getDoc, deleteDoc, setDoc, query, orderBy, collectionGroup, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyDLJGPbMVGY-5b-aRbFlqgYSqn9c8azZ_E",
             authDomain: "bioworld-1.firebaseapp.com",
-            databaseURL: "https://bioworld-1-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "bioworld-1",
             storageBucket: "bioworld-1.firebasestorage.app",
             messagingSenderId: "691211086040",
@@ -604,174 +603,161 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const database = getDatabase(app);
+        const db = getFirestore(app);
         const ADMIN_EMAIL = 'petro.hryhorenko@gmail.com';
         let currentLessonId = null;
 
-        // Authentication functions
-        window.prepareSignUp = function() {
-            document.getElementById('authTitle').textContent = 'Реєстрація';
-            document.getElementById('nicknameInput').style.display = 'block';
-            document.getElementById('signInButton').style.display = 'none';
-            document.getElementById('signUpButton').onclick = signUp;
+        // Authentication
+        window.prepareSignUp = () => {
+            const authModal = document.getElementById('authModal');
+            authModal.querySelector('#authTitle').textContent = 'Реєстрація';
+            authModal.querySelector('#nicknameInput').style.display = 'block';
+            authModal.querySelector('#signInButton').style.display = 'none';
+            authModal.querySelector('#signUpButton').onclick = signUp;
         };
 
-        window.signIn = function() {
+        window.signIn = async () => {
             const email = document.getElementById('emailInput').value.trim();
             const password = document.getElementById('passwordInput').value.trim();
-            signInWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    if (!user.displayName) {
-                        document.getElementById('nicknameModal').style.display = 'flex';
-                    }
-                    closeAuthModal();
-                    set(ref(database, `users/${user.uid}/lastActivity`), new Date().toISOString());
-                })
-                .catch((error) => {
-                    document.getElementById('authError').textContent = 'Помилка входу: ' + error.message;
-                });
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                if (!user.displayName) document.getElementById('nicknameModal').style.display = 'flex';
+                closeAuthModal();
+                await setDoc(doc(db, 'users', user.uid), { lastActivity: new Date().toISOString() }, { merge: true });
+            } catch (error) {
+                document.getElementById('authError').textContent = 'Помилка входу: ' + error.message;
+            }
         };
 
-        window.signUp = function() {
+        window.signUp = async () => {
             const email = document.getElementById('emailInput').value.trim();
             const password = document.getElementById('passwordInput').value.trim();
             const nickname = document.getElementById('nicknameInput').value.trim();
             if (!nickname) {
-                document.getElementById('authError').textContent = 'Введіть нікнейм для реєстрації';
+                document.getElementById('authError').textContent = 'Введіть нікнейм';
                 return;
             }
-            createUserWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    return Promise.all([
-                        updateProfile(user, { displayName: nickname }),
-                        set(ref(database, `users/${user.uid}`), {
-                            nickname: nickname,
-                            email: email,
-                            registrationDate: new Date().toISOString(),
-                            darkTheme: false,
-                            banned: false,
-                            lastActivity: new Date().toISOString()
-                        })
-                    ]);
-                })
-                .then(() => {
-                    closeAuthModal();
-                })
-                .catch((error) => {
-                    document.getElementById('authError').textContent = 'Помилка реєстрації: ' + error.message;
-                });
-        };
-
-        window.saveNickname = function() {
-            const nickname = document.getElementById('nicknameInputModal').value.trim();
-            if (nickname) {
-                updateProfile(auth.currentUser, { displayName: nickname })
-                    .then(() => {
-                        update(ref(database, `users/${auth.currentUser.uid}`), { nickname: nickname });
-                        closeModal('nicknameModal');
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                await Promise.all([
+                    updateProfile(user, { displayName: nickname }),
+                    setDoc(doc(db, 'users', user.uid), {
+                        nickname, email, registrationDate: new Date().toISOString(), darkTheme: false, banned: false, lastActivity: new Date().toISOString()
                     })
-                    .catch((error) => {
-                        document.getElementById('nicknameError').textContent = 'Помилка: ' + error.message;
-                    });
-            } else {
-                document.getElementById('nicknameError').textContent = 'Введіть нікнейм';
+                ]);
+                closeAuthModal();
+            } catch (error) {
+                document.getElementById('authError').textContent = 'Помилка реєстрації: ' + error.message;
             }
         };
 
-        window.signOutUser = function() {
-            set(ref(database, `users/${auth.currentUser.uid}/lastActivity`), new Date().toISOString())
-                .then(() => {
-                    signOut(auth).then(() => {
-                        updateAccountPanel(null);
-                    }).catch((error) => {
-                        alert('Помилка виходу: ' + error.message);
-                    });
-                });
+        window.saveNickname = async () => {
+            const nickname = document.getElementById('nicknameInputModal').value.trim();
+            if (!nickname) {
+                document.getElementById('nicknameError').textContent = 'Введіть нікнейм';
+                return;
+            }
+            try {
+                await updateProfile(auth.currentUser, { displayName: nickname });
+                await setDoc(doc(db, 'users', auth.currentUser.uid), { nickname }, { merge: true });
+                closeModal('nicknameModal');
+            } catch (error) {
+                document.getElementById('nicknameError').textContent = 'Помилка: ' + error.message;
+            }
+        };
+
+        window.signOutUser = async () => {
+            try {
+                await setDoc(doc(db, 'users', auth.currentUser.uid), { lastActivity: new Date().toISOString() }, { merge: true });
+                await signOut(auth);
+                updateAccountPanel(null);
+            } catch (error) {
+                alert('Помилка виходу: ' + error.message);
+            }
         };
 
         // Modal functions
-        window.openAuthModal = function() {
-            document.getElementById('authTitle').textContent = 'Увійти або Зареєструватися';
-            document.getElementById('nicknameInput').style.display = 'none';
-            document.getElementById('signInButton').style.display = 'inline-block';
-            document.getElementById('signUpButton').onclick = prepareSignUp;
-            document.getElementById('authModal').style.display = 'flex';
-            document.getElementById('authError').textContent = '';
+        window.openAuthModal = () => {
+            const authModal = document.getElementById('authModal');
+            authModal.querySelector('#authTitle').textContent = 'Увійти або Зареєструватися';
+            authModal.querySelector('#nicknameInput').style.display = 'none';
+            authModal.querySelector('#signInButton').style.display = 'inline-block';
+            authModal.querySelector('#signUpButton').onclick = prepareSignUp;
+            authModal.style.display = 'flex';
+            authModal.querySelector('#authError').textContent = '';
         };
 
-        window.closeAuthModal = function() {
-            document.getElementById('authModal').style.display = 'none';
-            document.getElementById('emailInput').value = '';
-            document.getElementById('passwordInput').value = '';
-            document.getElementById('nicknameInput').value = '';
-            document.getElementById('authError').textContent = '';
+        window.closeAuthModal = () => {
+            const authModal = document.getElementById('authModal');
+            authModal.style.display = 'none';
+            authModal.querySelector('#emailInput').value = '';
+            authModal.querySelector('#passwordInput').value = '';
+            authModal.querySelector('#nicknameInput').value = '';
+            authModal.querySelector('#authError').textContent = '';
         };
 
-        window.closeModal = function(modalId) {
-            document.getElementById(modalId).style.display = 'none';
+        window.closeModal = (modalId) => {
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'none';
             if (modalId === 'nicknameModal') {
-                document.getElementById('nicknameInputModal').value = '';
-                document.getElementById('nicknameError').textContent = '';
+                modal.querySelector('#nicknameInputModal').value = '';
+                modal.querySelector('#nicknameError').textContent = '';
             } else if (modalId === 'adminModal') {
-                document.getElementById('adminError').textContent = '';
+                modal.querySelector('#adminError').textContent = '';
             }
         };
 
-        window.openCreateLessonModal = function() {
+        window.openCreateLessonModal = async () => {
             if (!auth.currentUser) {
                 alert('Увійдіть, щоб створити урок');
                 openAuthModal();
                 return;
             }
-            get(ref(database, `users/${auth.currentUser.uid}/banned`)).then(snapshot => {
-                if (snapshot.val()) {
-                    alert('Ваш акаунт забанено. Ви не можете створювати уроки.');
-                    return;
-                }
-                document.getElementById('createLessonModal').style.display = 'flex';
-            });
+            const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+            if (userDoc.data()?.banned) {
+                alert('Ваш акаунт забанено. Ви не можете створювати уроки.');
+                return;
+            }
+            document.getElementById('createLessonModal').style.display = 'flex';
         };
 
-        window.closeCreateLessonModal = function() {
-            document.getElementById('createLessonModal').style.display = 'none';
-            document.getElementById('lessonTitle').value = '';
-            document.getElementById('lessonImage').value = '';
-            document.getElementById('lessonDescription').value = '';
+        window.closeCreateLessonModal = () => {
+            const modal = document.getElementById('createLessonModal');
+            modal.style.display = 'none';
+            modal.querySelector('#lessonTitle').value = '';
+            modal.querySelector('#lessonImage').value = '';
+            modal.querySelector('#lessonDescription').value = '';
         };
 
-        window.openDescriptionModal = async function(title, image, description, author, timestamp, lessonId = null) {
-            document.getElementById('lessonDescriptionTitle').textContent = title;
-            document.getElementById('lessonDescriptionImage').src = image;
-            document.getElementById('lessonDescriptionContent').innerHTML = description.replace(/\n/g, '<br>');
-            document.getElementById('lessonAuthor').textContent = author ? `Автор: ${author}` : '';
-            document.getElementById('lessonCreatedDate').textContent = timestamp ? `Створено: ${new Date(timestamp).toLocaleString('uk-UA')}` : '';
+        window.openDescriptionModal = async (title, image, description, author, timestamp, lessonId = null) => {
+            const modal = document.getElementById('lessonDescriptionModal');
+            modal.querySelector('#lessonDescriptionTitle').textContent = title;
+            modal.querySelector('#lessonDescriptionImage').src = image;
+            modal.querySelector('#lessonDescriptionContent').innerHTML = description.replace(/\n/g, '<br>');
+            modal.querySelector('#lessonAuthor').textContent = author ? `Автор: ${author}` : '';
+            modal.querySelector('#lessonCreatedDate').textContent = timestamp ? `Створено: ${new Date(timestamp).toLocaleString('uk-UA')}` : '';
             currentLessonId = lessonId;
-            const commentInputContainer = document.getElementById('commentInputContainer');
+            const commentInputContainer = modal.querySelector('#commentInputContainer');
             if (auth.currentUser && lessonId) {
-                get(ref(database, `users/${auth.currentUser.uid}/banned`)).then(snapshot => {
-                    if (snapshot.val()) {
-                        commentInputContainer.style.display = 'none';
-                        alert('Ваш акаунт забанено. Ви не можете коментувати.');
-                    } else {
-                        commentInputContainer.style.display = 'flex';
-                    }
-                });
+                const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+                commentInputContainer.style.display = userDoc.data()?.banned ? 'none' : 'flex';
+                if (userDoc.data()?.banned) alert('Ваш акаунт забанено. Ви не можете коментувати.');
             } else {
                 commentInputContainer.style.display = 'none';
             }
             await loadComments(lessonId);
-            document.getElementById('lessonDescriptionModal').style.display = 'flex';
+            modal.style.display = 'flex';
         };
 
-        window.closeDescriptionModal = function() {
+        window.closeDescriptionModal = () => {
             document.getElementById('lessonDescriptionModal').style.display = 'none';
             currentLessonId = null;
         };
 
-        // Admin panel functions
-        window.openAdminPanel = function() {
+        // Admin panel
+        window.openAdminPanel = () => {
             if (!auth.currentUser || auth.currentUser.email !== ADMIN_EMAIL) {
                 alert('Доступ заборонено');
                 return;
@@ -782,142 +768,118 @@
             showUserActivity();
         };
 
-        window.banUser = function() {
+        window.banUser = async () => {
             const email = document.getElementById('banEmail').value.trim();
+            const adminError = document.getElementById('adminError');
             if (!email) {
-                document.getElementById('adminError').textContent = 'Введіть електронну пошту';
+                adminError.textContent = 'Введіть електронну пошту';
                 return;
             }
-            get(ref(database, 'users')).then(snapshot => {
-                const users = snapshot.val();
-                const userId = Object.keys(users).find(uid => users[uid].email === email);
-                if (userId) {
-                    set(ref(database, `users/${userId}/banned`), true)
-                        .then(() => {
-                            document.getElementById('adminError').textContent = `Користувача ${email} забанено`;
-                            document.getElementById('banEmail').value = '';
-                            showUserActivity();
-                        })
-                        .catch(error => {
-                            document.getElementById('adminError').textContent = 'Помилка: ' + error.message;
-                        });
-                } else {
-                    document.getElementById('adminError').textContent = 'Користувача не знайдено';
-                }
-            });
-        };
-
-        window.unbanUser = function() {
-            const email = document.getElementById('banEmail').value.trim();
-            if (!email) {
-                document.getElementById('adminError').textContent = 'Введіть електронну пошту';
+            const querySnapshot = await getDocs(collection(db, 'users'));
+            const userDoc = querySnapshot.docs.find(d => d.data().email === email);
+            if (!userDoc) {
+                adminError.textContent = 'Користувача не знайдено';
                 return;
             }
-            get(ref(database, 'users')).then(snapshot => {
-                const users = snapshot.val();
-                const userId = Object.keys(users).find(uid => users[uid].email === email);
-                if (userId) {
-                    set(ref(database, `users/${userId}/banned`), false)
-                        .then(() => {
-                            document.getElementById('adminError').textContent = `Користувача ${email} розбанено`;
-                            document.getElementById('banEmail').value = '';
-                            showUserActivity();
-                        })
-                        .catch(error => {
-                            document.getElementById('adminError').textContent = 'Помилка: ' + error.message;
-                        });
-                } else {
-                    document.getElementById('adminError').textContent = 'Користувача не знайдено';
-                }
-            });
+            try {
+                await setDoc(doc(db, 'users', userDoc.id), { banned: true }, { merge: true });
+                adminError.textContent = `Користувача ${email} забанено`;
+                document.getElementById('banEmail').value = '';
+                showUserActivity();
+            } catch (error) {
+                adminError.textContent = 'Помилка: ' + error.message;
+            }
         };
 
-        window.deleteCommunityLesson = function() {
+        window.unbanUser = async () => {
+            const email = document.getElementById('banEmail').value.trim();
+            const adminError = document.getElementById('adminError');
+            if (!email) {
+                adminError.textContent = 'Введіть електронну пошту';
+                return;
+            }
+            const querySnapshot = await getDocs(collection(db, 'users'));
+            const userDoc = querySnapshot.docs.find(d => d.data().email === email);
+            if (!userDoc) {
+                adminError.textContent = 'Користувача не знайдено';
+                return;
+            }
+            try {
+                await setDoc(doc(db, 'users', userDoc.id), { banned: false }, { merge: true });
+                adminError.textContent = `Користувача ${email} розбанено`;
+                document.getElementById('banEmail').value = '';
+                showUserActivity();
+            } catch (error) {
+                adminError.textContent = 'Помилка: ' + error.message;
+            }
+        };
+
+        window.deleteCommunityLesson = async () => {
             const lessonId = document.getElementById('deleteLessonSelect').value;
+            const adminError = document.getElementById('adminError');
             if (!lessonId) {
-                document.getElementById('adminError').textContent = 'Виберіть урок';
+                adminError.textContent = 'Виберіть урок';
                 return;
             }
-            get(ref(database, `communityLessons/${lessonId}`)).then(snapshot => {
-                const lesson = snapshot.val();
-                remove(ref(database, `communityLessons/${lessonId}`)).then(() => {
-                    document.getElementById('adminError').textContent = `Урок "${lesson.title}" видалено`;
-                    updateLessonSelect();
-                }).catch(error => {
-                    document.getElementById('adminError').textContent = 'Помилка: ' + error.message;
-                });
-            });
+            try {
+                const lessonDoc = await getDoc(doc(db, 'communityLessons', lessonId));
+                await deleteDoc(doc(db, 'communityLessons', lessonId));
+                adminError.textContent = `Урок "${lessonDoc.data().title}" видалено`;
+                updateLessonSelect();
+            } catch (error) {
+                adminError.textContent = 'Помилка: ' + error.message;
+            }
         };
 
-        window.deleteComment = function() {
+        window.deleteComment = async () => {
             const commentId = document.getElementById('deleteCommentSelect').value;
+            const adminError = document.getElementById('adminError');
             if (!commentId) {
-                document.getElementById('adminError').textContent = 'Виберіть коментар';
+                adminError.textContent = 'Виберіть коментар';
                 return;
             }
             const [lessonId, commentKey] = commentId.split(':');
-            get(ref(database, `communityLessons/${lessonId}/comments/${commentKey}`)).then(snapshot => {
-                const comment = snapshot.val();
-                remove(ref(database, `communityLessons/${lessonId}/comments/${commentKey}`)).then(() => {
-                    document.getElementById('adminError').textContent = `Коментар "${comment.text.substring(0, 50)}..." видалено`;
-                    updateCommentSelect();
-                    if (currentLessonId === lessonId) {
-                        loadComments(lessonId);
-                    }
-                }).catch(error => {
-                    document.getElementById('adminError').textContent = 'Помилка: ' + error.message;
-                });
+            try {
+                const commentDoc = await getDoc(doc(db, 'communityLessons', lessonId, 'comments', commentKey));
+                await deleteDoc(doc(db, 'communityLessons', lessonId, 'comments', commentKey));
+                adminError.textContent = `Коментар "${commentDoc.data().text.substring(0, 50)}..." видалено`;
+                updateCommentSelect();
+                if (currentLessonId === lessonId) loadComments(lessonId);
+            } catch (error) {
+                adminError.textContent = 'Помилка: ' + error.message;
+            }
+        };
+
+        window.showUserActivity = async () => {
+            const activityDiv = document.getElementById('userActivity');
+            activityDiv.innerHTML = '';
+            const querySnapshot = await getDocs(collection(db, 'users'));
+            querySnapshot.forEach(doc => {
+                const user = doc.data();
+                const lastActivity = user.lastActivity ? new Date(user.lastActivity).toLocaleString('uk-UA') : 'Немає даних';
+                const status = user.banned ? ' (Забанено)' : '';
+                activityDiv.innerHTML += `<p>${user.nickname || user.email}: ${lastActivity}${status}</p>`;
             });
         };
 
-        window.showUserActivity = function() {
-            get(ref(database, 'users')).then(snapshot => {
-                const users = snapshot.val();
-                const activityDiv = document.getElementById('userActivity');
-                activityDiv.innerHTML = '';
-                Object.entries(users).forEach(([uid, user]) => {
-                    const lastActivity = user.lastActivity ? new Date(user.lastActivity).toLocaleString('uk-UA') : 'Немає даних';
-                    const status = user.banned ? ' (Забанено)' : '';
-                    const p = document.createElement('p');
-                    p.textContent = `${user.nickname || user.email}: ${lastActivity}${status}`;
-                    activityDiv.appendChild(p);
-                });
-            });
-        };
-
-        function updateLessonSelect() {
-            get(ref(database, 'communityLessons')).then(snapshot => {
-                const lessons = snapshot.val();
-                const lessonSelect = document.getElementById('deleteLessonSelect');
-                lessonSelect.innerHTML = '<option value="">Виберіть урок</option>';
-                if (lessons) {
-                    Object.entries(lessons).forEach(([key, lesson]) => {
-                        const option = document.createElement('option');
-                        option.value = key;
-                        option.textContent = `${lesson.title} (Автор: ${lesson.author})`;
-                        lessonSelect.appendChild(option);
-                    });
-                }
+        async function updateLessonSelect() {
+            const lessonSelect = document.getElementById('deleteLessonSelect');
+            lessonSelect.innerHTML = '<option value="">Виберіть урок</option>';
+            const querySnapshot = await getDocs(collection(db, 'communityLessons'));
+            querySnapshot.forEach(doc => {
+                const lesson = doc.data();
+                lessonSelect.innerHTML += `<option value="${doc.id}">${lesson.title} (Автор: ${lesson.author})</option>`;
             });
         }
 
-        function updateCommentSelect() {
-            get(ref(database, 'communityLessons')).then(snapshot => {
-                const lessons = snapshot.val();
-                const commentSelect = document.getElementById('deleteCommentSelect');
-                commentSelect.innerHTML = '<option value="">Виберіть коментар</option>';
-                if (lessons) {
-                    Object.entries(lessons).forEach(([lessonId, lesson]) => {
-                        if (lesson.comments) {
-                            Object.entries(lesson.comments).forEach(([commentId, comment]) => {
-                                const option = document.createElement('option');
-                                option.value = `${lessonId}:${commentId}`;
-                                option.textContent = `${lesson.title}: ${comment.text.substring(0, 50)}... (Автор: ${comment.author})`;
-                                commentSelect.appendChild(option);
-                            });
-                        }
-                    });
-                }
+        async function updateCommentSelect() {
+            const commentSelect = document.getElementById('deleteCommentSelect');
+            commentSelect.innerHTML = '<option value="">Виберіть коментар</option>';
+            const querySnapshot = await getDocs(collectionGroup(db, 'comments'));
+            querySnapshot.forEach(doc => {
+                const comment = doc.data();
+                const lessonId = doc.ref.parent.parent.id;
+                commentSelect.innerHTML += `<option value="${lessonId}:${doc.id}">${comment.text.substring(0, 50)}... (Автор: ${comment.author})</option>`;
             });
         }
 
@@ -926,92 +888,83 @@
             const userName = document.getElementById('userName');
             const authButton = document.getElementById('authButton');
             const adminBtn = document.getElementById('adminBtn');
-            if (user) {
-                userName.textContent = user.displayName || user.email;
-                authButton.textContent = 'Вийти';
-                authButton.onclick = signOutUser;
-                adminBtn.style.display = user.email === ADMIN_EMAIL ? 'block' : 'none';
-            } else {
-                userName.textContent = 'Гість';
-                authButton.textContent = 'Увійти';
-                authButton.onclick = openAuthModal;
-                adminBtn.style.display = 'none';
-            }
+            userName.textContent = user ? user.displayName || user.email : 'Гість';
+            authButton.textContent = user ? 'Вийти' : 'Увійти';
+            authButton.onclick = user ? signOutUser : openAuthModal;
+            adminBtn.style.display = user && user.email === ADMIN_EMAIL ? 'block' : 'none';
         }
 
         // Create community lesson
-        window.createCommunityLesson = async function() {
+        window.createCommunityLesson = async () => {
             const user = auth.currentUser;
             if (!user) {
-                alert('Будь ласка, увійдіть, щоб створити урок');
+                alert('Увійдіть, щоб створити урок');
                 closeCreateLessonModal();
                 openAuthModal();
                 return;
             }
-            get(ref(database, `users/${user.uid}/banned`)).then(snapshot => {
-                if (snapshot.val()) {
-                    alert('Ваш акаунт забанено. Ви не можете створювати уроки.');
-                    closeCreateLessonModal();
-                    return;
-                }
-                const title = document.getElementById('lessonTitle').value.trim();
-                const image = document.getElementById('lessonImage').value.trim();
-                const description = document.getElementById('lessonDescription').value.trim();
-                if (title && image && description) {
-                    push(ref(database, 'communityLessons'), {
-                        title: title,
-                        image: image,
-                        description: description,
-                        author: user.displayName || user.email,
-                        userId: user.uid,
-                        timestamp: new Date().toISOString(),
-                        likes: 0,
-                        dislikes: 0,
-                        userVotes: {}
-                    }).then(() => {
-                        closeCreateLessonModal();
-                    }).catch(error => {
-                        alert('Помилка створення уроку: ' + error.message);
-                    });
-                } else {
-                    alert('Заповніть усі поля');
-                }
-            });
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.data()?.banned) {
+                alert('Ваш акаунт забанено. Ви не можете створювати уроки.');
+                closeCreateLessonModal();
+                return;
+            }
+            const title = document.getElementById('lessonTitle').value.trim();
+            const image = document.getElementById('lessonImage').value.trim();
+            const description = document.getElementById('lessonDescription').value.trim();
+            if (!title || !image || !description) {
+                alert('Заповніть усі поля');
+                return;
+            }
+            try {
+                await addDoc(collection(db, 'communityLessons'), {
+                    title, image, description,
+                    author: user.displayName || user.email,
+                    userId: user.uid,
+                    timestamp: new Date().toISOString(),
+                    likes: 0,
+                    dislikes: 0,
+                    userVotes: {}
+                });
+                closeCreateLessonModal();
+            } catch (error) {
+                alert('Помилка створення уроку: ' + error.message);
+            }
         };
 
         // Submit comment
-        window.submitComment = async function() {
+        window.submitComment = async () => {
             const user = auth.currentUser;
             if (!user || !currentLessonId) {
                 alert('Увійдіть, щоб залишити коментар');
                 openAuthModal();
                 return;
             }
-            get(ref(database, `users/${user.uid}/banned`)).then(snapshot => {
-                if (snapshot.val()) {
-                    alert('Ваш акаунт забанено. Ви не можете коментувати.');
-                    return;
-                }
-                const commentText = document.getElementById('commentInput').value.trim();
-                if (!commentText) {
-                    alert('Введіть текст коментаря');
-                    return;
-                }
-                push(ref(database, `communityLessons/${currentLessonId}/comments`), {
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.data()?.banned) {
+                alert('Ваш акаунт забанено. Ви не можете коментувати.');
+                return;
+            }
+            const commentText = document.getElementById('commentInput').value.trim();
+            if (!commentText) {
+                alert('Введіть текст коментаря');
+                return;
+            }
+            try {
+                await addDoc(collection(db, 'communityLessons', currentLessonId, 'comments'), {
                     text: commentText,
                     author: user.displayName || user.email,
                     userId: user.uid,
                     timestamp: new Date().toISOString()
-                }).then(() => {
-                    document.getElementById('commentInput').value = '';
-                    loadComments(currentLessonId);
-                }).catch(error => {
-                    alert('Помилка додавання коментаря: ' + error.message);
                 });
-            });
+                document.getElementById('commentInput').value = '';
+                loadComments(currentLessonId);
+            } catch (error) {
+                alert('Помилка додавання коментаря: ' + error.message);
+            }
         };
 
-        window.cancelComment = function() {
+        window.cancelComment = () => {
             document.getElementById('commentInput').value = '';
         };
 
@@ -1020,13 +973,11 @@
             const commentsList = document.getElementById('commentsList');
             commentsList.innerHTML = '';
             if (!lessonId) return;
-            const snapshot = await get(ref(database, `communityLessons/${lessonId}/comments`));
-            const comments = snapshot.val();
-            if (comments) {
-                Object.values(comments).forEach(comment => {
-                    const commentDiv = document.createElement('div');
-                    commentDiv.className = 'comment';
-                    commentDiv.innerHTML = `
+            const querySnapshot = await getDocs(query(collection(db, 'communityLessons', lessonId, 'comments'), orderBy('timestamp')));
+            querySnapshot.forEach(doc => {
+                const comment = doc.data();
+                commentsList.innerHTML += `
+                    <div class="comment">
                         <div class="comment-avatar"></div>
                         <div class="comment-content">
                             <div class="comment-header">
@@ -1035,119 +986,94 @@
                             </div>
                             <div class="comment-text">${comment.text.replace(/\n/g, '<br>')}</div>
                         </div>
-                    `;
-                    commentsList.appendChild(commentDiv);
-                });
-            }
+                    </div>`;
+            });
         }
 
-        // Like/Dislike functions
-        window.toggleLike = async function(lessonId, currentUserId) {
-            if (!currentUserId) {
+        // Like/Dislike
+        window.toggleLike = async (lessonId, userId) => {
+            if (!userId) {
                 alert('Увійдіть, щоб поставити оцінку');
                 openAuthModal();
                 return;
             }
-            get(ref(database, `users/${currentUserId}/banned`)).then(snapshot => {
-                if (snapshot.val()) {
-                    alert('Ваш акаунт забанено. Ви не можете ставити оцінки.');
-                    return;
-                }
-                const lessonRef = ref(database, `communityLessons/${lessonId}`);
-                get(lessonRef).then(snapshot => {
-                    const lesson = snapshot.val();
-                    if (!lesson) return;
-                    const userVotes = lesson.userVotes || {};
-                    if (userVotes[currentUserId] === 'like') {
-                        userVotes[currentUserId] = null;
-                        lesson.likes -= 1;
-                    } else if (userVotes[currentUserId] === 'dislike') {
-                        userVotes[currentUserId] = 'like';
-                        lesson.dislikes -= 1;
-                        lesson.likes += 1;
-                    } else {
-                        userVotes[currentUserId] = 'like';
-                        lesson.likes += 1;
-                    }
-                    update(lessonRef, { likes: lesson.likes, dislikes: lesson.dislikes, userVotes });
-                });
-            });
+            const userDoc = await getDoc(doc(db, 'users', userId));
+            if (userDoc.data()?.banned) {
+                alert('Ваш акаунт забанено. Ви не можете ставити оцінки.');
+                return;
+            }
+            const lessonRef = doc(db, 'communityLessons', lessonId);
+            const lessonDoc = await getDoc(lessonRef);
+            const lesson = lessonDoc.data();
+            const userVotes = lesson.userVotes || {};
+            let { likes, dislikes } = lesson;
+            if (userVotes[userId] === 'like') {
+                userVotes[userId] = null;
+                likes -= 1;
+            } else {
+                userVotes[userId] = 'like';
+                likes += 1;
+                if (userVotes[userId] === 'dislike') dislikes -= 1;
+            }
+            await updateDoc(lessonRef, { likes, dislikes, userVotes });
         };
 
-        window.toggleDislike = async function(lessonId, currentUserId) {
-            if (!currentUserId) {
+        window.toggleDislike = async (lessonId, userId) => {
+            if (!userId) {
                 alert('Увійдіть, щоб поставити оцінку');
                 openAuthModal();
                 return;
             }
-            get(ref(database, `users/${currentUserId}/banned`)).then(snapshot => {
-                if (snapshot.val()) {
-                    alert('Ваш акаунт забанено. Ви не можете ставити оцінки.');
-                    return;
-                }
-                const lessonRef = ref(database, `communityLessons/${lessonId}`);
-                get(lessonRef).then(snapshot => {
-                    const lesson = snapshot.val();
-                    if (!lesson) return;
-                    const userVotes = lesson.userVotes || {};
-                    if (userVotes[currentUserId] === 'dislike') {
-                        userVotes[currentUserId] = null;
-                        lesson.dislikes -= 1;
-                    } else if (userVotes[currentUserId] === 'like') {
-                        userVotes[currentUserId] = 'dislike';
-                        lesson.likes -= 1;
-                        lesson.dislikes += 1;
-                    } else {
-                        userVotes[currentUserId] = 'dislike';
-                        lesson.dislikes += 1;
-                    }
-                    update(lessonRef, { likes: lesson.likes, dislikes: lesson.dislikes, userVotes });
-                });
-            });
+            const userDoc = await getDoc(doc(db, 'users', userId));
+            if (userDoc.data()?.banned) {
+                alert('Ваш акаунт забанено. Ви не можете ставити оцінки.');
+                return;
+            }
+            const lessonRef = doc(db, 'communityLessons', lessonId);
+            const lessonDoc = await getDoc(lessonRef);
+            const lesson = lessonDoc.data();
+            const userVotes = lesson.userVotes || {};
+            let { likes, dislikes } = lesson;
+            if (userVotes[userId] === 'dislike') {
+                userVotes[userId] = null;
+                dislikes -= 1;
+            } else {
+                userVotes[userId] = 'dislike';
+                dislikes += 1;
+                if (userVotes[userId] === 'like') likes -= 1;
+            }
+            await updateDoc(lessonRef, { likes, dislikes, userVotes });
         };
 
-        // Display community lessons (sorted by likes - dislikes)
-        onValue(ref(database, 'communityLessons'), (snapshot) => {
+        // Display community lessons
+        onSnapshot(query(collection(db, 'communityLessons'), orderBy('likes', 'desc')), (snapshot) => {
             const communityLessonsDiv = document.getElementById('communityLessons');
             communityLessonsDiv.innerHTML = '';
-            const lessons = snapshot.val();
-            if (lessons) {
-                const lessonArray = Object.entries(lessons).map(([key, lesson]) => ({
-                    id: key,
-                    ...lesson,
-                    score: (lesson.likes || 0) - (lesson.dislikes || 0)
-                }));
-                lessonArray.sort((a, b) => b.score - a.score);
-                lessonArray.forEach((lesson) => {
-                    const lessonCard = document.createElement('div');
-                    lessonCard.className = 'lesson-card';
-                    lessonCard.setAttribute('data-description', lesson.description);
-                    const user = auth.currentUser;
-                    const userId = user ? user.uid : null;
-                    const hasLiked = lesson.userVotes && lesson.userVotes[userId] === 'like';
-                    const hasDisliked = lesson.userVotes && lesson.userVotes[userId] === 'dislike';
-                    lessonCard.innerHTML = `
+            snapshot.forEach(doc => {
+                const lesson = doc.data();
+                const userId = auth.currentUser ? auth.currentUser.uid : null;
+                const hasLiked = lesson.userVotes && lesson.userVotes[userId] === 'like';
+                const hasDisliked = lesson.userVotes && lesson.userVotes[userId] === 'dislike';
+                communityLessonsDiv.innerHTML += `
+                    <div class="lesson-card" data-description="${lesson.description}">
                         <div class="lesson-header">
                             <img src="${lesson.image}" class="lesson-img" alt="${lesson.title}">
-                            <a href="#" class="lesson-link" onclick="openDescriptionModal('${lesson.title} #community', '${lesson.image}', '${lesson.description.replace(/'/g, "\\'")}', '${lesson.author}', '${lesson.timestamp}', '${lesson.id}')">${lesson.title} #community</a>
+                            <a href="#" class="lesson-link" onclick="openDescriptionModal('${lesson.title} #community', '${lesson.image}', '${lesson.description.replace(/'/g, "\\'")}', '${lesson.author}', '${lesson.timestamp}', '${doc.id}')">${lesson.title} #community</a>
                             <button class="favorite-btn" onclick="toggleFavorite(this, '${lesson.title} #community')">⭐</button>
                         </div>
                         <span class="author">Автор: ${lesson.author}</span>
                         <span class="created-date">Створено: ${new Date(lesson.timestamp).toLocaleString('uk-UA')}</span>
                         <div class="like-dislike-container">
-                            <button class="like-btn ${hasLiked ? 'active' : ''}" onclick="toggleLike('${lesson.id}', '${userId}')">👍 ${lesson.likes || 0}</button>
-                            <button class="dislike-btn ${hasDisliked ? 'active' : ''}" onclick="toggleDislike('${lesson.id}', '${userId}')">👎 ${lesson.dislikes || 0}</button>
+                            <button class="like-btn ${hasLiked ? 'active' : ''}" onclick="toggleLike('${doc.id}', '${userId}')">👍 ${lesson.likes || 0}</button>
+                            <button class="dislike-btn ${hasDisliked ? 'active' : ''}" onclick="toggleDislike('${doc.id}', '${userId}')">👎 ${lesson.dislikes || 0}</button>
                         </div>
-                    `;
-                    communityLessonsDiv.appendChild(lessonCard);
-                });
-            }
-        }, (error) => {
-            console.error('Помилка при отриманні уроків спільноти:', error);
+                    </div>`;
+            });
+            restoreFavorites();
         });
 
         // Show community lessons
-        window.showCommunity = function() {
+        window.showCommunity = () => {
             document.getElementById('staticLessons').style.display = 'none';
             document.getElementById('communityLessons').style.display = 'block';
             document.getElementById('searchBox').value = '';
@@ -1155,94 +1081,85 @@
         };
 
         // Show all lessons
-        window.showAllLessons = function() {
+        window.showAllLessons = () => {
             document.getElementById('staticLessons').style.display = 'block';
             document.getElementById('communityLessons').style.display = 'block';
-            const cards = document.getElementsByClassName('lesson-card');
-            for (let card of cards) {
-                card.style.display = 'flex';
-            }
+            document.querySelectorAll('.lesson-card').forEach(card => card.style.display = 'flex');
             restoreFavorites();
         };
 
-        // Dark theme toggle
-        window.toggleDarkTheme = function() {
+        // Dark theme
+        window.toggleDarkTheme = async () => {
             const isDark = document.getElementById('darkThemeToggle').checked;
             document.body.classList.toggle('dark-theme', isDark);
             localStorage.setItem('darkTheme', isDark);
-            const user = auth.currentUser;
-            if (user) {
-                update(ref(database, `users/${user.uid}`), { darkTheme: isDark });
+            if (auth.currentUser) {
+                await setDoc(doc(db, 'users', auth.currentUser.uid), { darkTheme: isDark }, { merge: true });
             }
         };
 
-        // Original functions (favorites and search)
-        let favoriteLessons = new Set(JSON.parse(localStorage.getItem("favorites")) || []);
+        // Favorites
+        let favoriteLessons = new Set(JSON.parse(localStorage.getItem('favorites')) || []);
 
-        window.toggleFavorite = function(button, lesson) {
+        window.toggleFavorite = (button, lesson) => {
             if (favoriteLessons.has(lesson)) {
                 favoriteLessons.delete(lesson);
-                button.classList.remove("active");
-                button.textContent = "⭐";
+                button.classList.remove('active');
+                button.textContent = '⭐';
             } else {
                 favoriteLessons.add(lesson);
-                button.classList.add("active");
-                button.textContent = "❌";
+                button.classList.add('active');
+                button.textContent = '❌';
             }
-            localStorage.setItem("favorites", JSON.stringify(Array.from(favoriteLessons)));
+            localStorage.setItem('favorites', JSON.stringify([...favoriteLessons]));
         };
 
         function restoreFavorites() {
-            document.querySelectorAll(".lesson-card").forEach(card => {
-                let lesson = card.querySelector(".lesson-link").textContent;
-                let button = card.querySelector(".favorite-btn");
-                if (favoriteLessons.has(lesson)) {
-                    button.classList.add("active");
-                    button.textContent = "❌";
-                } else {
-                    button.classList.remove("active");
-                    button.textContent = "⭐";
-                }
+            document.querySelectorAll('.lesson-card').forEach(card => {
+                const lesson = card.querySelector('.lesson-link').textContent;
+                const button = card.querySelector('.favorite-btn');
+                button.classList.toggle('active', favoriteLessons.has(lesson));
+                button.textContent = favoriteLessons.has(lesson) ? '❌' : '⭐';
             });
         }
 
-        window.searchLessons = function() {
-            let input = document.getElementById("searchBox").value.toLowerCase();
+        window.showFavorites = () => {
             document.getElementById('staticLessons').style.display = 'block';
             document.getElementById('communityLessons').style.display = 'block';
-            const cards = document.getElementsByClassName("lesson-card");
-            for (let card of cards) {
-                let text = card.innerText.toLowerCase();
-                card.style.display = text.includes(input) ? "flex" : "none";
-            }
+            document.querySelectorAll('.lesson-card').forEach(card => {
+                const lesson = card.querySelector('.lesson-link').textContent;
+                card.style.display = favoriteLessons.has(lesson) ? 'flex' : 'none';
+            });
         };
 
-        window.showFavorites = function() {
+        // Search lessons
+        window.searchLessons = () => {
+            const input = document.getElementById('searchBox').value.trim().toLowerCase();
             document.getElementById('staticLessons').style.display = 'block';
             document.getElementById('communityLessons').style.display = 'block';
-            const cards = document.getElementsByClassName("lesson-card");
-            for (let card of cards) {
-                let link = card.querySelector(".lesson-link").textContent;
-                card.style.display = favoriteLessons.has(link) ? "flex" : "none";
+            if (!input) {
+                showAllLessons();
+                return;
             }
+            document.querySelectorAll('.lesson-card').forEach(card => {
+                const title = card.querySelector('.lesson-link').textContent.toLowerCase();
+                const description = card.getAttribute('data-description')?.toLowerCase() || '';
+                card.style.display = title.includes(input) || description.includes(input) ? 'flex' : 'none';
+            });
+            restoreFavorites();
         };
 
-        // Monitor auth state
-        onAuthStateChanged(auth, (user) => {
+        // Auth state
+        onAuthStateChanged(auth, async user => {
             updateAccountPanel(user);
             if (user) {
-                get(ref(database, `users/${user.uid}`)).then(snapshot => {
-                    const userData = snapshot.val();
-                    if (userData) {
-                        if (userData.darkTheme !== undefined) {
-                            document.body.classList.toggle('dark-theme', userData.darkTheme);
-                            document.getElementById('darkThemeToggle').checked = userData.darkTheme;
-                        }
-                        if (userData.banned) {
-                            alert('Ваш акаунт забанено. Ви не можете створювати уроки або коментувати.');
-                        }
-                    }
-                });
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                const userData = userDoc.data();
+                if (userData) {
+                    document.body.classList.toggle('dark-theme', userData.darkTheme);
+                    document.getElementById('darkThemeToggle').checked = userData.darkTheme;
+                    if (userData.banned) alert('Ваш акаунт забанено. Ви не можете створювати уроки або коментувати.');
+                }
             } else {
                 document.body.classList.remove('dark-theme');
                 document.getElementById('darkThemeToggle').checked = false;
@@ -1251,7 +1168,7 @@
             restoreFavorites();
         });
 
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener('DOMContentLoaded', () => {
             restoreFavorites();
             showAllLessons();
             const isDark = localStorage.getItem('darkTheme') === 'true';
@@ -1261,6 +1178,3 @@
     </script>
 </body>
 </html>
-
-
-

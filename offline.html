@@ -19,6 +19,11 @@
       font-size: 1rem;
       padding: 10px 20px;
     }
+    canvas {
+      border: 1px solid #aaa;
+      margin-top: 30px;
+      background: #fff;
+    }
   </style>
 </head>
 <body>
@@ -26,5 +31,123 @@
   <h1>Немає інтернету</h1>
   <p>Будь ласка, перевір своє з’єднання 🛠️</p>
   <button onclick="location.reload()">Спробувати знову</button>
+  <br><br>
+  <a href="index.html">Назад до дому</a>
+
+  <h2>А поки що — зіграй у міні-гру! 🎮</h2>
+  <canvas id="gameCanvas" width="400" height="150"></canvas>
+
+  <!-- Саундтрек -->
+  <audio id="bgMusic" src="Assets/sound1.mp3" loop></audio>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Музика
+    const bgMusic = document.getElementById('bgMusic');
+    bgMusic.volume = 0.5;
+
+    // Грати музику після кліку
+    document.body.addEventListener('click', () => {
+      if (bgMusic.paused) {
+        bgMusic.play().catch(e => console.warn('Музику заблоковано браузером'));
+      }
+    }, { once: true });
+
+    let dino = {
+      x: 50,
+      y: 110,
+      width: 30,
+      height: 30,
+      vy: 0,
+      jumping: false
+    };
+
+    let obstacle = {
+      x: 400,
+      y: 120,
+      width: 20,
+      height: 30
+    };
+
+    let gravity = 1.5;
+    let gameOver = false;
+    let score = 0;
+    let bestScore = localStorage.getItem('bestScore') || 0;
+
+    function drawDino() {
+      ctx.fillStyle = '#4CAF50';
+      ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+    }
+
+    function drawObstacle() {
+      ctx.fillStyle = '#f44336';
+      ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+    }
+
+    function drawScore() {
+      ctx.fillStyle = '#333';
+      ctx.font = '16px sans-serif';
+      ctx.fillText('Очки: ' + score, 10, 20);
+      ctx.fillText('Рекорд: ' + bestScore, 300, 20);
+    }
+
+    function update() {
+      if (gameOver) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Динозавр
+      if (dino.jumping) {
+        dino.vy -= gravity;
+        dino.y -= dino.vy;
+        if (dino.y >= 110) {
+          dino.y = 110;
+          dino.jumping = false;
+          dino.vy = 0;
+        }
+      }
+
+      // Перешкода
+      obstacle.x -= 5;
+      if (obstacle.x < -20) {
+        obstacle.x = 400;
+        score++;
+        if (score > bestScore) {
+          bestScore = score;
+          localStorage.setItem('bestScore', bestScore);
+        }
+      }
+
+      // Зіткнення
+      if (
+        dino.x < obstacle.x + obstacle.width &&
+        dino.x + dino.width > obstacle.x &&
+        dino.y < obstacle.y + obstacle.height &&
+        dino.y + dino.height > obstacle.y
+      ) {
+        gameOver = true;
+        bgMusic.pause();
+        alert('Гру завершено! Твій рахунок: ' + score + '\nРекорд: ' + bestScore);
+        return;
+      }
+
+      drawDino();
+      drawObstacle();
+      drawScore();
+
+      requestAnimationFrame(update);
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (e.code === 'Space' && !dino.jumping && !gameOver) {
+        dino.jumping = true;
+        dino.vy = 20;
+      }
+    });
+
+    update();
+  </script>
 </body>
 </html>
